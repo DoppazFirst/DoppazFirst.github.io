@@ -1,17 +1,35 @@
 body {
     background-color: rgb(61, 61, 61);
+    align-items: center;
+    justify-content: center;
+}
+
+.content {
+    max-width: 80%;
+    text-align: center;
+    margin: 0 auto;
+    background-color: rgb(43, 43, 43);
+
 }
 
 .navbar {
-    align-items: flex-start;
-    justify-content: center;
+    align-items:flex-start;
+    display: flex;
     background-color: rgb(39, 39, 39);
     padding: 5px;
     margin: 0px;
+    max-height:10%;
 }
 
 .navbar a {
     background-color: rgb(39, 39, 39);
     padding: 5px;
     margin: 0px;
+    font-family: jersey;
+    color: blueviolet;
+}
+
+@font-face {
+    font-family: Jersey;
+    src: url(ressources/Jersey10-Regular.ttf);
 }
