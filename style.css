@@ -1,0 +1,17 @@
+body {
+    background-color: rgb(61, 61, 61);
+}
+
+.navbar {
+    align-items: flex-start;
+    justify-content: center;
+    background-color: rgb(39, 39, 39);
+    padding: 5px;
+    margin: 0px;
+}
+
+.navbar a {
+    background-color: rgb(39, 39, 39);
+    padding: 5px;
+    margin: 0px;
+}
