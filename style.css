@@ -118,3 +118,25 @@ nav a {
 footer {
   text-align: center;
 }
+
+.consoles {
+  background-color: #181818;
+  padding: 1rem 2rem;
+  display: flex;
+  gap: 2rem;
+}
+
+.consoles a {
+  color: white;
+  text-decoration: none;
+  font-weight: bold;
+  font-size: small;
+}
+
+.console-info {
+  display:block;
+  align-items: center;
+  background-color: #222;
+  padding: 1rem;
+  border-radius: 8px;
+}
