@@ -4,125 +4,7 @@
   <meta charset="UTF-8">
   <title>BitVault</title>
   <link rel="icon" href="ressources/logo.png" type="image/png">
-  <style>
-    body {
-      margin: 0;
-      padding: 0;
-      font-family: sans-serif;
-      background-color: #111;
-      color: white;
-    }
-
-    nav {
-      background-color: #000;
-      padding: 1rem 2rem;
-      display: flex;
-      gap: 2rem;
-    }
-
-    nav a {
-      color: white;
-      text-decoration: none;
-      font-weight: bold;
-    }
-
-    .container {
-      max-width: 80%;
-      margin: 2rem auto;
-    }
-
-    .search-bar {
-      margin-bottom: 1rem;
-    }
-
-    .search-bar input {
-      width: 100%;
-      padding: 0.75rem;
-      border: none;
-      border-radius: 5px;
-      font-size: 1rem;
-    }
-
-    .sort-bar {
-      margin-bottom: 2rem;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .sort-bar select {
-      padding: 0.5rem;
-      font-size: 1rem;
-      border-radius: 5px;
-      border: none;
-    }
-
-    .game-list {
-      display: flex;
-      flex-direction: column;
-      gap: 1rem;
-    }
-
-    .game {
-      display: flex;
-      align-items: center;
-      background-color: #222;
-      padding: 1rem;
-      border-radius: 8px;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .game-info {
-      display: flex;
-      align-items: center;
-    }
-
-    .game-icon {
-      width: 40px;
-      height: 40px;
-      background-color: white;
-      border-radius: 4px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: bold;
-      color: black;
-      margin-right: 1rem;
-    }
-
-    .game-info h3 {
-      margin: 0;
-      font-size: 1.1rem;
-    }
-
-    .game-info p {
-      margin: 0;
-      font-size: 0.9rem;
-      color: #aaa;
-    }
-
-    .button {
-      padding: 0.75rem 1.5rem;
-      background-color: #444;
-      color: white;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-      transition: background-color 0.3s ease;
-    }
-
-    .button:hover {
-      background-color: #666;
-    }
-
-    .message {
-      text-align: center;
-      margin-top: 2rem;
-      color: #888;
-      font-size: 1.2rem;
-    }
-  </style>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <nav>
@@ -146,77 +28,13 @@
     </div>
 
     <div class="game-list" id="gameList">
-      <!-- Les jeux seront ajoutés dynamiquement ici -->
     </div>
     <div class="message" id="noResultMessage" style="display: none;">Aucun résultat trouvé...</div>
   </div>
+  <script src="script.js"></script>
+  <footer>
+  <p>Je rapelle que le téléchargement de roms est illégal, moi je met juste des liens 😁.</p>
+</footer>
 
-  <script>
-    const searchInput = document.getElementById('searchInput');
-    const sortSelect = document.getElementById('sortSelect');
-    const gameList = document.getElementById('gameList');
-    const noResultMessage = document.getElementById('noResultMessage');
-
-    const gamesData = [
-      { icon: '🎮', name: 'Super Mario', editor: 'Nintendo' },
-      { icon: '🕹️', name: 'Pac-Man', editor: 'Namco' },
-      { icon: '⚔️', name: 'Zelda', editor: 'Nintendo' },
-      { icon: '🚗', name: 'Need for Speed', editor: 'Electronic Arts' },
-      { icon: '👾', name: 'Space Invaders', editor: 'Taito' }
-    ];
-
-    function renderGames(games) {
-      gameList.innerHTML = '';
-      games.forEach(game => {
-        const gameDiv = document.createElement('div');
-        gameDiv.className = 'game';
-
-        gameDiv.innerHTML = `
-          <div class="game-info">
-            <div class="game-icon">${game.icon}</div>
-            <div>
-              <h3>${game.name}</h3>
-              <p>${game.editor}</p>
-            </div>
-          </div>
-          <button class="button">Télécharger</button>
-        `;
-
-        gameList.appendChild(gameDiv);
-      });
-    }
-
-    function filterGames() {
-      const value = searchInput.value.toLowerCase();
-      const filtered = gamesData.filter(game =>
-        game.name.toLowerCase().includes(value) ||
-        game.editor.toLowerCase().includes(value)
-      );
-      renderGames(filtered);
-      noResultMessage.style.display = filtered.length > 0 ? 'none' : 'block';
-    }
-
-    function sortGames(by) {
-      gamesData.sort((a, b) => {
-        const aText = a[by].toLowerCase();
-        const bText = b[by].toLowerCase();
-        return aText.localeCompare(bText);
-      });
-      filterGames();
-    }
-
-    searchInput.addEventListener('input', filterGames);
-
-    sortSelect.addEventListener('change', () => {
-      if (sortSelect.value !== 'default') {
-        sortGames(sortSelect.value);
-      } else {
-        filterGames();
-      }
-    });
-
-    // Initial rendering
-    renderGames(gamesData);
-  </script>
 </body>
 </html>
