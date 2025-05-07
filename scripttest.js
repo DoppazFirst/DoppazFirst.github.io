@@ -50,53 +50,76 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     ];
 
-    const bestGamesContainer = document.getElementById('bestgames') || document.getElementById('game-list');
+    const bestGamesContainer = document.getElementById('bestgames');
+    const searchInput = document.getElementById('searchInput');
+    const sortSelect = document.getElementById('sortSelect');
+    const noResultMessage = document.getElementById('noResultMessage');
     const page = window.location.pathname.split("/").pop().toLowerCase();
     const consoleName = page.replace(".html", "").toLowerCase();
 
     // Filtrer les jeux selon la page
-    const filteredGames = games.filter(game =>
-        game.console.toLowerCase() === consoleName || consoleName === 'index'
+    let filteredGames = consoleName === 'index' ? games : games.filter(game =>
+        game.console.toLowerCase() === consoleName
     );
 
-    filteredGames.forEach(game => {
-        // Déterminer la classe à appliquer selon la page
-        const gameClass = (consoleName === 'wii' || consoleName === 'switch') ? 'gamecard' : 'game';
+    // Déterminer la classe à appliquer selon la page
+    const gameClass = (consoleName === 'wii' || consoleName === 'switch') ? 'gamecard' : 'game';
 
-        const gameElement = document.createElement('div');
-        gameElement.classList.add(gameClass);  // Appliquer la classe dynamique (game ou gamecard)
-        
-        // Si c'est index.html, ne pas ajouter la description
-        if (consoleName === 'index') {
-            gameElement.innerHTML = `
-                <div class="game-info">
-                    <div class="game-icon">${game.icon}</div>
-                    <div>
-                        <h3>${game.name}</h3>
-                        <p>${game.editor}</p>
-                    </div>
-                </div>
-                <a href="${game.link}" class="button" target="_blank">Télécharger</a>
-            `;
+    // Fonction pour afficher les jeux
+    const displayGames = (gamesToDisplay) => {
+        bestGamesContainer.innerHTML = '';
+        if (gamesToDisplay.length === 0) {
+            if (noResultMessage) {
+                noResultMessage.style.display = 'block';
+            }
         } else {
-            // Si ce n'est pas index.html, ajouter la description
-            gameElement.innerHTML = `
-                <div class="game-info">
-                    <div class="game-icon">${game.icon}</div>
-                    <div>
-                        <h3>${game.name}</h3>
-                        <p>${game.editor}</p>
-                    </div>
-                </div>
-                <p>${game.description}</p>
-                <a href="${game.link}" class="button" target="_blank">Télécharger</a>
-            `;
+            if (noResultMessage) {
+                noResultMessage.style.display = 'none';
+            }
+            gamesToDisplay.forEach(game => {
+                const gameElement = document.createElement('div');
+                gameElement.classList.add(gameClass);
+                if (consoleName === 'index') {
+                    gameElement.innerHTML = `
+                        <div class="game-info">
+                            <div class="game-icon">${game.icon}</div>
+                            <div>
+                                <h3>${game.name}</h3>
+                                <p>${game.editor}</p>
+                            </div>
+                        </div>
+                        <a href="${game.link}" class="button" target="_blank">Télécharger</a>
+                    `;
+                } else {
+                    gameElement.innerHTML = `
+                        <div class="game-info">
+                            <div class="game-icon">${game.icon}</div>
+                            <div>
+                                <h3>${game.name}</h3>
+                                <p>${game.editor}</p>
+                            </div>
+                        </div>
+                        <p>${game.description}</p>
+                        <a href="${game.link}" class="button" target="_blank">Télécharger</a>
+                    `;
+                }
+                bestGamesContainer.appendChild(gameElement);
+            });
         }
+    };
 
-        bestGamesContainer.appendChild(gameElement);
-    });
+    // Fonction pour filtrer les jeux en fonction de la recherche
+    const filterGames = () => {
+        const searchTerm = searchInput.value.toLowerCase();
+        filteredGames = games.filter(game =>
+            (game.name.toLowerCase().includes(searchTerm) ||
+            game.editor.toLowerCase().includes(searchTerm)) &&
+            (consoleName === 'index' || game.console.toLowerCase() === consoleName)
+        );
+        displayGames(filteredGames);
+    };
 
-    // Fonction de tri des jeux par critère
+    // Fonction pour trier les jeux
     const sortGames = (criterion) => {
         const sortedGames = [...filteredGames].sort((a, b) => {
             if (criterion === "name") {
@@ -105,33 +128,25 @@ document.addEventListener('DOMContentLoaded', () => {
                 return a.editor.localeCompare(b.editor);
             }
         });
-
-        // Vider le container actuel et réinsérer les jeux triés
-        bestGamesContainer.innerHTML = '';
-        sortedGames.forEach(game => {
-            const gameElement = document.createElement('div');
-            gameElement.classList.add(gameClass);  // Appliquer la classe dynamique (game ou gamecard)
-            // Si c'est index.html, ne pas ajouter la description
-            gameElement.innerHTML = `
-                <div class="game-info">
-                    <div class="game-icon">${game.icon}</div>
-                    <div>
-                        <h3>${game.name}</h3>
-                        <p>${game.editor}</p>
-                    </div>
-                </div>
-                <a href="${game.link}" class="button" target="_blank">Télécharger</a>
-                ${consoleName !== 'index' ? `<p>${game.description}</p>` : ''}
-            `;
-            bestGamesContainer.appendChild(gameElement);
-        });
+        displayGames(sortedGames);
     };
 
-    // Connecter les boutons de tri à la fonction
-    if (document.getElementById('sort-name')) {
-        document.getElementById('sort-name').addEventListener('click', () => sortGames("name"));
+    // Écouteurs d'événements
+    if (searchInput) {
+        searchInput.addEventListener('input', filterGames);
     }
-    if (document.getElementById('sort-editor')) {
-        document.getElementById('sort-editor').addEventListener('click', () => sortGames("editor"));
+
+    if (sortSelect) {
+        sortSelect.addEventListener('change', (e) => {
+            const criterion = e.target.value;
+            if (criterion !== "default") {
+                sortGames(criterion);
+            } else {
+                displayGames(filteredGames);
+            }
+        });
     }
+
+    // Afficher tous les jeux au chargement de la page
+    displayGames(filteredGames);
 });
