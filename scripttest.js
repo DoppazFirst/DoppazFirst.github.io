@@ -55,7 +55,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const sortSelect = document.getElementById('sortSelect');
     const noResultMessage = document.getElementById('noResultMessage');
     const page = window.location.pathname.split("/").pop().toLowerCase();
-    const consoleName = page.replace(".html", "").toLowerCase();
+    const consoleName = page === '' ? 'index' : page.replace(".html", "").toLowerCase();
+
 
     // Filtrer les jeux selon la page
     let filteredGames = consoleName === 'index' ? games : games.filter(game =>
