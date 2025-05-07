@@ -87,6 +87,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             <div>
                                 <h3>${game.name}</h3>
                                 <p>${game.editor}</p>
+                                <p>${game.console}</p>
                             </div>
                         </div>
                         <a href="${game.link}" class="button" target="_blank">Télécharger</a>
@@ -98,6 +99,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             <div>
                                 <h3>${game.name}</h3>
                                 <p>${game.editor}</p>
+                                <p>${game.console}</p>
                             </div>
                         </div>
                         <p>${game.description}</p>
