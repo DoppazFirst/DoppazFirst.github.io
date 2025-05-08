@@ -1,20 +1,20 @@
 document.addEventListener("DOMContentLoaded", function () {
     const games = [
       {
-        name: "Jeu 1",
+        name: "Gang Beast (MultiPlayer)",
         console: "PC",
         description: "rien pour l'instant",
-        editor: "Rien",
-        icon: "✔",
-        link: "#"
+        editor: "Boneloaf, Coatsink",
+        icon: "🥊",
+        link: "http://fs20.megadb.xyz:8080/d/47not5yoy5vxygoid3w3nfschjgkgoduyb453lqjwex6jdgmy2rw4pefuwe6ju73t47ipszc/Gang-Beasts-SteamRIP.com.rar"
       },
       {
-        name: "Jeu 2",
+        name: "Schedule I (MultiPlayer)",
         console: "PC",
         description: "rien pour l'instant",
-        editor: "Rien",
-        icon: "✔",
-        link: "#"
+        editor: "TVGS",
+        icon: "🌿",
+        link: "https://node2.datanodes.to:8443/d/s2mmhynbkae5w4x3u7zg2jmtuy2e4rchizyldpeu2ep7kfkyi5k5irmawug34qiqhsfz5tby/Skedule-I-SteamRIP.com.rar"
       },
       
     ];
