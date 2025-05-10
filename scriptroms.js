@@ -4,7 +4,7 @@ document.addEventListener('DOMContentLoaded', () => {
             name: "Mario Kart Wii",
             editor: "Nintendo",
             icon: "🏎",
-            link: "https://sto.romsfast.com/Wii/Mario%20Kart%20Wii%20(Europe%20Australia)%20(EnFrDeEsIt).zip?token=cyVZdVszClFMG3l2UCZbMlFRRBt2dA0hW2RcVEwbeXVQdls0WlFDXXBzXXJWYV9RRRc%3D",
+            link: "https://sto.romsfast.com/Wii/Mario%20Kart%20Wii%20(Europe%20Australia)%20(EnFrDeEsIt).zip?token=cyVZdVszClFMG3lyWnxbaVhRRBt3dVt3WzYOAkUbI3JZJ1tmC1hCXXBzXXJZaFxUTRI%3D",
             description: "Mario Kart Wii (マリオカートWii, Mario Kāto Uī?) est un jeu vidéo de course développé par Nintendo EAD et édité par Nintendo. Il est sorti sur la Wii le 10 avril 2008.",
             console: "Wii"
         },
