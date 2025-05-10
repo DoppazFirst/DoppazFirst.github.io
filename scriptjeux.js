@@ -6,7 +6,7 @@ document.addEventListener("DOMContentLoaded", function () {
         description: "rien pour l'instant",
         editor: "Boneloaf, Coatsink",
         icon: "🥊",
-        link: "http://fs20.megadb.xyz:8080/d/47not5yoy5vxygoid3w3nfschjgkgoduyb453lqjwex6jdgmy2rw4pefuwe6ju73t47ipszc/Gang-Beasts-SteamRIP.com.rar"
+        link: "http://fs20.megadb.xyz:8080/d/47not5yoy5vxygoid3w3nfschjgkgoduyb453lqjwex6jdgmyycpicor4lztkiliaznulovr/Gang-Beasts-SteamRIP.com.rar"
       },
       {
         name: "Schedule I (MultiPlayer)",
