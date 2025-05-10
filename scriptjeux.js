@@ -14,7 +14,7 @@ document.addEventListener("DOMContentLoaded", function () {
         description: "rien pour l'instant",
         editor: "TVGS",
         icon: "🌿",
-        link: "https://node2.datanodes.to:8443/d/s2mmhynbkae5w4x3u7zg2jmtuy2e4rchizyldpeu2ep7kfkyi5k5irmawug34qiqhsfz5tby/Skedule-I-SteamRIP.com.rar"
+        link: "https://drive.online-fix.me:2053/Schedule%20I"
       },
       
     ];
