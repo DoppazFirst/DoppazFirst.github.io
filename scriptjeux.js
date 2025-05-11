@@ -24,6 +24,46 @@ document.addEventListener("DOMContentLoaded", function () {
         icon: "🛒",
         link: "https://megadb.net/e9953dvv2y6p"
       },
+          {
+        name: "Lethal Company (MultiPlayer)",
+        console: "PC",
+        description: "rien pour l'instant",
+        editor: " Zeekerss",
+        icon: "🥽",
+        link: "https://megadb.net/baprk5c03ow7"
+      },
+         {
+        name: "R.E.P.O (MultiPlayer)",
+        console: "PC",
+        description: "rien pour l'instant",
+        editor: "semiwork",
+        icon: "😁",
+        link: "https://megadb.net/wufxxiqe5nrm"
+      },
+        {
+        name: "Geometry Dash",
+        console: "PC",
+        description: "rien pour l'instant",
+        editor: "RobTop Games",
+        icon: "🟨",
+        link: "https://megadb.net/521qrfktmdf2"
+      },
+         {
+        name: "Among Us (MultiPlayer)",
+        console: "PC",
+        description: "rien pour l'instant",
+        editor: "Innersloth",
+        icon: "🔪",
+        link: "https://megadb.net/j2cib0w47p5j"
+      },
+           {
+        name: "Garry’s Mod",
+        console: "PC",
+        description: "rien pour l'instant",
+        editor: "Facepunch Studios",
+        icon: "🎃",
+        link: "https://megadb.net/vr2r178d1rkj"
+      },
       
     ];
   
