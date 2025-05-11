@@ -6,7 +6,7 @@ document.addEventListener("DOMContentLoaded", function () {
         description: "rien pour l'instant",
         editor: "Boneloaf, Coatsink",
         icon: "🥊",
-        link: "http://fs20.megadb.xyz:8080/d/47not5yoy5vxygoid3w3nfschjgkgoduyb453lqjwex6jdgmyycpicor4lztkiliaznulovr/Gang-Beasts-SteamRIP.com.rar"
+        link: "https://megadb.net/6vvmg1siu7gl"
       },
       {
         name: "Schedule I (MultiPlayer)",
@@ -14,7 +14,15 @@ document.addEventListener("DOMContentLoaded", function () {
         description: "rien pour l'instant",
         editor: "TVGS",
         icon: "🌿",
-        link: "https://drive.online-fix.me:2053/Schedule%20I"
+        link: "https://megadb.net/00gzm2n52k4s"
+      },
+         {
+        name: "Slackers – Carts of Glory (MultiPlayer)",
+        console: "PC",
+        description: "rien pour l'instant",
+        editor: "Falling Saints",
+        icon: "🛒",
+        link: "https://megadb.net/e9953dvv2y6p"
       },
       
     ];
