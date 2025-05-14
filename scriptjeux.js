@@ -14,7 +14,7 @@ document.addEventListener("DOMContentLoaded", function () {
         description: "rien pour l'instant",
         editor: "Skog, Zorro, Wilnyl, Philip, thePetHen",
         icon: "🐌",
-        link: "https://buzzheavier.com/f80zdil9qmca"
+        link: "https://gofile.io/d/ndFwsS"
       },
       {
         name: "Schedule I (MultiPlayer)",
