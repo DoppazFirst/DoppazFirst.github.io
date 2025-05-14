@@ -8,6 +8,14 @@ document.addEventListener("DOMContentLoaded", function () {
         icon: "🥊",
         link: "https://megadb.net/6vvmg1siu7gl"
       },
+         {
+        name: "Content Warning (MultiPlayer)",
+        console: "PC",
+        description: "rien pour l'instant",
+        editor: "Skog, Zorro, Wilnyl, Philip, thePetHen",
+        icon: "🐌",
+        link: "https://drive.online-fix.me:2053/Content%20Warning"
+      },
       {
         name: "Schedule I (MultiPlayer)",
         console: "PC",
