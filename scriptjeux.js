@@ -14,7 +14,7 @@ document.addEventListener("DOMContentLoaded", function () {
         description: "rien pour l'instant",
         editor: "Skog, Zorro, Wilnyl, Philip, thePetHen",
         icon: "🐌",
-        link: "https://drive.online-fix.me:2053/Content%20Warning"
+        link: "https://buzzheavier.com/f80zdil9qmca"
       },
       {
         name: "Schedule I (MultiPlayer)",
