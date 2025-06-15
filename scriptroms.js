@@ -4,7 +4,7 @@ document.addEventListener('DOMContentLoaded', () => {
             name: "Mario Kart Wii",
             editor: "Nintendo",
             icon: "🏎",
-            link: "https://sto.romsfast.com/Wii/Mario%20Kart%20Wii%20(Europe%20Australia)%20(EnFrDeEsIt).zip?token=cyVZdVszClFMG3lyWnxbaVhRRBt3dVt3WzYOAkUbI3JZJ1tmC1hCXXBzXXJZaFxUTRI%3D",
+            link: "https://romsfun.com/download/mario-kart-wii-13294/1",
             description: "Mario Kart Wii (マリオカートWii, Mario Kāto Uī?) est un jeu vidéo de course développé par Nintendo EAD et édité par Nintendo. Il est sorti sur la Wii le 10 avril 2008.",
             console: "Wii"
         },
@@ -12,7 +12,7 @@ document.addEventListener('DOMContentLoaded', () => {
             name: "Wii sport",
             editor: "Nintendo",
             icon: "👟",
-            link: "https://sto.romsfast.com/Wii/Wii%20Sports%20(Europe)%20(EnFrDeEsIt)%20(Rev%201).zip?token=cyVZdVszClFMG3l2UCZbMlFRRBtyIFAmW2RRVhAbICBbc1toCVhCXXBzXXJWYl1SRRY%3D",
+            link: "https://romsfun.com/download/wii-sports-13300/4",
             description: "Wii Sports (Wii スポーツ, Wii Supōtsu?) est un jeu vidéo de sport développé et édité par Nintendo comme titre de lancement pour la console de jeux vidéo Wii. Il est commercialisé dans un premier temps en Amérique du Nord le 19 novembre 2006, et sort le mois suivant au Japon, en Australie et en Europe.",
             console: "Wii"
         },
@@ -20,7 +20,7 @@ document.addEventListener('DOMContentLoaded', () => {
             name: "Wii sport resort",
             editor: "Nintendo",
             icon: "👟",
-            link: "https://sto.romsfast.com/Wii/Wii%20Sports%20Resort%20(Europe)%20(EnFrDeEsIt).zip?token=cyVZdVszClFMG3l2UCZbMlFRRBt2dA0hW2RcVEwbeXVQdls0WlFDXXBzXXJWYV9QRhY%3D",
+            link: "https://romsfun.com/download/wii-sports-13300/1",
             description: "Wii Sports Resort est un jeu vidéo de sport, édité et développé par Nintendo, sorti sur Wii le 25 juin 2009 au Japon, le 23 juillet 2009 en Australie, le 24 juillet 2009 en Europe et le 26 juillet 2009 aux États-Unis. C'est la suite du jeu vidéo Wii Sports sur Wii.",
             console: "Wii"
         },
@@ -28,7 +28,7 @@ document.addEventListener('DOMContentLoaded', () => {
             name: "New Super Mario Bros Wii",
             editor: "Nintendo",
             icon: "🍄",
-            link: "https://sto.romsfast.com/Wii/New%20Super%20Mario%20Bros.%20Wii%20(Europe)%20(EnFrDeEsIt)%20(Rev%202).zip?token=cyVZdVszClFMG3l2UCZbMlFRRBt2dA0hW2RcVEwbeXVQdls0WlFDXXBzXXJWYV9VQRM%3D",
+            link: "https://romsfun.com/download/new-super-mario-bros-13275/2",
             description: "New Super Mario Bros. Wii est un jeu de plateforme développé et édité par Nintendo. Il a été publié sur Wii en 2009.",
             console: "Wii"
         },
