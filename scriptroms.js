@@ -44,7 +44,7 @@ document.addEventListener('DOMContentLoaded', () => {
             name: "Super Mario Bros Wonder",
             editor: "Nintendo",
             icon: "🐘",
-            link: "https://pub-897de1ddf9cc4c43a289f1d7006fcbf6.r2.dev/Super%20Mario%20Bros.%20Wonder%5B010015100B514000%5D%5B1.0.0%5D%5B0%5D%5B16.0.3%5D.nsp",
+            link: "https://waewz.com/download/switch/super-mario-bros-wonder-nsp-rom-update-download/download-2/",
             description: "Super Mario Bros. Wonder (スーパーマリオブラザーズ ワンダー, Sūpā Mario Burazāzu Wandā?) est un jeu vidéo de plates-formes développé par Nintendo EPD et édité par Nintendo, sorti le 20 octobre 2023 sur Nintendo Switch.",
             console: "Switch"
         },
