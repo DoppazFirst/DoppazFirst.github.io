@@ -52,7 +52,7 @@ document.addEventListener('DOMContentLoaded', () => {
             name: "Mario kart 8 Deluxe",
             editor: "Nintendo",
             icon: "🏎",
-            link: "https://file.whatsapgroup.com/Mario%20Kart%208%20Deluxe%20%5B0100152000022000%5D%5Bv0%5D.nsp",
+            link: "https://waewz.com/download/switch/mario-kart-8-deluxe-nsp-xci-rom-download/download-2/",
             description: "Mario Kart 8 (マリオカート8, Mario Kāto Eito?) est un jeu vidéo de course développé par Nintendo EAD et édité par Nintendo pour la console Wii U. Huitième opus de la série Mario Kart, il est sorti en mai 2014 au Japon, en Europe, en Australie et en Amérique du Nord.",
             console: "Switch"
         }
