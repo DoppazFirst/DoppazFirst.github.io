@@ -10,12 +10,13 @@
 <div class="chatinterface">
 <div id="chat" class="chat"></div>
 <div class="messagearea">
-<input id="messageInput" placeholder="Écris ton message..." autocomplete="off" class="messageInput">
-<button id="sendBtn" class="sendBtn">Envoyer</button>
+  <input type="color" id="colorInput" value="#ae00ff" title="Choisir la couleur de votre pseudo" class="color-picker">
+
+  <input id="messageInput" placeholder="Écris ton message..." autocomplete="off" class="messageInput">
+  <button id="sendBtn" class="sendBtn">Envoyer</button>
 </div>
 </div>
 
-<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 <script src="script.js"></script>
