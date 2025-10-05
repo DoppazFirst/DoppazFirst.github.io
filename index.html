@@ -8,14 +8,20 @@
 </head>
 <body>
 <h1>Shy.net</h1>
-<div class="chatinterface">
-<div id="chat" class="chat"></div>
-<div class="messagearea">
-  <input type="color" id="colorInput" value="#ae00ff" title="Choisir la couleur de votre pseudo" class="color-picker">
 
-  <input id="messageInput" placeholder="Écris ton message..." autocomplete="on" class="messageInput">
-  <button id="sendBtn" class="sendBtn">Envoyer</button>
-</div>
+<div class="chatinterface">
+  <div id="chat" class="chat"></div>
+  <div class="messagearea">
+    <input type="color" id="colorInput" value="#ae00ff" title="Choisir la couleur de votre pseudo" class="color-picker">
+
+    <input id="messageInput" placeholder="Écris ton message..." autocomplete="off" class="messageInput">
+    
+    <button id="generatePseudoBtn" title="Générer un nouveau pseudo aléatoire (cooldown 24h)">&#x21BB;</button>
+    
+    <button id="sendBtn" class="sendBtn">Envoyer</button>
+  </div>
+  
+  <div id="pseudoCooldownDisplay" class="cooldown-display"></div>
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -23,4 +29,3 @@
 <script src="script.js"></script>
 </body>
 </html>
-
