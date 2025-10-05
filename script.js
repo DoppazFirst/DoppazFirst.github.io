@@ -41,13 +41,41 @@ function getUserColor() {
     return localStorage.getItem('userColor') || '#ae00ff';
 }
 
+// --- NOUVEAU: Fonction pour appliquer la couleur à l'interface (bordures) ---
+function applyUserStyle(color) {
+    const chatInterface = document.querySelector('.chatinterface');
+    // document.querySelectorAll est nécessaire pour obtenir tous les messages déjà affichés
+    const myMessages = document.querySelectorAll('.msg.my-message');
+    
+    // 1. Appliquer au conteneur principal
+    if (chatInterface) {
+        // Applique la couleur à la bordure complète
+        chatInterface.style.borderColor = color; 
+    }
+    
+    // 2. Appliquer aux messages de l'utilisateur
+    myMessages.forEach(msg => {
+        // Applique la couleur à la bordure gauche uniquement
+        msg.style.borderLeftColor = color; 
+    });
+}
+
+
 // Appliquer la couleur stockée à l'input au chargement
 if (colorInput) {
-    colorInput.value = getUserColor();
+    const initialColor = getUserColor(); 
+    colorInput.value = initialColor;
+    
+    // NOUVEAU: Appliquer la couleur à l'interface au chargement
+    applyUserStyle(initialColor); 
 
     // Écouter le changement de couleur et le sauvegarder
     colorInput.addEventListener('change', (e) => {
-        localStorage.setItem('userColor', e.target.value);
+        const newColor = e.target.value;
+        localStorage.setItem('userColor', newColor);
+        
+        // NOUVEAU: Appliquer la nouvelle couleur à l'interface immédiatement
+        applyUserStyle(newColor); 
     });
 }
 
@@ -107,6 +135,11 @@ db.ref('messages').on('child_added', snapshot => {
   `;
   
   chat.appendChild(div);
+  
+  // NOUVEAU: S'assurer que le style est appliqué après l'ajout d'un nouveau message
+  // Ceci est crucial pour que le message qui vient d'être créé ait la bordure colorée
+  applyUserStyle(getUserColor());
+  
   chat.scrollTop = chat.scrollHeight;
 
   // --- LOGIQUE DE NETTOYAGE : Supprime les messages au-delà du seuil de 100 ---
