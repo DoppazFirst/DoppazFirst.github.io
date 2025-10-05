@@ -15,11 +15,11 @@ h1{
 
 @font-face {
     font-family:Jet ;
-    src: url(../assets/JetBrainsMono-Regular.ttf);
+    src: url(assets/JetBrainsMono-Regular.ttf);
 }
 @font-face {
     font-family:JetThin ;
-    src: url(../assets/JetBrainsMono-Thin.ttf);
+    src: url(assets/JetBrainsMono-Thin.ttf);
 }
 
 .chat { 
@@ -115,4 +115,59 @@ border-radius: 15px;
 border: solid #ae00ff;
 border-width: 2px;
 }
+#reply-indicator {
+    padding: 8px 10px;
+    margin-top: 5px;
+    background: #2b2b2b;
+    border-radius: 5px 5px 0 0;
+    font-family: Jet;
+    font-size: 0.9em;
+    color: #fff;
+}
+#reply-indicator button {
+    background: none;
+    border: none;
+    color: rgb(68, 68, 68);
+    cursor: pointer;
+    text-decoration: underline;
+    margin-left: 10px;
+    padding: 0 5px;
+    flex-shrink: 0;
+}
 
+.reply-btn {
+    background: none;
+    border: none;
+    color: #555;
+    font-size: 1.1em;
+    cursor: pointer;
+    margin-left: 10px;
+    padding: 0;
+    flex-shrink: 0;
+    transition: color 0.2s, opacity 0.3s;
+    opacity: 0;
+    pointer-events: none;
+}
+.msg:hover .reply-btn {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.reply-context {
+    font-family: JetThin;
+    font-size: 0.8em;
+    color: #888;
+    background-color: #303030;
+    padding: 3px 5px;
+    margin-bottom: 5px;
+    border-left: 2px solid #555;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+.reply-context:hover {
+    background-color: #383838;
+}
+.msg.highlight {
+    background-color: #4a3d00 !important; 
+    transition: background-color 0.1s;
+}
