@@ -19,6 +19,52 @@ const sendBtn = document.getElementById('sendBtn');
 // Récupérer le sélecteur de couleur
 const colorInput = document.getElementById('colorInput'); 
 
+// NOUVEAU: Objet pour stocker les détails des messages chargés (clé, ID, couleur, texte)
+const messagesData = {}; 
+
+// Variables pour gérer la réponse
+let replyingToId = null; 
+const replyIndicator = document.createElement('div');
+replyIndicator.id = 'reply-indicator';
+replyIndicator.innerHTML = 'Répondre à : <span id="reply-to-text"></span> <button onclick="cancelReply()">Stop Reply</button>';
+
+const chatInterface = document.querySelector('.chatinterface');
+if (chatInterface) {
+    // Insère l'indicateur juste au-dessus de la zone de saisie
+    chatInterface.insertBefore(replyIndicator, document.querySelector('.messagearea'));
+}
+
+
+// --- Fonctions de gestion de la réponse (Globales pour les boutons onclick) ---
+
+window.startReply = function(messageId, messageText) {
+    replyingToId = messageId;
+    // Affiche un extrait du message dans l'indicateur
+    const shortText = messageText.length > 30 ? messageText.substring(0, 30) + '...' : messageText;
+    document.getElementById('reply-to-text').textContent = shortText;
+    replyIndicator.style.display = 'flex';
+    input.focus();
+}
+
+window.cancelReply = function() {
+    replyingToId = null;
+    replyIndicator.style.display = 'none';
+    document.getElementById('reply-to-text').textContent = '';
+}
+
+window.scrollToMessage = function(key) {
+    const target = document.querySelector(`.msg[data-key="${key}"]`);
+    if (target) {
+        target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        
+        // Effet de flash
+        target.classList.add('highlight');
+        setTimeout(() => {
+            target.classList.remove('highlight');
+        }, 1500);
+    }
+}
+
 // Gestion de l'ID utilisateur anonyme (cookie)
 function getUserId() {
   let id = document.cookie.split('; ').find(c => c.startsWith('userId='));
@@ -41,21 +87,19 @@ function getUserColor() {
     return localStorage.getItem('userColor') || '#ae00ff';
 }
 
-// --- NOUVEAU: Fonction pour appliquer la couleur à l'interface (bordures) ---
+// NOUVEAU: Fonction pour appliquer la couleur à l'interface (bordures)
 function applyUserStyle(color) {
     const chatInterface = document.querySelector('.chatinterface');
-    // document.querySelectorAll est nécessaire pour obtenir tous les messages déjà affichés
+    // Récupère tous les messages de l'utilisateur déjà affichés
     const myMessages = document.querySelectorAll('.msg.my-message');
     
     // 1. Appliquer au conteneur principal
     if (chatInterface) {
-        // Applique la couleur à la bordure complète
         chatInterface.style.borderColor = color; 
     }
     
     // 2. Appliquer aux messages de l'utilisateur
     myMessages.forEach(msg => {
-        // Applique la couleur à la bordure gauche uniquement
         msg.style.borderLeftColor = color; 
     });
 }
@@ -63,19 +107,16 @@ function applyUserStyle(color) {
 
 // Appliquer la couleur stockée à l'input au chargement
 if (colorInput) {
-    const initialColor = getUserColor(); 
+    const initialColor = getUserColor();
     colorInput.value = initialColor;
-    
-    // NOUVEAU: Appliquer la couleur à l'interface au chargement
     applyUserStyle(initialColor); 
+    window.cancelReply(); // S'assurer que l'indicateur est caché au début
 
     // Écouter le changement de couleur et le sauvegarder
     colorInput.addEventListener('change', (e) => {
         const newColor = e.target.value;
         localStorage.setItem('userColor', newColor);
-        
-        // NOUVEAU: Appliquer la nouvelle couleur à l'interface immédiatement
-        applyUserStyle(newColor); 
+        applyUserStyle(newColor);
     });
 }
 
@@ -88,31 +129,41 @@ function formatTime(timestamp) {
 }
 
 
-// --- Envoyer un message (avec couleur et timestamp) ---
+// --- Envoyer un message (avec couleur, timestamp et parentId) ---
 sendBtn.addEventListener('click', () => {
   const msg = input.value.trim();
   if (!msg) return;
   
   // Récupérer la couleur actuelle pour l'envoyer
   const userColor = getUserColor();
-
-  db.ref('messages').push({ 
+  
+  const messageData = { 
     text: msg, 
     id: userId,
     color: userColor, // Envoi de la couleur
     timestamp: firebase.database.ServerValue.TIMESTAMP // Utilise l'heure du serveur
-  });
+  };
+  
+  // NOUVEAU: Si replyingToId est défini, l'ajouter
+  if (replyingToId) {
+      messageData.parentId = replyingToId;
+      window.cancelReply(); 
+  }
+
+  db.ref('messages').push(messageData);
   input.value = '';
 });
 
 input.addEventListener('keypress', (e) => { if(e.key==='Enter') sendBtn.click(); });
 
 
-// --- Écoute des messages (Afficher le pseudo coloré et nettoyer) ---
+// --- Écoute des messages (Stockage, Affichage du contexte et bouton Répondre) ---
 db.ref('messages').on('child_added', snapshot => {
   const msg = snapshot.val();
+  const messageKey = snapshot.key; // Récupère la clé pour l'ID de réponse
   const div = document.createElement('div');
   div.classList.add('msg');
+  div.setAttribute('data-key', messageKey); // Ajout de la clé pour le ciblage
   
   if (msg.id === userId) {
       div.classList.add('my-message');
@@ -120,24 +171,55 @@ db.ref('messages').on('child_added', snapshot => {
 
   // L'ID du perso (pseudo) - 4 premiers caractères
   const displayId = msg.id.substring(0, 4); 
-  
-  // L'heure du message (fallback si le timestamp n'est pas encore là)
   const time = msg.timestamp ? formatTime(msg.timestamp) : formatTime(Date.now());
-  
-  // La couleur choisie (fallback si non définie)
   const pseudoColor = msg.color || '#ae00ff'; 
   
-  // Affichage du pseudo coloré, du message et de l'heure
-  div.innerHTML = `
-      <span class="user" style="color: ${pseudoColor};">${displayId}</span>: 
-      ${msg.text} 
-      <span class="timestamp">${time}</span>
+  // NOUVEAU: Stocker les données pour les réponses futures
+  messagesData[messageKey] = {
+      id: displayId,
+      color: pseudoColor,
+      text: msg.text 
+  };
+  
+  // Construction du contenu du message
+  let innerContent = '';
+  
+  // 1. Si c'est une réponse, afficher le message parent (avec pseudo et couleur)
+  if (msg.parentId) {
+      const parentData = messagesData[msg.parentId];
+      let replyText = 'Répond à un message non chargé...';
+      let replyColor = '#555'; 
+
+      // Vérifier si le message parent a déjà été chargé
+      if (parentData) {
+          // Affichage du pseudo et du début du texte du parent
+          const parentSnippet = parentData.text.length > 25 ? parentData.text.substring(0, 25) + '...' : parentData.text;
+          replyText = `<span style="color: ${parentData.color}; font-weight: bold;">${parentData.id}</span>: ${parentSnippet}`;
+          replyColor = parentData.color; 
+      }
+      
+      innerContent += `<div class="reply-context" onclick="scrollToMessage('${msg.parentId}')" style="border-left-color: ${replyColor};">${replyText}</div>`;
+  }
+  
+  // 2. Affichage du pseudo, du texte, de l'heure et du bouton Répondre
+  // Protection contre les guillemets dans le message pour l'onclick
+  const safeText = msg.text.replace(/'/g, "\\'"); 
+  
+  innerContent += `
+      <div class="message-content">
+          <span class="user" style="color: ${pseudoColor};">${displayId}</span>: 
+          ${msg.text} 
+          <span class="timestamp">${time}</span>
+          
+          <button class="reply-btn" onclick="startReply('${messageKey}', '${safeText}')">↪</button>
+      </div>
   `;
+  
+  div.innerHTML = innerContent;
   
   chat.appendChild(div);
   
-  // NOUVEAU: S'assurer que le style est appliqué après l'ajout d'un nouveau message
-  // Ceci est crucial pour que le message qui vient d'être créé ait la bordure colorée
+  // On réapplique le style pour s'assurer que les messages prennent la couleur de bordure locale
   applyUserStyle(getUserColor());
   
   chat.scrollTop = chat.scrollHeight;
@@ -151,34 +233,23 @@ db.ref('messages').on('child_added', snapshot => {
       if (totalMessages > limit) {
           const messages = [];
           messagesSnapshot.forEach(child => {
-              // Stocke la clé et le timestamp pour le tri
               messages.push({ 
                   key: child.key, 
                   timestamp: child.val().timestamp || 0 
               });
           });
 
-          // Trie les messages du plus ancien au plus récent
           messages.sort((a, b) => a.timestamp - b.timestamp);
           
-          // Calcule le nombre de messages à supprimer
           const countToDelete = totalMessages - limit;
           const updates = {};
           
-          // Marque les messages à supprimer (valeur null)
           for (let i = 0; i < countToDelete; i++) {
               updates[messages[i].key] = null;
           }
 
-          // Exécute la suppression en bloc
           if (Object.keys(updates).length > 0) {
-              db.ref('messages').update(updates)
-                  .then(() => {
-                      console.log(`${countToDelete} messages les plus anciens supprimés.`);
-                  })
-                  .catch(error => {
-                      console.error("Erreur lors de la suppression des messages :", error);
-                  });
+              db.ref('messages').update(updates);
           }
       }
   });
