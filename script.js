@@ -26,6 +26,7 @@ const messagesData = {};
 let replyingToId = null; 
 const replyIndicator = document.createElement('div');
 replyIndicator.id = 'reply-indicator';
+// Texte de l'indicateur mis à jour en français simple
 replyIndicator.innerHTML = 'Répondre à : <span id="reply-to-text"></span> <button onclick="cancelReply()">Stop Reply</button>';
 
 const chatInterface = document.querySelector('.chatinterface');
@@ -224,11 +225,11 @@ db.ref('messages').on('child_added', snapshot => {
   
   chat.scrollTop = chat.scrollHeight;
 
-  // --- LOGIQUE DE NETTOYAGE : Supprime les messages au-delà du seuil de 100 ---
+  // --- LOGIQUE DE NETTOYAGE : Supprime les messages au-delà du seuil de 20 (ancienne limite 100) ---
   
   db.ref('messages').once('value', messagesSnapshot => {
       const totalMessages = messagesSnapshot.numChildren();
-      const limit = 100;
+      const limit = 20; // FIX: Changement de 100 à 20 comme demandé
 
       if (totalMessages > limit) {
           const messages = [];
@@ -239,15 +240,18 @@ db.ref('messages').on('child_added', snapshot => {
               });
           });
 
+          // Trie les messages du plus ancien au plus récent
           messages.sort((a, b) => a.timestamp - b.timestamp);
           
           const countToDelete = totalMessages - limit;
           const updates = {};
           
+          // Marque les messages à supprimer (valeur null)
           for (let i = 0; i < countToDelete; i++) {
               updates[messages[i].key] = null;
           }
 
+          // Exécute la suppression en bloc
           if (Object.keys(updates).length > 0) {
               db.ref('messages').update(updates);
           }
