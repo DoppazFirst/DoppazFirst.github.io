@@ -1,12 +1,12 @@
 // 🔥 Configure Firebase ici
 const firebaseConfig = {
-  apiKey: "AIzaSyADCSPTs3UWMqAeYWkautbG2B9LSMOO7yE",
-  authDomain: "shynet-project.firebaseapp.com",
-  databaseURL: "https://shynet-project-default-rtdb.firebaseio.com",
-  projectId: "shynet-project",
-  storageBucket: "shynet-project.firebasestorage.app",
-  messagingSenderId: "958400032907",
-  appId: "1:958400032907:web:58da8a5b3657995b08648e"
+    apiKey: "AIzaSyADCSPTs3UWMqAeYWkautbG2B9LSMOO7yE",
+    authDomain: "shynet-project.firebaseapp.com",
+    databaseURL: "https://shynet-project-default-rtdb.firebaseio.com",
+    projectId: "shynet-project",
+    storageBucket: "shynet-project.firebasestorage.app",
+    messagingSenderId: "958400032907",
+    appId: "1:958400032907:web:58da8a5b3657995b08648e"
 };
 
 
@@ -18,6 +18,103 @@ const input = document.getElementById('messageInput');
 const sendBtn = document.getElementById('sendBtn');
 // Récupérer le sélecteur de couleur
 const colorInput = document.getElementById('colorInput'); 
+// NOUVEAU: Récupération du bouton
+const generatePseudoBtn = document.getElementById('generatePseudoBtn');
+// AJOUTÉ: Récupération de l'élément d'affichage du cooldown
+const pseudoCooldownDisplay = document.getElementById('pseudoCooldownDisplay');
+
+// NOUVEAU: Liste de mots pour la génération de pseudo (Adjectifs/Noms)
+const WORD_LIST = [
+    "Co", "Oo", "Bu", "Ke", "Op", "Ra", "Le", "Ti", "Su", "Ya",
+    "Mo", "Ki", "Pu", "Ne", "Va", "So", "Di", "Tu", "By", "Gi",
+    "De", "Me", "Pi", "Vo", "Cu", "Za", "Ze", "Zo", "Zu", "Ga",
+    "Go", "Gu", "Do", "Du", "Fe", "Fi", "Fo", "Fu", "Ha", "He",
+    "Hu", "Ja", "Je", "Jo", "Ju", "Li", "Lo", "Lu", "Mi", "Mu"
+];
+
+// NOUVEAU: Constante pour le cooldown (24 heures)
+const PSEUDO_COOLDOWN_MS = 24 * 60 * 60 * 1000; 
+
+// NOUVEAU: Fonction pour générer un pseudo basé sur deux mots
+function generateRandomWordPseudo() {
+    const list = WORD_LIST;
+    // Sélectionne deux mots aléatoires non identiques
+    let index1 = Math.floor(Math.random() * list.length);
+    let index2 = Math.floor(Math.random() * list.length);
+    while (index1 === index2) {
+        index2 = Math.floor(Math.random() * list.length);
+    }
+    
+    // Concatène les deux mots (ex: 'LoupSecret')
+    return list[index1] + list[index2];
+}
+
+// NOUVEAU: Fonction de gestion du cooldown (MODIFIÉE POUR SÉPARER BOUTON ET AFFICHAGE)
+function checkPseudoCooldown() {
+    // AJOUTÉ: Vérification pour le nouvel élément
+    if (!generatePseudoBtn || !pseudoCooldownDisplay) return;
+    
+    const lastChange = localStorage.getItem('lastPseudoChange');
+    const now = Date.now();
+    
+    if (!lastChange || (now - parseInt(lastChange) > PSEUDO_COOLDOWN_MS)) {
+        // Cooldown expiré ou jamais utilisé
+        generatePseudoBtn.disabled = false;
+        // Rétablit l'icône de rechargement (car elle a pu être effacée par d'autres styles)
+        generatePseudoBtn.innerHTML = '&#x21BB;'; 
+        generatePseudoBtn.classList.remove('cooldown');
+        generatePseudoBtn.title = 'Changer Pseudo (cooldown 24h)';
+        
+        // AJOUTÉ: Masque l'affichage du cooldown
+        pseudoCooldownDisplay.style.display = 'none';
+        
+    } else {
+        // Cooldown actif
+        generatePseudoBtn.disabled = true;
+        generatePseudoBtn.classList.add('cooldown');
+        const timeLeft = PSEUDO_COOLDOWN_MS - (now - parseInt(lastChange));
+        
+        const hours = Math.floor(timeLeft / (1000 * 60 * 60));
+        const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
+        
+        // MODIFIÉ: Le bouton garde son icône et son titre (il est désactivé)
+        generatePseudoBtn.innerHTML = '&#x21BB;';
+        generatePseudoBtn.title = `Prochain changement dans ${hours}h ${minutes}m ${seconds}s`;
+        
+        // AJOUTÉ: Affiche uniquement le temps restant dans l'élément séparé
+        pseudoCooldownDisplay.textContent = `Vous pourrez changer de pseudo dans : ${hours}h ${minutes}m ${seconds}s`; // Seulement le temps
+        pseudoCooldownDisplay.style.display = 'block';
+        
+        // Mettre à jour le compte à rebours toutes les secondes
+        setTimeout(checkPseudoCooldown, 1000); 
+    }
+}
+
+// NOUVEAU: Handler pour la génération de pseudo
+function handlePseudoGeneration() {
+    if (generatePseudoBtn.disabled) return;
+
+    // 1. Générer le nouveau pseudo (basé sur les mots)
+    const newId = generateRandomWordPseudo(); 
+
+    // 2. Mettre à jour le temps de cooldown
+    localStorage.setItem('lastPseudoChange', Date.now().toString());
+    
+    // 3. Mettre à jour le cookie userId avec le nouvel ID
+    document.cookie = `userId=${newId}; max-age=${60*60*24*365}`;
+    
+    // 4. Informer l'utilisateur et recharger la page pour appliquer l'ID
+    alert(`Votre nouveau pseudo est: ${newId}. La page va se recharger pour appliquer le changement.`);
+    window.location.reload(); 
+}
+
+// NOUVEAU: Initialisation du cooldown et écoute du bouton
+if (generatePseudoBtn) {
+    generatePseudoBtn.addEventListener('click', handlePseudoGeneration);
+    checkPseudoCooldown(); // Lance la vérification initiale et le compte à rebours
+}
+
 
 // NOUVEAU: Objet pour stocker les détails des messages chargés (clé, ID, couleur, texte)
 const messagesData = {}; 
@@ -26,8 +123,7 @@ const messagesData = {};
 let replyingToId = null; 
 const replyIndicator = document.createElement('div');
 replyIndicator.id = 'reply-indicator';
-// Texte de l'indicateur mis à jour en français simple
-replyIndicator.innerHTML = 'Répondre à : <span id="reply-to-text"></span> <button onclick="cancelReply()">Stop Reply</button>';
+replyIndicator.innerHTML = 'Répondre à : <span id="reply-to-text"></span> <button onclick="cancelReply()">X</button>';
 
 const chatInterface = document.querySelector('.chatinterface');
 if (chatInterface) {
@@ -68,15 +164,15 @@ window.scrollToMessage = function(key) {
 
 // Gestion de l'ID utilisateur anonyme (cookie)
 function getUserId() {
-  let id = document.cookie.split('; ').find(c => c.startsWith('userId='));
-  if (!id) {
-    id = Math.random().toString(36).substring(2, 10);
-    // Stockage pour 1 an
-    document.cookie = `userId=${id}; max-age=${60*60*24*365}`; 
-  } else {
-    id = id.split('=')[1];
-  }
-  return id;
+    let id = document.cookie.split('; ').find(c => c.startsWith('userId='));
+    if (!id) {
+        id = generateRandomWordPseudo(); // MODIFIÉ: Utilise le pseudo basé sur les mots
+        // Stockage pour 1 an
+        document.cookie = `userId=${id}; max-age=${60*60*24*365}`; 
+    } else {
+        id = id.split('=')[1];
+    }
+    return id;
 }
 
 const userId = getUserId();
@@ -132,27 +228,27 @@ function formatTime(timestamp) {
 
 // --- Envoyer un message (avec couleur, timestamp et parentId) ---
 sendBtn.addEventListener('click', () => {
-  const msg = input.value.trim();
-  if (!msg) return;
-  
-  // Récupérer la couleur actuelle pour l'envoyer
-  const userColor = getUserColor();
-  
-  const messageData = { 
-    text: msg, 
-    id: userId,
-    color: userColor, // Envoi de la couleur
-    timestamp: firebase.database.ServerValue.TIMESTAMP // Utilise l'heure du serveur
-  };
-  
-  // NOUVEAU: Si replyingToId est défini, l'ajouter
-  if (replyingToId) {
-      messageData.parentId = replyingToId;
-      window.cancelReply(); 
-  }
+    const msg = input.value.trim();
+    if (!msg) return;
+    
+    // Récupérer la couleur actuelle pour l'envoyer
+    const userColor = getUserColor();
+    
+    const messageData = { 
+        text: msg, 
+        id: userId,
+        color: userColor, // Envoi de la couleur
+        timestamp: firebase.database.ServerValue.TIMESTAMP // Utilise l'heure du serveur
+    };
+    
+    // NOUVEAU: Si replyingToId est défini, l'ajouter
+    if (replyingToId) {
+        messageData.parentId = replyingToId;
+        window.cancelReply(); 
+    }
 
-  db.ref('messages').push(messageData);
-  input.value = '';
+    db.ref('messages').push(messageData);
+    input.value = '';
 });
 
 input.addEventListener('keypress', (e) => { if(e.key==='Enter') sendBtn.click(); });
@@ -160,101 +256,98 @@ input.addEventListener('keypress', (e) => { if(e.key==='Enter') sendBtn.click();
 
 // --- Écoute des messages (Stockage, Affichage du contexte et bouton Répondre) ---
 db.ref('messages').on('child_added', snapshot => {
-  const msg = snapshot.val();
-  const messageKey = snapshot.key; // Récupère la clé pour l'ID de réponse
-  const div = document.createElement('div');
-  div.classList.add('msg');
-  div.setAttribute('data-key', messageKey); // Ajout de la clé pour le ciblage
-  
-  if (msg.id === userId) {
-      div.classList.add('my-message');
-  }
+    const msg = snapshot.val();
+    const messageKey = snapshot.key; // Récupère la clé pour l'ID de réponse
+    const div = document.createElement('div');
+    div.classList.add('msg');
+    div.setAttribute('data-key', messageKey); // Ajout de la clé pour le ciblage
+    
+    if (msg.id === userId) {
+        div.classList.add('my-message');
+    }
 
-  // L'ID du perso (pseudo) - 4 premiers caractères
-  const displayId = msg.id.substring(0, 4); 
-  const time = msg.timestamp ? formatTime(msg.timestamp) : formatTime(Date.now());
-  const pseudoColor = msg.color || '#ae00ff'; 
-  
-  // NOUVEAU: Stocker les données pour les réponses futures
-  messagesData[messageKey] = {
-      id: displayId,
-      color: pseudoColor,
-      text: msg.text 
-  };
-  
-  // Construction du contenu du message
-  let innerContent = '';
-  
-  // 1. Si c'est une réponse, afficher le message parent (avec pseudo et couleur)
-  if (msg.parentId) {
-      const parentData = messagesData[msg.parentId];
-      let replyText = 'Répond à un message non chargé...';
-      let replyColor = '#555'; 
+    // MODIFIÉ: On affiche jusqu'à 8 caractères de l'ID/Pseudo pour un bon affichage des mots.
+    const displayId = msg.id.substring(0, 8); 
+    const time = msg.timestamp ? formatTime(msg.timestamp) : formatTime(Date.now());
+    const pseudoColor = msg.color || '#ae00ff'; 
+    
+    // NOUVEAU: Stocker les données pour les réponses futures
+    messagesData[messageKey] = {
+        id: displayId,
+        color: pseudoColor,
+        text: msg.text 
+    };
+    
+    // Construction du contenu du message
+    let innerContent = '';
+    
+    // 1. Si c'est une réponse, afficher le message parent (avec pseudo et couleur)
+    if (msg.parentId) {
+        const parentData = messagesData[msg.parentId];
+        let replyText = 'Répond à un message non chargé...';
+        let replyColor = '#555'; 
 
-      // Vérifier si le message parent a déjà été chargé
-      if (parentData) {
-          // Affichage du pseudo et du début du texte du parent
-          const parentSnippet = parentData.text.length > 25 ? parentData.text.substring(0, 25) + '...' : parentData.text;
-          replyText = `<span style="color: ${parentData.color}; font-weight: bold;">${parentData.id}</span>: ${parentSnippet}`;
-          replyColor = parentData.color; 
-      }
-      
-      innerContent += `<div class="reply-context" onclick="scrollToMessage('${msg.parentId}')" style="border-left-color: ${replyColor};">${replyText}</div>`;
-  }
-  
-  // 2. Affichage du pseudo, du texte, de l'heure et du bouton Répondre
-  // Protection contre les guillemets dans le message pour l'onclick
-  const safeText = msg.text.replace(/'/g, "\\'"); 
-  
-  innerContent += `
-      <div class="message-content">
-          <span class="user" style="color: ${pseudoColor};">${displayId}</span>: 
-          ${msg.text} 
-          <span class="timestamp">${time}</span>
-          
-          <button class="reply-btn" onclick="startReply('${messageKey}', '${safeText}')">↪</button>
-      </div>
-  `;
-  
-  div.innerHTML = innerContent;
-  
-  chat.appendChild(div);
-  
-  // On réapplique le style pour s'assurer que les messages prennent la couleur de bordure locale
-  applyUserStyle(getUserColor());
-  
-  chat.scrollTop = chat.scrollHeight;
+        // Vérifier si le message parent a déjà été chargé
+        if (parentData) {
+            // Affichage du pseudo et du début du texte du parent
+            const parentSnippet = parentData.text.length > 25 ? parentData.text.substring(0, 25) + '...' : parentData.text;
+            replyText = `<span style="color: ${parentData.color}; font-weight: bold;">${parentData.id}</span>: ${parentSnippet}`;
+            replyColor = parentData.color; 
+        }
+        
+        innerContent += `<div class="reply-context" onclick="scrollToMessage('${msg.parentId}')" style="border-left-color: ${replyColor};">${replyText}</div>`;
+    }
+    
+    // 2. Affichage du pseudo, du texte, de l'heure et du bouton Répondre
+    // Protection contre les guillemets dans le message pour l'onclick
+    const safeText = msg.text.replace(/'/g, "\\'"); 
+    
+    innerContent += `
+        <div class="message-content">
+            <span class="user" style="color: ${pseudoColor};">${displayId}</span>: 
+            ${msg.text} 
+            <span class="timestamp">${time}</span>
+            
+            <button class="reply-btn" onclick="startReply('${messageKey}', '${safeText}')">↪</button>
+        </div>
+    `;
+    
+    div.innerHTML = innerContent;
+    
+    chat.appendChild(div);
+    
+    // On réapplique le style pour s'assurer que les messages prennent la couleur de bordure locale
+    applyUserStyle(getUserColor());
+    
+    chat.scrollTop = chat.scrollHeight;
 
-  // --- LOGIQUE DE NETTOYAGE : Supprime les messages au-delà du seuil de 20 (ancienne limite 100) ---
-  
-  db.ref('messages').once('value', messagesSnapshot => {
-      const totalMessages = messagesSnapshot.numChildren();
-      const limit = 20; // FIX: Changement de 100 à 20 comme demandé
+    // --- LOGIQUE DE NETTOYAGE : Supprime les messages au-delà du seuil de 20 ---
+    
+    db.ref('messages').once('value', messagesSnapshot => {
+        const totalMessages = messagesSnapshot.numChildren();
+        const limit = 20; // FIX: Changé à 20 comme demandé pour le nettoyage
 
-      if (totalMessages > limit) {
-          const messages = [];
-          messagesSnapshot.forEach(child => {
-              messages.push({ 
-                  key: child.key, 
-                  timestamp: child.val().timestamp || 0 
-              });
-          });
+        if (totalMessages > limit) {
+            const messages = [];
+            messagesSnapshot.forEach(child => {
+                messages.push({ 
+                    key: child.key, 
+                    timestamp: child.val().timestamp || 0 
+                });
+            });
 
-          // Trie les messages du plus ancien au plus récent
-          messages.sort((a, b) => a.timestamp - b.timestamp);
-          
-          const countToDelete = totalMessages - limit;
-          const updates = {};
-          
-          // Marque les messages à supprimer (valeur null)
-          for (let i = 0; i < countToDelete; i++) {
-              updates[messages[i].key] = null;
-          }
+            messages.sort((a, b) => a.timestamp - b.timestamp);
+            
+            const countToDelete = totalMessages - limit;
+            const updates = {};
+            
+            for (let i = 0; i < countToDelete; i++) {
+                updates[messages[i].key] = null;
+            }
 
-          // Exécute la suppression en bloc
-          if (Object.keys(updates).length > 0) {
-              db.ref('messages').update(updates);
-          }
-      }
-  });
+            if (Object.keys(updates).length > 0) {
+                db.ref('messages').update(updates);
+            }
+        }
+    });
 });
