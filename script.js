@@ -225,8 +225,19 @@ function formatTime(timestamp) {
     return date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
 }
 
+// AJOUTÉ : Fonction de formatage du texte (avec votre unique remplacement)
+function formatMessageText(text) {
+    const emojiRegex = /:emojimathis:/gi;
+    const customEmojiHTML = '<span class="custom-emoji"></span>';
+    
+    let formattedText = text.replace(emojiRegex, customEmojiHTML); 
 
-// --- Envoyer un message (avec couleur, timestamp et parentId) ---
+    formattedText = formattedText.replace(/:flamme:/g, '🔥');
+    formattedText = formattedText.replace(/:pouce:/g, '👍');
+
+    return formattedText;
+}
+
 sendBtn.addEventListener('click', () => {
     const msg = input.value.trim();
     if (!msg) return;
@@ -298,14 +309,15 @@ db.ref('messages').on('child_added', snapshot => {
         innerContent += `<div class="reply-context" onclick="scrollToMessage('${msg.parentId}')" style="border-left-color: ${replyColor};">${replyText}</div>`;
     }
     
-    // 2. Affichage du pseudo, du texte, de l'heure et du bouton Répondre
-    // Protection contre les guillemets dans le message pour l'onclick
+  const formattedText = formatMessageText(msg.text);
+    
+    // 2. Affichage du pseudo, du texte FORMATÉ, de l'heure et du bouton Répondre
     const safeText = msg.text.replace(/'/g, "\\'"); 
     
     innerContent += `
         <div class="message-content">
             <span class="user" style="color: ${pseudoColor};">${displayId}</span>: 
-            ${msg.text} 
+            ${formattedText} 
             <span class="timestamp">${time}</span>
             
             <button class="reply-btn" onclick="startReply('${messageKey}', '${safeText}')">↪</button>
