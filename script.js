@@ -16,13 +16,16 @@ const db = firebase.database();
 const chat = document.getElementById('chat');
 const input = document.getElementById('messageInput');
 const sendBtn = document.getElementById('sendBtn');
+// Récupérer le sélecteur de couleur
+const colorInput = document.getElementById('colorInput'); 
 
 // Gestion de l'ID utilisateur anonyme (cookie)
 function getUserId() {
   let id = document.cookie.split('; ').find(c => c.startsWith('userId='));
   if (!id) {
     id = Math.random().toString(36).substring(2, 10);
-    document.cookie = `userId=${id}; max-age=${60*60*24*365}`;
+    // Stockage pour 1 an
+    document.cookie = `userId=${id}; max-age=${60*60*24*365}`; 
   } else {
     id = id.split('=')[1];
   }
@@ -31,23 +34,44 @@ function getUserId() {
 
 const userId = getUserId();
 
-// --- NOUVELLE FONCTION : Formatage de l'heure ---
+// --- Gestion de la couleur de l'utilisateur (localStorage) ---
+
+// Récupérer la couleur stockée localement (sinon utiliser le par défaut)
+function getUserColor() {
+    return localStorage.getItem('userColor') || '#ae00ff';
+}
+
+// Appliquer la couleur stockée à l'input au chargement
+if (colorInput) {
+    colorInput.value = getUserColor();
+
+    // Écouter le changement de couleur et le sauvegarder
+    colorInput.addEventListener('change', (e) => {
+        localStorage.setItem('userColor', e.target.value);
+    });
+}
+
+
+// --- Fonction de formatage de l'heure ---
 function formatTime(timestamp) {
     const date = new Date(timestamp);
-    // Retourne l'heure au format HH:MM (ex: 14:30)
+    // Retourne l'heure au format HH:MM
     return date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
 }
 
 
-// --- MODIFICATION : Envoyer un message (avec timestamp) ---
+// --- Envoyer un message (avec couleur et timestamp) ---
 sendBtn.addEventListener('click', () => {
   const msg = input.value.trim();
   if (!msg) return;
   
-  // Envoi du message avec l'ID, le texte, et un timestamp du serveur Firebase
+  // Récupérer la couleur actuelle pour l'envoyer
+  const userColor = getUserColor();
+
   db.ref('messages').push({ 
     text: msg, 
     id: userId,
+    color: userColor, // Envoi de la couleur
     timestamp: firebase.database.ServerValue.TIMESTAMP // Utilise l'heure du serveur
   });
   input.value = '';
@@ -55,26 +79,32 @@ sendBtn.addEventListener('click', () => {
 
 input.addEventListener('keypress', (e) => { if(e.key==='Enter') sendBtn.click(); });
 
-// --- MODIFICATION : Écoute des messages (avec timestamp et auto-nettoyage) ---
+
+// --- Écoute des messages (Afficher le pseudo coloré et nettoyer) ---
 db.ref('messages').on('child_added', snapshot => {
   const msg = snapshot.val();
   const div = document.createElement('div');
   div.classList.add('msg');
   
-  // Ajout d'une classe pour identifier nos propres messages (nécessite CSS)
   if (msg.id === userId) {
       div.classList.add('my-message');
   }
 
-  // Affiche uniquement les 4 premiers caractères de l'ID comme pseudo visible
+  // L'ID du perso (pseudo) - 4 premiers caractères
   const displayId = msg.id.substring(0, 4); 
   
-  // Formate et affiche l'heure
-  // Le || Date.now() est une sécurité si le timestamp serveur n'est pas encore là
+  // L'heure du message (fallback si le timestamp n'est pas encore là)
   const time = msg.timestamp ? formatTime(msg.timestamp) : formatTime(Date.now());
   
-  // Intégration de l'heure et du message
-  div.innerHTML = `<span class="user">${displayId}</span>: ${msg.text} <span class="timestamp">${time}</span>`;
+  // La couleur choisie (fallback si non définie)
+  const pseudoColor = msg.color || '#ae00ff'; 
+  
+  // Affichage du pseudo coloré, du message et de l'heure
+  div.innerHTML = `
+      <span class="user" style="color: ${pseudoColor};">${displayId}</span>: 
+      ${msg.text} 
+      <span class="timestamp">${time}</span>
+  `;
   
   chat.appendChild(div);
   chat.scrollTop = chat.scrollHeight;
@@ -83,32 +113,31 @@ db.ref('messages').on('child_added', snapshot => {
   
   db.ref('messages').once('value', messagesSnapshot => {
       const totalMessages = messagesSnapshot.numChildren();
-      const limit = 10; // La limite que vous avez définie
+      const limit = 100;
 
       if (totalMessages > limit) {
           const messages = [];
           messagesSnapshot.forEach(child => {
-              // Stocke l'objet { key, timestamp } de chaque message
+              // Stocke la clé et le timestamp pour le tri
               messages.push({ 
                   key: child.key, 
                   timestamp: child.val().timestamp || 0 
               });
           });
 
-          // Trie les messages par timestamp (le plus ancien d'abord)
+          // Trie les messages du plus ancien au plus récent
           messages.sort((a, b) => a.timestamp - b.timestamp);
           
-          // Calcule le nombre de messages à supprimer (total - limite)
+          // Calcule le nombre de messages à supprimer
           const countToDelete = totalMessages - limit;
-          
-          // Créé un objet de mise à jour pour la suppression en bloc
           const updates = {};
+          
+          // Marque les messages à supprimer (valeur null)
           for (let i = 0; i < countToDelete; i++) {
-              // Ajoute la clé du message à supprimer avec une valeur null
               updates[messages[i].key] = null;
           }
 
-          // Exécute la suppression en bloc pour nettoyer la base de données
+          // Exécute la suppression en bloc
           if (Object.keys(updates).length > 0) {
               db.ref('messages').update(updates)
                   .then(() => {
