@@ -15,7 +15,7 @@ h1{
 
 @font-face {
     font-family:Jet ;
-    src: url(../../JetBrainsMono-Regular.ttf);
+    src: url(../../assets/JetBrainsMono-Regular.ttf);
 }
 @font-face {
     font-family:JetThin ;
@@ -213,6 +213,7 @@ border-radius: 0px 0px 0px 0px;
     overflow: hidden;
     text-indent: -9999px;
 }
+
 
 
 
