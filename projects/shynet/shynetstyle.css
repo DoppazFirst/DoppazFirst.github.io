@@ -15,11 +15,11 @@ h1{
 
 @font-face {
     font-family:Jet ;
-    src: url(../assets/JetBrainsMono-Regular.ttf);
+    src: url(assets/JetBrainsMono-Regular.ttf);
 }
 @font-face {
     font-family:JetThin ;
-    src: url(../assets/JetBrainsMono-Thin.ttf);
+    src: url(assets/JetBrainsMono-Thin.ttf);
 }
 
 .chat { 
@@ -213,4 +213,5 @@ border-radius: 0px 0px 0px 0px;
     overflow: hidden;
     text-indent: -9999px;
 }
+
 
