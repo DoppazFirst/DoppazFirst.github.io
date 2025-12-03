@@ -1,0 +1,45 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 20px;
+    background-color: #f4f4f4;
+}
+
+.list-projects {
+    list-style-type: none;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    background: #e0e0e0;
+    border-color: #007BFF;
+    border-width: 5px;
+    padding: 10px;
+    border-radius: 0px;
+    border: solid;
+}
+
+.list-projects li {
+    background-color: rgb(218, 218, 218);
+    padding: 10px;
+    border-radius: 0px;
+    display: block;
+}
+.list-projects a {
+    text-decoration: none;
+    color: #333;
+    font-size: 18px;
+}
+.list-projects a:hover {
+    color: #007BFF;
+}
+.badstate {
+    color: red;
+    font-weight: bold;
+}
+.devstate {
+    color: orange;
+    font-weight: bold;
+}
+.goodstate {
+    color: green;
+    font-weight: bold;
+}
