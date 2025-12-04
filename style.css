@@ -43,7 +43,7 @@ body {
     color: green;
     font-weight: bold;
 }
-.banniere {
+header {
     align-self: center;
     justify-content: center;
     padding: 10px;
