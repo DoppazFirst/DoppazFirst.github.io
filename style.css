@@ -43,8 +43,10 @@ body {
     color: green;
     font-weight: bold;
 }
-.titre {
-    background-color: black;
-    text-align: center;
-    color: aliceblue;
+.banniere {
+    align-self: center;
+    justify-content: center;
+    padding: 10px;
+    background-color: rgb(40, 40, 40);
+    border-radius: 5px;
 }
