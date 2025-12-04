@@ -48,5 +48,9 @@ header {
     justify-content: center;
     padding: 10px;
     background-color: rgb(40, 40, 40);
+    color: white;
     border-radius: 5px;
+}
+.titre {
+    text-align: center;
 }
