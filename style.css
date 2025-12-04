@@ -44,6 +44,7 @@ body {
     font-weight: bold;
 }
 .titre {
+    background-color: black;
     text-align: center;
     color: aliceblue;
 }
