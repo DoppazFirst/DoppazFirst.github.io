@@ -11,27 +11,33 @@
 <div class="main-container">
 <div class="chatinterface">
   <div id="user-identity-display" style="text-align: center; padding: 5px; color: #888; font-size: 0.9em; font-weight: bold;">
-    Vous êtes n°<span id="my-number-display">...</span>
-</div>
+    Vous êtes <span id="my-number-display">n°...</span>
+  </div>
+  
   <div id="chat" class="chat"></div>
+
+  <div id="reply-indicator" style="display: none; align-items: center; background: rgba(255,255,255,0.1); padding: 5px 10px; border-radius: 5px 5px 0 0; font-size: 0.8em; color: #bbb; border-left: 3px solid #ae00ff;">
+    <span style="flex-grow: 1;">Réponse à <strong id="reply-to-text"></strong></span>
+    <button onclick="window.cancelReply()" style="background: none; border: none; color: #ff4444; cursor: pointer; font-weight: bold; margin-left: 10px;">✕</button>
+  </div>
+
   <div class="messagearea">
     <input type="color" id="colorInput" value="#ae00ff" title="Choisir la couleur de votre pseudo" class="color-picker">
-
     <input id="messageInput" placeholder="Écris ton message..." autocomplete="off" class="messageInput">
-    
     <button id="sendBtn" class="sendBtn">Envoyer</button>
   </div>
   
   <div id="pseudoCooldownDisplay" class="cooldown-display"></div>
 </div>
-<div id="subway-container" class="subway-video">
-        </div>
+
+<div id="subway-container" class="subway-video"></div>
 </div>
+
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 <script src="script.js"></script>
 </body>
-  <footer>
+<footer>
     <a href="../../index.html">return to WobNet</a>
-  </footer>
+</footer>
 </html>
