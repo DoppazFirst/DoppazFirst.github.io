@@ -8,6 +8,15 @@
 </head>
 <body>
 <h1>Shy.net</h1>
+<div class="global-wrapper">
+<div class="admin-bar">
+    <div class="admin-inputs">
+        <input type="text" id="adminUser" placeholder="Email Admin">
+        <input type="password" id="adminPass" placeholder="Mot de passe">
+        <button onclick="window.checkAdmin()" class="loginbtn">Connexion</button>
+    </div>
+    <div id="adminStatus" class="status-badge">Utilisateur</div>
+</div>
 <div class="main-container">
 <div class="chatinterface">
   <div id="user-identity-display" style="text-align: center; padding: 5px; color: #888; font-size: 0.9em; font-weight: bold;">
@@ -29,12 +38,13 @@
   
   <div id="pseudoCooldownDisplay" class="cooldown-display"></div>
 </div>
-
+</div>
 <div id="subway-container" class="subway-video"></div>
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script> <script src="script.js"></script>
 <script src="script.js"></script>
 </body>
 <footer>
