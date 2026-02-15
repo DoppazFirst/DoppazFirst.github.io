@@ -21,15 +21,23 @@ const displayedMessageKeys = new Set();
 const messagesData = {};
 let replyingToId = null;
 
-// --- ID UTILISATEUR ---
+// --- 1. IDENTITÉ (Correctif GitHub Pages) ---
+function generateRandomNumberID() { 
+    return Math.floor(1000 + Math.random() * 9000).toString(); 
+}
+
 const userId = (() => {
-    let id = document.cookie.split('; ').find(c => c.startsWith('userId='));
-    if (!id) {
-        const newId = Math.floor(1000 + Math.random() * 9000).toString();
-        document.cookie = `userId=${newId}; max-age=31536000`;
+    let cookieArr = document.cookie.split('; ');
+    let idCookie = cookieArr.find(c => c.trim().startsWith('userId='));
+    
+    if (!idCookie) {
+        const newId = generateRandomNumberID();
+        // Correction : ajout de path=/ et alert de bienvenue
+        document.cookie = `userId=${newId}; max-age=86400; path=/; SameSite=Lax`;
+        alert("Bienvenue ! Ton nouveau numéro est : n°" + newId);
         return newId;
     }
-    return id.split('=')[1];
+    return idCookie.split('=')[1];
 })();
 
 // --- SONS ---
@@ -43,7 +51,7 @@ function handleCommands(text) {
     const args = text.split(' ');
     const cmd = args[0].toLowerCase();
 
-    // /SUBWAY (Version Directe pour Firefox)
+    // /SUBWAY (Version YouTube optimisée pour GitHub)
     if (cmd === '/subway') {
         const subwayDiv = document.getElementById('subway-container');
         if (subwayDiv) {
@@ -52,19 +60,23 @@ function handleCommands(text) {
                 subwayDiv.innerHTML = '';
             } else {
                 subwayDiv.style.display = 'block';
-                // Lien optimisé pour GitHub Pages
-                subwayDiv.innerHTML = `
-                    <iframe 
-                        width="100%" height="100%" 
-                        src="https://www.youtube.com/embed/zZ7AimPACzc?autoplay=1&mute=1&loop=1&playlist=zZ7AimPACzc" 
-                        frameborder="0" 
-                        allow="autoplay; encrypted-media" 
-                        allowfullscreen>
-                    </iframe>`;
+                subwayDiv.innerHTML = `<iframe width="100%" height="100%" src="https://www.youtube.com/embed/zZ7AimPACzc?autoplay=1&mute=1&loop=1&playlist=zZ7AimPACzc" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>`;
             }
         }
         return true;
     }
+
+    // /NICK (Pour changer son numéro manuellement)
+    if (cmd === '/nick' && args[1]) {
+        const newNum = args[1].substring(0, 4).replace(/\D/g, '');
+        if (newNum.length > 0) {
+            document.cookie = `userId=${newNum}; max-age=86400; path=/; SameSite=Lax`;
+            alert("Numéro changé : n°" + newNum + ". Actualisation...");
+            location.reload();
+        }
+        return true;
+    }
+
     if (cmd === '/disco') {
         const chatInt = document.querySelector('.chatinterface');
         if (chatInt) {
@@ -77,7 +89,6 @@ function handleCommands(text) {
         return true;
     }
 
-    // --- TOUTES LES COMMANDES RESTAURÉES ---
     if (cmd === '/fart') { sendMessage("vient de péter bruyamment... 💨", true, "fart"); return true; }
     if (cmd === '/shrug') { sendMessage("¯\\_(ツ)_/¯"); return true; }
     if (cmd === '/tableflip') { sendMessage("(╯°□°）╯︵ ┻━┻"); return true; }
@@ -183,7 +194,8 @@ window.startReply = (id) => {
 
 window.cancelReply = () => {
     replyingToId = null;
-    document.getElementById('reply-indicator').style.display = 'none';
+    const ind = document.getElementById('reply-indicator');
+    if(ind) ind.style.display = 'none';
 };
 
 window.scrollToMessage = (key) => {
@@ -214,4 +226,3 @@ db.ref('typing').on('value', snap => {
     snap.forEach(c => { if(c.val() && c.key !== userId) list.push("n°"+c.key); });
     if(typingElem) typingElem.textContent = list.length > 0 ? list.join(', ') + " écrit..." : "";
 });
-
