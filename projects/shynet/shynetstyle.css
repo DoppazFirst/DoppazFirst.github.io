@@ -1,3 +1,6 @@
+*, *:before, *:after {
+    box-sizing: border-box;
+}
 body { 
 background: #111;
 color: #eee;
@@ -106,19 +109,15 @@ align-items: center;
 }
 
 .chatinterface {
-    /* Tes réglages d'origine */
-    width: 90%; 
-    max-width: 600px;  
+    width: 100%; 
+    max-width: 100%; /* Important pour suivre le wrapper */
+    box-sizing: border-box; 
     padding: 10px; 
     background: #0c0c0c; 
     border-radius: 15px;
-    border: solid #ae00ff;
-    border-width: 2px;
-    
-    /* Ajout pour le layout */
+    border: 2px solid #ae00ff;
     display: flex;
     flex-direction: column;
-    margin-bottom: 0; /* On retire le margin-bottom pour l'alignement */
 }
 #reply-indicator {
     padding: 8px 10px;
@@ -235,8 +234,10 @@ border-radius: 0px 0px 0px 0px;
     display: flex;
     justify-content: center;
     align-items: stretch;
-    gap: 20px;
-    padding: 20px;
+    width: 100%;
+    /* On enlève le padding: 20px qui réduisait la taille du chat par rapport à la barre */
+    padding: 0; 
+    box-sizing: border-box;
 }
 
 /* Bloc Subway */
@@ -291,4 +292,100 @@ footer a {
     border-color: #0c0c0c;
     padding:8px 12px; 
     border-radius: 0px 0px 10px 10px;
+}
+/* Panneau Admin à gauche */
+.admin-panel {
+    position: fixed;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 150px;
+    background: rgba(0, 0, 0, 0.5);
+    padding: 15px;
+    border-radius: 10px;
+    color: white;
+    font-family: sans-serif;
+    z-index: 100;
+}
+
+.admin-panel input { width: 100%; margin-bottom: 5px; background: #222; border: 1px solid #444; color: white; }
+
+/* La petite croix de suppression */
+.delete-btn {
+    display: none; /* Caché par défaut */
+    color: #ff4444;
+    cursor: pointer;
+    margin-left: 10px;
+    font-weight: bold;
+}
+
+/* On ne montre la croix que si l'utilisateur est modo ET qu'il survole le message */
+body.is-modo .msg:hover .delete-btn {
+    display: inline-block;
+}
+/* Barre Admin Horizontale */
+.admin-bar {
+    width: 100%; 
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(0, 0, 0, 0.4); 
+    backdrop-filter: blur(10px);
+    padding: 12px 20px;
+    border-radius: 10px;
+    border: 2px solid #ae00ff;
+    box-sizing: border-box;
+}
+.admin-inputs {
+    display: flex;
+    gap: 10px;
+}
+
+.admin-bar input {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 5px;
+    color: white;
+    padding: 8px;
+    font-size: 0.9em;
+    outline: none;
+}
+
+.admin-bar button {
+    background: rgba(174, 0, 255, 0.2);
+    color: white;
+    border: 1px solid #ae00ff;
+    border-radius: 5px;
+    padding: 5px 15px;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.admin-bar button:hover {
+    background: #ae00ff;
+}
+
+.status-badge {
+    font-weight: bold;
+    font-size: 0.8em;
+    color: #888;
+}
+
+/* Quand on est connecté */
+body.is-modo .status-badge {
+    background: rgba(0, 255, 0, 0.1);
+    color: #00ff00;
+    border: 1px solid #00ff00;
+}
+
+body.is-modo .admin-inputs {
+    display: none; /* Cache les champs après connexion pour libérer de l'espace */
+}
+.global-wrapper {
+    width: 100%;
+    max-width: 600px; /* Aligné sur la taille de ton chat (chatinterface) */
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
 }
