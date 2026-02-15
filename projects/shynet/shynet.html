@@ -10,14 +10,14 @@
 <h1>Shy.net</h1>
 <div class="main-container">
 <div class="chatinterface">
-  
+  <div id="user-identity-display" style="text-align: center; padding: 5px; color: #888; font-size: 0.9em; font-weight: bold;">
+    Vous êtes n°<span id="my-number-display">...</span>
+</div>
   <div id="chat" class="chat"></div>
   <div class="messagearea">
     <input type="color" id="colorInput" value="#ae00ff" title="Choisir la couleur de votre pseudo" class="color-picker">
 
     <input id="messageInput" placeholder="Écris ton message..." autocomplete="off" class="messageInput">
-    
-    <button id="generatePseudoBtn" title="Générer un nouveau pseudo aléatoire (cooldown 24h)">&#x21BB;</button>
     
     <button id="sendBtn" class="sendBtn">Envoyer</button>
   </div>
@@ -35,7 +35,3 @@
     <a href="../../index.html">return to WobNet</a>
   </footer>
 </html>
-
-
-
-
