@@ -21,15 +21,13 @@ const displayedMessageKeys = new Set();
 const messagesData = {};
 let replyingToId = null;
 
-// --- 1. IDENTITÉ (Version Universelle LocalStorage) ---
+// --- 1. IDENTITÉ ---
 function generateRandomNumberID() { 
     return Math.floor(1000 + Math.random() * 9000).toString(); 
 }
 
 const userId = (() => {
-    // On cherche dans le localStorage (marche en local et sur le web)
     let savedId = localStorage.getItem('chatUserId');
-    
     if (!savedId) {
         const newId = generateRandomNumberID();
         localStorage.setItem('chatUserId', newId);
@@ -50,7 +48,7 @@ function handleCommands(text) {
     const args = text.split(' ');
     const cmd = args[0].toLowerCase();
 
-    // /SUBWAY (YouTube Optimisé)
+    // /SUBWAY
     if (cmd === '/subway') {
         const subwayDiv = document.getElementById('subway-container');
         if (subwayDiv) {
@@ -65,13 +63,27 @@ function handleCommands(text) {
         return true;
     }
 
-    // /NICK (Version LocalStorage)
+    // /NICK
     if (cmd === '/nick' && args[1]) {
         const newNum = args[1].substring(0, 4).replace(/\D/g, '');
         if (newNum.length > 0) {
             localStorage.setItem('chatUserId', newNum);
             alert("Numéro changé : n°" + newNum + ". Actualisation...");
             location.reload();
+        }
+        return true;
+    }
+
+    // /COLOR (Nouvelle commande)
+    if (cmd === '/color' && args[1]) {
+        const newColor = args[1];
+        // Vérifie si c'est un format hexadécimal valide (ex: #ff0000)
+        if (/^#[0-9A-F]{6}$/i.test(newColor)) {
+            localStorage.setItem('userColor', newColor);
+            if (colorInput) colorInput.value = newColor;
+            applyUserStyle(newColor);
+        } else {
+            alert("Format invalide ! Utilise le format Hexa (ex: /color #ff0000)");
         }
         return true;
     }
@@ -96,6 +108,7 @@ function handleCommands(text) {
     if (cmd === '/flip') { sendMessage(`🪙 lance une pièce : **${Math.random()<0.5?"PILE":"FACE"}**`); return true; }
     if (cmd === '/clear') { chat.innerHTML = ''; displayedMessageKeys.clear(); return true; }
     if (cmd === '/me' && args.length > 1) { sendMessage(args.slice(1).join(' '), true); return true; }
+    
     if (cmd === '/calc' && args.length > 1) {
         try {
             const expr = args.slice(1).join('');
@@ -209,13 +222,16 @@ window.scrollToMessage = (key) => {
 function applyUserStyle(color) {
     const chatInt = document.querySelector('.chatinterface');
     const subway = document.getElementById('subway-container');
-    if (chatInt && !chatInt.classList.contains('disco-active')) chatInt.style.borderColor = color;
-    if (subway) subway.style.borderColor = color;
+    if (chatInt) chatInt.style.border = `2px solid ${color}`;
+    if (subway) subway.style.border = `2px solid ${color}`;
     document.querySelectorAll('.msg.my-message').forEach(m => m.style.borderLeftColor = color);
 }
 
-// Initialisation couleur au chargement
-colorInput.value = localStorage.getItem('userColor') || '#ae00ff';
+// --- INITIALISATION COULEUR ---
+const savedColor = localStorage.getItem('userColor') || '#ae00ff';
+colorInput.value = savedColor;
+applyUserStyle(savedColor); // Applique la couleur dès le chargement
+
 colorInput.addEventListener('input', (e) => {
     localStorage.setItem('userColor', e.target.value);
     applyUserStyle(e.target.value);
