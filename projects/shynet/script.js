@@ -22,7 +22,7 @@ const displayedMessageKeys = new Set();
 const messagesData = {};
 let replyingToId = null;
 
-// --- 1. FONCTIONS D'IDENTITÉ (Anti-doublons) ---
+// --- 1. IDENTITÉ (Anti-doublons) ---
 async function getExistingIds() {
     const snapshot = await db.ref('messages').limitToLast(100).once('value');
     const ids = [];
@@ -41,7 +41,6 @@ async function generateUniqueId() {
     return newId;
 }
 
-// Initialisation de l'ID utilisateur
 let userId = localStorage.getItem('chatUserId');
 if (!userId) {
     generateUniqueId().then(id => {
@@ -51,7 +50,6 @@ if (!userId) {
     });
 }
 
-// Fonction pour mettre à jour l'affichage "Vous êtes n°XXXX"
 function updateIdentityDisplay(color) {
     if (myNumberDisplay && userId) {
         myNumberDisplay.textContent = "n°" + userId;
@@ -85,11 +83,10 @@ async function handleCommands(text) {
         return true;
     }
 
-    // /NICK & /NICK RANDOM
+    // /NICK
     if (cmd === '/nick' && args[1]) {
         let newNum;
         const existing = await getExistingIds();
-
         if (args[1].toLowerCase() === 'random') {
             newNum = await generateUniqueId();
         } else {
@@ -99,10 +96,8 @@ async function handleCommands(text) {
                 return true;
             }
         }
-
         if (newNum && newNum.length > 0) {
             localStorage.setItem('chatUserId', newNum);
-            alert("Nouveau numéro : n°" + newNum);
             location.reload();
         }
         return true;
@@ -116,70 +111,46 @@ async function handleCommands(text) {
             if (colorInput) colorInput.value = newColor;
             applyUserStyle(newColor);
             updateIdentityDisplay(newColor);
-        } else {
-            alert("Format Hexa requis (ex: /color #ff0000)");
         }
         return true;
     }
 
-    if (cmd === '/disco') {
-        const chatInt = document.querySelector('.chatinterface');
-        if (chatInt) {
-            chatInt.classList.add('disco-active');
-            setTimeout(() => {
-                chatInt.classList.remove('disco-active');
-                applyUserStyle(localStorage.getItem('userColor') || '#ae00ff');
-            }, 10000);
-        }
-        return true;
-    }
-
-    // Autres commandes
-    // /FART (Avec Cooldown de 60s)
+    // /FART (Cooldown 60s)
     if (cmd === '/fart') {
         const lastFart = localStorage.getItem('lastFartTime') || 0;
         const now = Date.now();
-        const delay = 60 * 1000; // 60 secondes en millisecondes
-
-        if (now - lastFart < delay) {
-            const remaining = Math.ceil((delay - (now - lastFart)) / 1000);
-            alert(`Doucement ! Tes intestins ont besoin de repos. Réessaie dans ${remaining}s.`);
+        if (now - lastFart < 60000) {
+            alert(`Attends encore ${Math.ceil((60000 - (now - lastFart)) / 1000)}s.`);
         } else {
             localStorage.setItem('lastFartTime', now);
             sendMessage("vient de péter bruyamment... 💨", true, "fart");
         }
         return true;
     }
-    if (cmd === '/shrug') { sendMessage("¯\\_(ツ)_/¯"); return true; }
-    if (cmd === '/tableflip') { sendMessage("(╯°□°）╯︵ ┻━┻"); return true; }
-    if (cmd === '/unflip') { sendMessage("┬─┬ノ( º _ ºノ)"); return true; }
-    if (cmd === '/roll') { sendMessage(`🎲 lance un dé : **${Math.floor(Math.random()*6)+1}**`); return true; }
-    if (cmd === '/flip') { sendMessage(`🪙 lance une pièce : **${Math.random()<0.5?"PILE":"FACE"}**`); return true; }
-    if (cmd === '/clear') { chat.innerHTML = ''; displayedMessageKeys.clear(); return true; }
-    if (cmd === '/me' && args.length > 1) { sendMessage(args.slice(1).join(' '), true); return true; }
-    
-    if (cmd === '/calc' && args.length > 1) {
-        try {
-            const expr = args.slice(1).join('');
-            const res = Function(`'use strict'; return (${expr})`)();
-            sendMessage(`🧮 Calcul : ${expr} = **${res}**`);
-        } catch (e) { alert("Calcul invalide"); }
+
+    // Autres commandes simples
+    if (cmd === '/disco') {
+        const chatInt = document.querySelector('.chatinterface');
+        if (chatInt) {
+            chatInt.classList.add('disco-active');
+            setTimeout(() => { chatInt.classList.remove('disco-active'); applyUserStyle(localStorage.getItem('userColor') || '#ae00ff'); }, 10000);
+        }
         return true;
     }
+    if (cmd === '/shrug') { sendMessage("¯\\_(ツ)_/¯"); return true; }
+    if (cmd === '/clear') { chat.innerHTML = ''; displayedMessageKeys.clear(); return true; }
+    
     return false;
 }
 
-// --- FORMATAGE TEXTE + IMAGES ---
+// --- FORMATAGE TEXTE ---
 function formatMessageText(text) {
     let safe = text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
     const imgRegex = /(https?:\/\/[^\s]+?\.(?:jpg|jpeg|png|gif|webp))/gi;
     if (imgRegex.test(safe)) {
-        safe = safe.replace(imgRegex, (url) => {
-            return `<br><img src="${url}" class="chat-img" onclick="window.open('${url}', '_blank')"><br>`;
-        });
+        safe = safe.replace(imgRegex, (url) => `<br><img src="${url}" class="chat-img" onclick="window.open('${url}', '_blank')"><br>`);
     }
-    safe = safe.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-    return safe.replace(/:flamme:/g, '🔥').replace(/:pouce:/g, '👍');
+    return safe.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
 }
 
 // --- RÉCEPTION ---
@@ -230,7 +201,6 @@ function sendMessage(text, isAction = false, specialType = "normal") {
     };
     if (replyingToId) { messageData.parentId = replyingToId; window.cancelReply(); }
     db.ref('messages').push(messageData);
-    db.ref('typing/' + userId).set(false);
 }
 
 sendBtn.addEventListener('click', async () => {
@@ -241,7 +211,7 @@ sendBtn.addEventListener('click', async () => {
 });
 input.addEventListener('keypress', async (e) => { if(e.key==='Enter') sendBtn.click(); });
 
-// --- UTILS ---
+// --- UTILS RÉPONSE ---
 window.startReply = (id) => {
     replyingToId = id;
     const ind = document.getElementById('reply-indicator');
@@ -271,33 +241,21 @@ window.scrollToMessage = (key) => {
 function applyUserStyle(color) {
     const chatInt = document.querySelector('.chatinterface');
     const subway = document.getElementById('subway-container');
+    const replyInd = document.getElementById('reply-indicator');
     if (chatInt) chatInt.style.border = `2px solid ${color}`;
     if (subway) subway.style.border = `2px solid ${color}`;
+    if (replyInd) replyInd.style.borderLeftColor = color;
     document.querySelectorAll('.msg.my-message').forEach(m => m.style.borderLeftColor = color);
 }
 
-// --- INITIALISATION FINALE ---
+// --- INITIALISATION ---
 const savedColor = localStorage.getItem('userColor') || '#ae00ff';
 colorInput.value = savedColor;
 applyUserStyle(savedColor);
-updateIdentityDisplay(savedColor); // Affiche le n° au chargement
+updateIdentityDisplay(savedColor);
 
 colorInput.addEventListener('input', (e) => {
-    const newColor = e.target.value;
-    localStorage.setItem('userColor', newColor);
-    applyUserStyle(newColor);
-    updateIdentityDisplay(newColor); // Met à jour la couleur du n° en haut
+    localStorage.setItem('userColor', e.target.value);
+    applyUserStyle(e.target.value);
+    updateIdentityDisplay(e.target.value);
 });
-
-// Typing indicator
-input.addEventListener('input', () => {
-    db.ref('typing/' + userId).set(true);
-    clearTimeout(window.tOut);
-    window.tOut = setTimeout(() => db.ref('typing/' + userId).set(false), 3000);
-});
-db.ref('typing').on('value', snap => {
-    let list = [];
-    snap.forEach(c => { if(c.val() && c.key !== userId) list.push("n°"+c.key); });
-    if(typingElem) typingElem.textContent = list.length > 0 ? list.join(', ') + " écrit..." : "";
-});
-
