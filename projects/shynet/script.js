@@ -135,7 +135,21 @@ async function handleCommands(text) {
     }
 
     // Autres commandes
-    if (cmd === '/fart') { sendMessage("vient de péter bruyamment... 💨", true, "fart"); return true; }
+    // /FART (Avec Cooldown de 60s)
+    if (cmd === '/fart') {
+        const lastFart = localStorage.getItem('lastFartTime') || 0;
+        const now = Date.now();
+        const delay = 60 * 1000; // 60 secondes en millisecondes
+
+        if (now - lastFart < delay) {
+            const remaining = Math.ceil((delay - (now - lastFart)) / 1000);
+            alert(`Doucement ! Tes intestins ont besoin de repos. Réessaie dans ${remaining}s.`);
+        } else {
+            localStorage.setItem('lastFartTime', now);
+            sendMessage("vient de péter bruyamment... 💨", true, "fart");
+        }
+        return true;
+    }
     if (cmd === '/shrug') { sendMessage("¯\\_(ツ)_/¯"); return true; }
     if (cmd === '/tableflip') { sendMessage("(╯°□°）╯︵ ┻━┻"); return true; }
     if (cmd === '/unflip') { sendMessage("┬─┬ノ( º _ ºノ)"); return true; }
@@ -286,3 +300,4 @@ db.ref('typing').on('value', snap => {
     snap.forEach(c => { if(c.val() && c.key !== userId) list.push("n°"+c.key); });
     if(typingElem) typingElem.textContent = list.length > 0 ? list.join(', ') + " écrit..." : "";
 });
+
