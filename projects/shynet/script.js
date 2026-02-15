@@ -16,26 +16,48 @@ const input = document.getElementById('messageInput');
 const sendBtn = document.getElementById('sendBtn');
 const colorInput = document.getElementById('colorInput');
 const typingElem = document.getElementById('typingIndicator');
+const myNumberDisplay = document.getElementById('my-number-display');
 
 const displayedMessageKeys = new Set();
 const messagesData = {};
 let replyingToId = null;
 
-// --- 1. IDENTITÉ ---
-function generateRandomNumberID() { 
-    return Math.floor(1000 + Math.random() * 9000).toString(); 
+// --- 1. FONCTIONS D'IDENTITÉ (Anti-doublons) ---
+async function getExistingIds() {
+    const snapshot = await db.ref('messages').limitToLast(100).once('value');
+    const ids = [];
+    snapshot.forEach(child => { ids.push(child.val().id); });
+    return ids;
 }
 
-const userId = (() => {
-    let savedId = localStorage.getItem('chatUserId');
-    if (!savedId) {
-        const newId = generateRandomNumberID();
-        localStorage.setItem('chatUserId', newId);
-        alert("Bienvenue ! Ton nouveau numéro est : n°" + newId);
-        return newId;
+async function generateUniqueId() {
+    const existing = await getExistingIds();
+    let newId = "";
+    let isUnique = false;
+    while (!isUnique) {
+        newId = Math.floor(1000 + Math.random() * 9000).toString();
+        if (!existing.includes(newId)) isUnique = true;
     }
-    return savedId;
-})();
+    return newId;
+}
+
+// Initialisation de l'ID utilisateur
+let userId = localStorage.getItem('chatUserId');
+if (!userId) {
+    generateUniqueId().then(id => {
+        localStorage.setItem('chatUserId', id);
+        alert("Bienvenue ! Ton numéro unique est : n°" + id);
+        location.reload();
+    });
+}
+
+// Fonction pour mettre à jour l'affichage "Vous êtes n°XXXX"
+function updateIdentityDisplay(color) {
+    if (myNumberDisplay && userId) {
+        myNumberDisplay.textContent = "n°" + userId;
+        myNumberDisplay.style.color = color;
+    }
+}
 
 // --- SONS ---
 const notificationSound = new Audio('https://assets.mixkit.co/active_storage/sfx/2354/2354-preview.mp3');
@@ -43,7 +65,7 @@ const fartSound = new Audio('https://www.myinstants.com/media/sounds/fart-with-r
 window.addEventListener('click', () => { notificationSound.load(); fartSound.load(); }, { once: true });
 
 // --- COMMANDES SLASH ---
-function handleCommands(text) {
+async function handleCommands(text) {
     if (!text.startsWith('/')) return false;
     const args = text.split(' ');
     const cmd = args[0].toLowerCase();
@@ -63,27 +85,39 @@ function handleCommands(text) {
         return true;
     }
 
-    // /NICK
+    // /NICK & /NICK RANDOM
     if (cmd === '/nick' && args[1]) {
-        const newNum = args[1].substring(0, 4).replace(/\D/g, '');
-        if (newNum.length > 0) {
+        let newNum;
+        const existing = await getExistingIds();
+
+        if (args[1].toLowerCase() === 'random') {
+            newNum = await generateUniqueId();
+        } else {
+            newNum = args[1].substring(0, 4).replace(/\D/g, '');
+            if (existing.includes(newNum)) {
+                alert("Ce numéro est déjà pris !");
+                return true;
+            }
+        }
+
+        if (newNum && newNum.length > 0) {
             localStorage.setItem('chatUserId', newNum);
-            alert("Numéro changé : n°" + newNum + ". Actualisation...");
+            alert("Nouveau numéro : n°" + newNum);
             location.reload();
         }
         return true;
     }
 
-    // /COLOR (Nouvelle commande)
+    // /COLOR
     if (cmd === '/color' && args[1]) {
         const newColor = args[1];
-        // Vérifie si c'est un format hexadécimal valide (ex: #ff0000)
         if (/^#[0-9A-F]{6}$/i.test(newColor)) {
             localStorage.setItem('userColor', newColor);
             if (colorInput) colorInput.value = newColor;
             applyUserStyle(newColor);
+            updateIdentityDisplay(newColor);
         } else {
-            alert("Format invalide ! Utilise le format Hexa (ex: /color #ff0000)");
+            alert("Format Hexa requis (ex: /color #ff0000)");
         }
         return true;
     }
@@ -100,6 +134,7 @@ function handleCommands(text) {
         return true;
     }
 
+    // Autres commandes
     if (cmd === '/fart') { sendMessage("vient de péter bruyamment... 💨", true, "fart"); return true; }
     if (cmd === '/shrug') { sendMessage("¯\\_(ツ)_/¯"); return true; }
     if (cmd === '/tableflip') { sendMessage("(╯°□°）╯︵ ┻━┻"); return true; }
@@ -120,7 +155,7 @@ function handleCommands(text) {
     return false;
 }
 
-// --- FORMATAGE TEXTE + IMAGES AUTO ---
+// --- FORMATAGE TEXTE + IMAGES ---
 function formatMessageText(text) {
     let safe = text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
     const imgRegex = /(https?:\/\/[^\s]+?\.(?:jpg|jpeg|png|gif|webp))/gi;
@@ -184,13 +219,13 @@ function sendMessage(text, isAction = false, specialType = "normal") {
     db.ref('typing/' + userId).set(false);
 }
 
-sendBtn.addEventListener('click', () => {
+sendBtn.addEventListener('click', async () => {
     const val = input.value.trim();
     if (!val) return;
     input.value = '';
-    if (!handleCommands(val)) sendMessage(val);
+    if (!(await handleCommands(val))) sendMessage(val);
 });
-input.addEventListener('keypress', (e) => { if(e.key==='Enter') sendBtn.click(); });
+input.addEventListener('keypress', async (e) => { if(e.key==='Enter') sendBtn.click(); });
 
 // --- UTILS ---
 window.startReply = (id) => {
@@ -227,14 +262,17 @@ function applyUserStyle(color) {
     document.querySelectorAll('.msg.my-message').forEach(m => m.style.borderLeftColor = color);
 }
 
-// --- INITIALISATION COULEUR ---
+// --- INITIALISATION FINALE ---
 const savedColor = localStorage.getItem('userColor') || '#ae00ff';
 colorInput.value = savedColor;
-applyUserStyle(savedColor); // Applique la couleur dès le chargement
+applyUserStyle(savedColor);
+updateIdentityDisplay(savedColor); // Affiche le n° au chargement
 
 colorInput.addEventListener('input', (e) => {
-    localStorage.setItem('userColor', e.target.value);
-    applyUserStyle(e.target.value);
+    const newColor = e.target.value;
+    localStorage.setItem('userColor', newColor);
+    applyUserStyle(newColor);
+    updateIdentityDisplay(newColor); // Met à jour la couleur du n° en haut
 });
 
 // Typing indicator
