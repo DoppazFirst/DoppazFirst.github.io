@@ -1,49 +1,51 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="style.css">
-    <title>WobNet</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0"> 
+<title>Shynet</title>
+<link rel="stylesheet" href="shynetstyle.css">
 </head>
-<header>
-  <h1 class="titre">WobNet</h1>
-</header>
 <body>
-    <h2>| Html projects</h2>
-    <ul class="list-projects">
-        <li>
-            <a href="projects/shynet/shynet.html">ShyNet</a>
-            <p class="goodstate">project is functionnal</p>
-            <p>Shynet is a Chatting Website where you don't have an identity and where everybody become a complete unknow.</p>
-        </li>
-        <li>
-            <a href="projects/html/WobArena.html">WobArena</a>
-            <p class="devstate">In work</p>
-            <p>WobArena is a 2D game where you have to survive against monsters as more as possible to be the best player.</p>
-        </li>
-        <li>
-            <a href="projects/html/ClickForWobs!.html">Click for Wobs !</a>
-            <p class="devstate">In work</p>
-            <p>Click for Wobs ! is a Cookie Clicker inspired game where you have to click on a Wob to earn WobCoins and buy upgrades.</p>
-        </li>
-        <li>
-            <a href="">Openbattle</a>
-            <p class="goodstate">Project is functionnal</p>
-            <p>Openbattle is a 2D fighting game where you can import your images to use them as your player.</p>
-        </li>
-    </ul>
-    <h2>| others projects</h2>
-    <ul class="list-projects">
-        <li>
-            <a href="projects/others/runetail.html">RuneTail</a>
-            <p class="devstate">In work</p>
-            <p>Runetail is a dungeon crawler game where you became a soul who control a body made of stone to fight against ennemies for getting better and killing more and more ennemies.</p>
-        </li>
-    </ul>
+<h1>Shy.net</h1>
+<div class="admin-panel">
+    <h3>Modération</h3>
+    <input type="text" id="adminUser" placeholder="Identifiant">
+    <input type="password" id="adminPass" placeholder="Mot de passe">
+    <button onclick="checkAdmin()">Connexion</button>
+    <div id="adminStatus">Statut : Utilisateur</div>
+</div>
+<div class="main-container">
+<div class="chatinterface">
+  <div id="user-identity-display" style="text-align: center; padding: 5px; color: #888; font-size: 0.9em; font-weight: bold;">
+    Vous êtes <span id="my-number-display">n°...</span>
+  </div>
+  
+  <div id="chat" class="chat"></div>
+
+  <div id="reply-indicator" style="display: none; align-items: center; background: rgba(255,255,255,0.1); padding: 5px 10px; border-radius: 5px 5px 0 0; font-size: 0.8em; color: #bbb; border-left: 3px solid #ae00ff;">
+    <span style="flex-grow: 1;">Réponse à <strong id="reply-to-text"></strong></span>
+    <button onclick="window.cancelReply()" style="background: none; border: none; color: #ff4444; cursor: pointer; font-weight: bold; margin-left: 10px;">✕</button>
+  </div>
+
+  <div class="messagearea">
+    <input type="color" id="colorInput" value="#ae00ff" title="Choisir la couleur de votre pseudo" class="color-picker">
+    <input id="messageInput" placeholder="Écris ton message..." autocomplete="off" class="messageInput">
+    <button id="sendBtn" class="sendBtn">Envoyer</button>
+  </div>
+  
+  <div id="pseudoCooldownDisplay" class="cooldown-display"></div>
+</div>
+
+<div id="subway-container" class="subway-video"></div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script> <script src="script.js"></script>
+<script src="script.js"></script>
 </body>
 <footer>
-    <p>© 2024 WobNet. All rights reserved.</p>
-    <p>made by doppaz</p>
+    <a href="../../index.html">return to WobNet</a>
 </footer>
 </html>
