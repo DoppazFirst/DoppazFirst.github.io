@@ -21,23 +21,22 @@ const displayedMessageKeys = new Set();
 const messagesData = {};
 let replyingToId = null;
 
-// --- 1. IDENTITÉ (Correctif GitHub Pages) ---
+// --- 1. IDENTITÉ (Version Universelle LocalStorage) ---
 function generateRandomNumberID() { 
     return Math.floor(1000 + Math.random() * 9000).toString(); 
 }
 
 const userId = (() => {
-    let cookieArr = document.cookie.split('; ');
-    let idCookie = cookieArr.find(c => c.trim().startsWith('userId='));
+    // On cherche dans le localStorage (marche en local et sur le web)
+    let savedId = localStorage.getItem('chatUserId');
     
-    if (!idCookie) {
+    if (!savedId) {
         const newId = generateRandomNumberID();
-        // Correction : ajout de path=/ et alert de bienvenue
-        document.cookie = `userId=${newId}; max-age=86400; path=/; SameSite=Lax`;
+        localStorage.setItem('chatUserId', newId);
         alert("Bienvenue ! Ton nouveau numéro est : n°" + newId);
         return newId;
     }
-    return idCookie.split('=')[1];
+    return savedId;
 })();
 
 // --- SONS ---
@@ -51,7 +50,7 @@ function handleCommands(text) {
     const args = text.split(' ');
     const cmd = args[0].toLowerCase();
 
-    // /SUBWAY (Version YouTube optimisée pour GitHub)
+    // /SUBWAY (YouTube Optimisé)
     if (cmd === '/subway') {
         const subwayDiv = document.getElementById('subway-container');
         if (subwayDiv) {
@@ -66,11 +65,11 @@ function handleCommands(text) {
         return true;
     }
 
-    // /NICK (Pour changer son numéro manuellement)
+    // /NICK (Version LocalStorage)
     if (cmd === '/nick' && args[1]) {
         const newNum = args[1].substring(0, 4).replace(/\D/g, '');
         if (newNum.length > 0) {
-            document.cookie = `userId=${newNum}; max-age=86400; path=/; SameSite=Lax`;
+            localStorage.setItem('chatUserId', newNum);
             alert("Numéro changé : n°" + newNum + ". Actualisation...");
             location.reload();
         }
@@ -215,7 +214,14 @@ function applyUserStyle(color) {
     document.querySelectorAll('.msg.my-message').forEach(m => m.style.borderLeftColor = color);
 }
 
-// Typing
+// Initialisation couleur au chargement
+colorInput.value = localStorage.getItem('userColor') || '#ae00ff';
+colorInput.addEventListener('input', (e) => {
+    localStorage.setItem('userColor', e.target.value);
+    applyUserStyle(e.target.value);
+});
+
+// Typing indicator
 input.addEventListener('input', () => {
     db.ref('typing/' + userId).set(true);
     clearTimeout(window.tOut);
