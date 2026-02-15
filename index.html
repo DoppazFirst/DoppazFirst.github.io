@@ -8,14 +8,12 @@
 </head>
 <body>
 <h1>Shy.net</h1>
-<div class="global-wrapper">
-<div class="admin-bar">
-    <div class="admin-inputs">
-        <input type="text" id="adminUser" placeholder="Email Admin">
-        <input type="password" id="adminPass" placeholder="Mot de passe">
-        <button onclick="window.checkAdmin()" class="loginbtn">Connexion</button>
-    </div>
-    <div id="adminStatus" class="status-badge">Utilisateur</div>
+<div class="admin-panel">
+    <h3>Modération</h3>
+    <input type="text" id="adminUser" placeholder="Identifiant">
+    <input type="password" id="adminPass" placeholder="Mot de passe">
+    <button onclick="checkAdmin()">Connexion</button>
+    <div id="adminStatus">Statut : Utilisateur</div>
 </div>
 <div class="main-container">
 <div class="chatinterface">
@@ -38,7 +36,7 @@
   
   <div id="pseudoCooldownDisplay" class="cooldown-display"></div>
 </div>
-</div>
+
 <div id="subway-container" class="subway-video"></div>
 </div>
 
