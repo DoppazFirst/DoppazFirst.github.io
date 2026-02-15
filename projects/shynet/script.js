@@ -52,13 +52,19 @@ function handleCommands(text) {
                 subwayDiv.innerHTML = '';
             } else {
                 subwayDiv.style.display = 'block';
-                // On utilise un lien direct vers une vidéo Subway Surfers (test stable)
-                subwayDiv.innerHTML = `<video src="https://files.catbox.moe/k2h7p8.mp4" autoplay loop muted style="width:100%; height:100%; object-fit:cover;"></video>`;
+                // Lien optimisé pour GitHub Pages
+                subwayDiv.innerHTML = `
+                    <iframe 
+                        width="100%" height="100%" 
+                        src="https://www.youtube.com/embed/zZ7AimPACzc?autoplay=1&mute=1&loop=1&playlist=zZ7AimPACzc" 
+                        frameborder="0" 
+                        allow="autoplay; encrypted-media" 
+                        allowfullscreen>
+                    </iframe>`;
             }
         }
         return true;
     }
-
     if (cmd === '/disco') {
         const chatInt = document.querySelector('.chatinterface');
         if (chatInt) {
@@ -208,3 +214,4 @@ db.ref('typing').on('value', snap => {
     snap.forEach(c => { if(c.val() && c.key !== userId) list.push("n°"+c.key); });
     if(typingElem) typingElem.textContent = list.length > 0 ? list.join(', ') + " écrit..." : "";
 });
+
