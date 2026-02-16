@@ -1,331 +1,62 @@
+/* RESET UNIVERSEL */
 *, *:before, *:after {
     box-sizing: border-box;
 }
+
 body { 
-background: #111;
-color: #eee;
-font-family: sans-serif;
-display:flex;
-flex-direction:column;
-align-items:center;
-justify-content:center;
-height:100vh;
-margin:0; 
+    background: #111;
+    color: #eee;
+    font-family: sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh; /* min-height au lieu de height pour éviter les coupures */
+    margin: 0; 
 }
-h1{
+
+h1 {
     font-family: Jet;
 }
 
 @font-face {
-    font-family:Jet ;
+    font-family: Jet;
     src: url(../../assets/JetBrainsMono-Regular.ttf);
 }
 @font-face {
-    font-family:JetThin ;
+    font-family: JetThin;
     src: url(../../assets/JetBrainsMono-Thin.ttf);
 }
 
-.chat { 
-height:400px; 
-font-family: jet;
-overflow-y:auto; 
-padding:10px; 
-background:#111; 
-margin-bottom:10px;
-border-radius: 10px 10px 0px 0px;
-scrollbar-color: #555 #222;
-}
+/* --- STRUCTURE DE MISE EN PAGE --- */
 
-.messageInput { 
-width: 100%;
-padding:8px; 
-background-color: #111;
-border-radius: 0px 0px 0px 10px;
-border: none;
-color: #ffffff;
-font-family: Jet;
-}
-.messageInput:focus {
-outline: none;
-}
-.sendBtn { 
-font-family: Jet;
-background-color: #111;
-border: none;
-padding:8px 12px; 
-color: #555;
-border-radius: 0px 0px 10px 0px;
-}
-.sendBtn:active {
-    background-color: #555;
-    color: #111;
-}
-
-.msg { 
-margin:5px 0; 
-text-rendering: geometricPrecision;
-}
-.user { 
-font-family: Jet;
-text-rendering: geometricPrecision;
-text-shadow: #ae00ff;
-}
-
-.timestamp {
-    font-family: JetThin;
-    font-size: 0.5em;
-    color: #888;
-    margin-left: 10px;
-    opacity: 0.8;
-}
-.msg.my-message {
-    background-color: #353535;
-    border-left: 3px solid #ae00ff;
-    padding-left: 7px;
-    border-radius: 5px;
-}
-
-.messagearea{
-display: flex;
-gap: 5px;
-justify-content:space-between;
-align-items: center;
-}
-.color-picker {
-    width: 30px;
-    height: 30px;
-    padding: 0;
-    border: none;
-    background: none;
-    cursor: pointer;
-    border-radius: 10pxx;
-}
-.color-picker::-webkit-color-swatch-wrapper {
-	padding: 0;
-}
-.color-picker::-webkit-color-swatch {
-	border-radius: 5px;
-    border: 1px solid #555;
-}
-
-.chatinterface {
-    width: 100%; 
-    max-width: 100%; /* Important pour suivre le wrapper */
-    box-sizing: border-box; 
-    padding: 10px; 
-    background: #0c0c0c; 
-    border-radius: 15px;
-    border: 2px solid #ae00ff;
+.global-wrapper {
     display: flex;
     flex-direction: column;
-}
-#reply-indicator {
-    padding: 8px 10px;
-    margin-top: 5px;
-    background: #2b2b2b;
-    border-radius: 5px 5px 0 0;
-    font-family: Jet;
-    font-size: 0.9em;
-    color: #fff;
-}
-#reply-indicator button {
-    background: none;
-    border: none;
-    color: rgb(68, 68, 68);
-    cursor: pointer;
-    text-decoration: underline;
-    margin-left: 10px;
-    padding: 0 5px;
-    flex-shrink: 0;
-}
-
-.reply-btn {
-    background: none;
-    border: none;
-    color: #555;
-    font-size: 1.1em;
-    cursor: pointer;
-    margin-left: 10px;
-    padding: 0;
-    flex-shrink: 0;
-    transition: color 0.2s, opacity 0.3s;
-    opacity: 0;
-    pointer-events: none;
-}
-.msg:hover .reply-btn {
-    opacity: 1;
-    pointer-events: auto;
-}
-
-.reply-context {
-    font-family: JetThin;
-    font-size: 0.8em;
-    color: #888;
-    background-color: #303030;
-    padding: 3px 5px;
-    margin-bottom: 5px;
-    border-left: 2px solid #555;
-    cursor: pointer;
-    transition: background-color 0.2s;
-}
-.reply-context:hover {
-    background-color: #383838;
-}
-.msg.highlight {
-    background-color: #4a3d00 !important; 
-    transition: background-color 0.1s;
-}
-
-#generatePseudoBtn {
-font-family: Jet;
-background-color: #111;
-border: none;
-padding:8px 12px; 
-color: #555;
-border-radius: 0px 0px 0px 0px;
-}
-
-#generatePseudoBtn:hover:not(:disabled) {
-    background-color: #222;
-    color: #eee;
-}
-#generatePseudoBtn:disabled {
-    color: #444;
-    cursor: not-allowed;
-}
-.cooldown-display {
-    display: none;
-    font-family: JetThin;
-    color: #888;
-    font-size: 0.85em;
-    padding: 5px 10px; 
-    text-align: center;
+    align-items: center; /* Centre la barre admin et le bloc chat */
+    gap: 15px;
     width: 100%;
 }
-.custom-emoji {
-    display: inline-flex;
-    width: 1em; 
-    height: 1em;
-    vertical-align: middle; 
-    margin: 0 2px;
-    background-image: url(assets/emojimathis.webp); 
-    background-size: contain;
-    background-repeat: no-repeat;
-    background-position: center;
-    flex-shrink: 0;
-    line-height: 0;
-    overflow: hidden;
-    text-indent: -9999px;
-}
-@keyframes discoEffect {
-    0% { border-color: #ff0000; box-shadow: 0 0 15px #ff0000; }
-    20% { border-color: #00ff00; box-shadow: 0 0 15px #00ff00; }
-    40% { border-color: #0000ff; box-shadow: 0 0 15px #0000ff; }
-    60% { border-color: #ffff00; box-shadow: 0 0 15px #ffff00; }
-    80% { border-color: #ff00ff; box-shadow: 0 0 15px #ff00ff; }
-    100% { border-color: #00ffff; box-shadow: 0 0 15px #00ffff; }
+
+/* Force la même largeur pour la barre admin et l'interface de chat */
+.admin-bar, .chatinterface {
+    width: 600px !important; 
+    max-width: 600px !important;
 }
 
-.disco-active {
-    animation: discoEffect 0.5s linear infinite;
-}
-/* Layout Principal */
 .main-container {
     display: flex;
+    flex-direction: row; 
     justify-content: center;
-    align-items: stretch;
+    align-items: flex-start;
+    gap: 20px;
     width: 100%;
-    /* On enlève le padding: 20px qui réduisait la taille du chat par rapport à la barre */
-    padding: 0; 
-    box-sizing: border-box;
+    padding: 0;
 }
 
-/* Bloc Subway */
-.subway-video {
-    display: none; 
-    width: 300px;
-    background: #000;
-    border-radius: 15px;
-    border: 2px solid #ae00ff;
-    overflow: hidden;
-}
+/* --- BARRE ADMIN --- */
 
-.subway-video iframe {
-    width: 100%;
-    height: 100%;
-}
-
-/* Style pour les images postées dans le chat */
-.chat-img {
-    max-width: 100%;
-    max-height: 250px;
-    border-radius: 10px;
-    margin-top: 8px;
-    display: block;
-    cursor: pointer;
-    border: 1px solid #333;
-}
-#user-identity-container {
-    text-align: center;
-    padding: 12px;
-    background: rgba(255, 255, 255, 0.05); /* Un léger fond sombre */
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    font-size: 14px;
-    color: #888;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-}
-
-#my-number-display {
-    font-weight: bold;
-    font-size: 16px;
-    transition: color 0.3s ease; /* Animation fluide quand la couleur change */
-}
-footer a {
-    text-decoration: none;
-    color: white;
-    font-family: Jet;
-    background-color: #111;
-    border-width: 1px;
-    border: solid;
-    border-color: #0c0c0c;
-    padding:8px 12px; 
-    border-radius: 0px 0px 10px 10px;
-}
-/* Panneau Admin à gauche */
-.admin-panel {
-    position: fixed;
-    left: 10px;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 150px;
-    background: rgba(0, 0, 0, 0.5);
-    padding: 15px;
-    border-radius: 10px;
-    color: white;
-    font-family: sans-serif;
-    z-index: 100;
-}
-
-.admin-panel input { width: 100%; margin-bottom: 5px; background: #222; border: 1px solid #444; color: white; }
-
-/* La petite croix de suppression */
-.delete-btn {
-    display: none; /* Caché par défaut */
-    color: #ff4444;
-    cursor: pointer;
-    margin-left: 10px;
-    font-weight: bold;
-}
-
-/* On ne montre la croix que si l'utilisateur est modo ET qu'il survole le message */
-body.is-modo .msg:hover .delete-btn {
-    display: inline-block;
-}
-/* Barre Admin Horizontale */
 .admin-bar {
-    width: 100%; 
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -334,8 +65,8 @@ body.is-modo .msg:hover .delete-btn {
     padding: 12px 20px;
     border-radius: 10px;
     border: 2px solid #ae00ff;
-    box-sizing: border-box;
 }
+
 .admin-inputs {
     display: flex;
     gap: 10px;
@@ -371,7 +102,6 @@ body.is-modo .msg:hover .delete-btn {
     color: #888;
 }
 
-/* Quand on est connecté */
 body.is-modo .status-badge {
     background: rgba(0, 255, 0, 0.1);
     color: #00ff00;
@@ -379,13 +109,199 @@ body.is-modo .status-badge {
 }
 
 body.is-modo .admin-inputs {
-    display: none; /* Cache les champs après connexion pour libérer de l'espace */
+    display: none;
 }
-.global-wrapper {
-    width: 100%;
-    max-width: 600px; /* Aligné sur la taille de ton chat (chatinterface) */
-    margin: 0 auto;
+
+/* --- INTERFACE DE CHAT --- */
+
+.chatinterface {
+    background: #0c0c0c; 
+    border-radius: 15px;
+    border: 2px solid #ae00ff;
+    padding: 10px;
     display: flex;
     flex-direction: column;
-    gap: 10px;
+}
+
+.chat { 
+    height: 400px; 
+    font-family: Jet;
+    overflow-y: auto; 
+    padding: 10px; 
+    background: #111; 
+    margin-bottom: 10px;
+    border-radius: 10px 10px 0px 0px;
+    scrollbar-color: #555 #222;
+}
+
+.messagearea {
+    display: flex;
+    gap: 5px;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.messageInput { 
+    width: 100%;
+    padding: 8px; 
+    background-color: #111;
+    border-radius: 0px 0px 0px 10px;
+    border: none;
+    color: #ffffff;
+    font-family: Jet;
+}
+.messageInput:focus {
+    outline: none;
+}
+
+.sendBtn { 
+    font-family: Jet;
+    background-color: #111;
+    border: none;
+    padding: 8px 12px; 
+    color: #555;
+    border-radius: 0px 0px 10px 0px;
+}
+.sendBtn:active {
+    background-color: #555;
+    color: #111;
+}
+
+/* --- MESSAGES --- */
+
+.msg { 
+    margin: 5px 0; 
+    text-rendering: geometricPrecision;
+}
+.user { 
+    font-family: Jet;
+    text-rendering: geometricPrecision;
+}
+
+.msg.my-message {
+    background-color: #353535;
+    border-left: 3px solid #ae00ff;
+    padding-left: 7px;
+    border-radius: 5px;
+}
+
+.delete-btn {
+    display: none; 
+    color: #ff4444;
+    cursor: pointer;
+    margin-left: 10px;
+    font-weight: bold;
+}
+body.is-modo .msg:hover .delete-btn {
+    display: inline-block;
+}
+
+/* --- SUBWAY VIDEO --- */
+
+.subway-video {
+    display: none; 
+    width: 300px;
+    height: 525px; /* Aligné sur la hauteur approximative de la chatinterface */
+    background: #000;
+    border-radius: 15px;
+    border: 2px solid #ae00ff;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+/* --- AUTRES --- */
+
+.color-picker {
+    width: 30px;
+    height: 30px;
+    padding: 0;
+    border: none;
+    background: none;
+    cursor: pointer;
+}
+.color-picker::-webkit-color-swatch {
+    border-radius: 5px;
+    border: 1px solid #555;
+}
+
+#reply-indicator {
+    padding: 8px 10px;
+    margin-top: 5px;
+    background: #2b2b2b;
+    border-radius: 5px 5px 0 0;
+    font-family: Jet;
+    font-size: 0.9em;
+    color: #fff;
+    border-left: 3px solid #ae00ff;
+}
+
+.reply-btn {
+    background: none;
+    border: none;
+    color: #555;
+    font-size: 1.1em;
+    cursor: pointer;
+    margin-left: 10px;
+    opacity: 0;
+    pointer-events: none;
+}
+.msg:hover .reply-btn {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+@keyframes discoEffect {
+    0% { border-color: #ff0000; box-shadow: 0 0 15px #ff0000; }
+    20% { border-color: #00ff00; box-shadow: 0 0 15px #00ff00; }
+    40% { border-color: #0000ff; box-shadow: 0 0 15px #0000ff; }
+    60% { border-color: #ffff00; box-shadow: 0 0 15px #ffff00; }
+    80% { border-color: #ff00ff; box-shadow: 0 0 15px #ff00ff; }
+    100% { border-color: #00ffff; box-shadow: 0 0 15px #00ffff; }
+}
+.disco-active {
+    animation: discoEffect 0.5s linear infinite;
+}
+
+footer a {
+    text-decoration: none;
+    color: white;
+    font-family: Jet;
+    background-color: #111;
+    border: 1px solid #0c0c0c;
+    padding: 8px 12px; 
+    border-radius: 0px 0px 10px 10px;
+    margin-top: 20px;
+}
+.admin-message {
+    border: 2px solid #00ff00 !important;
+    background: rgba(0, 255, 0, 0.1) !important;
+    box-shadow: 0 0 10px rgba(0, 255, 0, 0.2);
+}
+.admin-message .user {
+    font-weight: bold;
+    text-transform: uppercase;
+}
+.custom-alert-overlay {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.85);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 9999;
+}
+.custom-alert-box {
+    background: #111;
+    border: 2px solid #ff0000;
+    padding: 30px;
+    border-radius: 15px;
+    text-align: center;
+    max-width: 400px;
+    font-family: Jet;
+    box-shadow: 0 0 20px rgba(255, 0, 0, 0.4);
+}
+.custom-alert-box h2 { color: #ff0000; margin-top: 0; }
+.custom-alert-box p { color: #eee; margin: 20px 0; line-height: 1.5; }
+.custom-alert-box button {
+    background: #ff0000; color: white; border: none;
+    padding: 10px 25px; border-radius: 5px; cursor: pointer;
+    font-family: Jet; font-weight: bold;
 }
