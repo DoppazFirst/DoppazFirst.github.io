@@ -10,7 +10,7 @@ const firebaseConfig = {
 };
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
-const auth = firebase.auth(); // <--- AUTH ACTIVÉ
+const auth = firebase.auth(); 
 
 const chat = document.getElementById('chat');
 const input = document.getElementById('messageInput');
@@ -22,6 +22,10 @@ const displayedMessageKeys = new Set();
 const messagesData = {};
 let replyingToId = null;
 let isModo = false;
+
+// Sécurité pour éviter les alertes au chargement
+let isInitialLoad = true;
+setTimeout(() => { isInitialLoad = false; }, 2500);
 
 // --- 1. MODÉRATION (Firebase Auth) ---
 window.checkAdmin = () => {
@@ -37,7 +41,6 @@ window.checkAdmin = () => {
             if(status) { 
                 status.textContent = "MODÉRATEUR ACTIVÉ"; 
             }
-            // Optionnel : masquer la barre ou changer sa couleur
             document.querySelector('.admin-bar').style.borderBottomColor = "#00ff00";
         })
         .catch((error) => alert("Erreur : " + error.message));
@@ -51,7 +54,12 @@ window.deleteMessage = (key) => {
     }
 };
 
-// --- 2. IDENTITÉ ---
+window.closeAlert = () => {
+    const alertBox = document.getElementById('custom-alert');
+    if(alertBox) alertBox.style.display = 'none';
+};
+
+// --- 2. IDENTITÉ (Multi-onglets) ---
 async function getExistingIds() {
     const snapshot = await db.ref('messages').limitToLast(100).once('value');
     const ids = [];
@@ -70,13 +78,30 @@ async function generateUniqueId() {
     return newId;
 }
 
+// Initialisation de l'ID
 let userId = localStorage.getItem('chatUserId');
 if (!userId) {
     generateUniqueId().then(id => {
-        localStorage.setItem('chatUserId', id);
-        location.reload();
+        // On vérifie une dernière fois si un autre onglet n'a pas généré d'ID entre temps
+        if (!localStorage.getItem('chatUserId')) {
+            localStorage.setItem('chatUserId', id);
+            userId = id;
+            location.reload(); 
+        }
     });
 }
+
+// Écouteur de synchronisation entre onglets
+window.addEventListener('storage', (e) => {
+    if (e.key === 'chatUserId') {
+        userId = e.newValue;
+        location.reload(); // On reload pour synchroniser l'ID partout
+    }
+    if (e.key === 'userColor') {
+        applyUserStyle(e.newValue);
+        updateIdentityDisplay(e.newValue);
+    }
+});
 
 function updateIdentityDisplay(color) {
     if (myNumberDisplay && userId) {
@@ -95,6 +120,25 @@ async function handleCommands(text) {
     if (!text.startsWith('/')) return false;
     const args = text.split(' ');
     const cmd = args[0].toLowerCase();
+
+    if (cmd === '/alert') {
+        if (!firebase.auth().currentUser) { 
+            alert("Accès refusé : réservé aux modérateurs."); 
+            return true; 
+        }
+        const alertMsg = text.replace('/alert', '').trim();
+        if (!alertMsg) { alert("Usage: /alert [message]"); return true; }
+        
+        db.ref('messages').push({
+            text: alertMsg,
+            id: "SYSTEM",
+            color: "#ff0000",
+            timestamp: firebase.database.ServerValue.TIMESTAMP,
+            type: "broadcast",
+            isAdmin: true
+        });
+        return true;
+    }
 
     if (cmd === '/subway') {
         const subwayDiv = document.getElementById('subway-container');
@@ -126,9 +170,18 @@ async function handleCommands(text) {
     }
 
     if (cmd === '/fart') {
-        const lastFart = localStorage.getItem('lastFartTime') || 0;
-        if (Date.now() - lastFart < 60000) { alert(`Cooldown: ${Math.ceil((60000 - (Date.now() - lastFart)) / 1000)}s`); } 
-        else { localStorage.setItem('lastFartTime', Date.now()); sendMessage("vient de péter bruyamment... 💨", true, "fart"); }
+        // Lecture forcée du localStorage pour bloquer le multi-onglet
+        const lastFart = parseInt(localStorage.getItem('lastFartTime') || 0);
+        const now = Date.now();
+        const cooldown = 60000;
+
+        if (now - lastFart < cooldown) { 
+            alert(`Cooldown: ${Math.ceil((cooldown - (now - lastFart)) / 1000)}s`); 
+        } 
+        else { 
+            localStorage.setItem('lastFartTime', now); 
+            sendMessage("vient de péter bruyamment... 💨", true, "fart"); 
+        }
         return true;
     }
 
@@ -168,6 +221,18 @@ db.ref('messages').on('child_added', snapshot => {
     displayedMessageKeys.add(key);
     const msg = snapshot.val();
     
+    // GESTION DES ALERTES BROADCAST
+    if (msg.type === "broadcast") {
+        if (!isInitialLoad) {
+            const alertText = document.getElementById('alert-text');
+            const alertBox = document.getElementById('custom-alert');
+            if(alertText && alertBox) {
+                alertText.textContent = msg.text;
+                alertBox.style.display = 'flex';
+            }
+        }
+    }
+
     if (msg.special === "fart") { fartSound.currentTime = 0; fartSound.play().catch(()=>{}); }
     else if (msg.id !== userId) { notificationSound.currentTime = 0; notificationSound.play().catch(()=>{}); }
 
@@ -175,6 +240,8 @@ db.ref('messages').on('child_added', snapshot => {
     div.classList.add('msg');
     div.setAttribute('data-key', key);
     if (msg.id === userId) div.classList.add('my-message');
+    if (msg.isAdmin || msg.id === "SYSTEM") div.classList.add('admin-msg');
+
     messagesData[key] = { id: msg.id, color: msg.color, text: msg.text };
 
     let html = '';
@@ -185,7 +252,10 @@ db.ref('messages').on('child_added', snapshot => {
     }
 
     const isAction = msg.type === 'action';
+    const adminBadge = (msg.isAdmin || msg.id === "SYSTEM") ? `<span class="admin-badge">ADMIN</span> ` : '';
+
     html += `<div class="message-content">
+        ${adminBadge}
         <span class="user" style="color: ${msg.color};">n°${msg.id}</span> ${isAction ? '' : ':'} 
         <span class="text-body" style="${isAction ? 'font-style: italic; color: #bbb;' : ''}">${formatMessageText(msg.text)}</span> 
         <button class="reply-btn" onclick="window.startReply('${key}')">↪</button>
@@ -206,17 +276,17 @@ db.ref('messages').on('child_removed', snapshot => {
 
 // --- 6. ENVOI ---
 function sendMessage(text, isAction = false, specialType = "normal") {
+    const currentId = localStorage.getItem('chatUserId'); // On reprend l'ID frais du stockage
     const messageData = {
         text: text, 
-        id: userId,
+        id: currentId,
         color: localStorage.getItem('userColor') || '#ae00ff',
         timestamp: firebase.database.ServerValue.TIMESTAMP,
         type: isAction ? 'action' : 'normal',
-        special: specialType
+        special: specialType,
+        isAdmin: isModo
     };
     if (replyingToId) { messageData.parentId = replyingToId; window.cancelReply(); }
-    
-    // On envoie direct, pas besoin d'être modo pour poster
     db.ref('messages').push(messageData).catch(err => alert("Erreur envoi : " + err.message));
 }
 
@@ -250,28 +320,29 @@ function applyUserStyle(color) {
     const adminBar = document.querySelector('.admin-bar');
     const adminBtn = document.querySelector('.admin-bar button');
     
-    // Application simple de la couleur de bordure
     if (chatInt) chatInt.style.borderColor = color;
     if (subway) subway.style.borderColor = color;
     if (adminBar) adminBar.style.borderColor = color;
-    
     if (replyInd) {
         replyInd.style.borderLeftColor = color;
-        // Optionnel : colorer le texte "Réponse à"
         const replyText = document.getElementById('reply-to-text');
         if(replyText) replyText.style.color = color;
     }
-
     if (adminBtn) {
         adminBtn.style.borderColor = color;
-        adminBtn.style.color = color; // Le texte du bouton prend la couleur
+        adminBtn.style.color = color;
     }
-
     document.querySelectorAll('.msg.my-message').forEach(m => {
         m.style.borderLeftColor = color;
     });
 }
+
 const savedColor = localStorage.getItem('userColor') || '#ae00ff';
 applyUserStyle(savedColor);
 updateIdentityDisplay(savedColor);
-colorInput.addEventListener('input', (e) => { localStorage.setItem('userColor', e.target.value); applyUserStyle(e.target.value); updateIdentityDisplay(e.target.value); });
+
+colorInput.addEventListener('input', (e) => { 
+    localStorage.setItem('userColor', e.target.value); 
+    applyUserStyle(e.target.value); 
+    updateIdentityDisplay(e.target.value); 
+});
