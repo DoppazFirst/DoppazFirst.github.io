@@ -176,10 +176,18 @@ body.fullscreen .meta-artist { font-size:.88rem; }
 .volume-bar { display:flex; align-items:center; gap:12px; padding:10px 20px; border-radius:99px; background:var(--glass); border:1px solid var(--border); backdrop-filter:blur(24px); -webkit-backdrop-filter:blur(24px); box-shadow:0 4px 20px rgba(0,0,0,.18),inset 0 1px 0 rgba(255,255,255,.08); width:100%; max-width:360px; }
 .vol-icon { color:var(--muted); display:flex; align-items:center; cursor:pointer; transition:color .18s; flex-shrink:0; }
 .vol-icon:hover { color:var(--txt); }
-.vol-track { flex:1; height:4px; background:var(--track); border-radius:99px; position:relative; cursor:pointer; }
+/* Bigger hitbox via padding without breaking layout */
+.vol-track { flex:1; height:4px; background:var(--track); border-radius:99px; position:relative; cursor:pointer; margin:10px 0; }
 .vol-fill { height:100%; background:linear-gradient(90deg,rgba(var(--accent),1),rgba(var(--accent),.6)); border-radius:99px; width:80%; position:relative; pointer-events:none; transition:background .8s; }
-.vol-fill::after { content:''; position:absolute; right:-5px; top:50%; transform:translateY(-50%); width:12px; height:12px; background:var(--txt); border-radius:50%; box-shadow:0 0 8px rgba(var(--accent),.7); opacity:0; transition:opacity .2s; }
-.volume-bar:hover .vol-fill::after { opacity:1; }
+/* Cursor always visible, smooth left transition */
+.vol-fill::after {
+  content:''; position:absolute; right:-6px; top:50%; transform:translateY(-50%);
+  width:13px; height:13px; background:var(--txt); border-radius:50%;
+  box-shadow:0 0 8px rgba(var(--accent),.7);
+  opacity:.85; transition:opacity .2s, transform .1s;
+}
+.vol-track:hover .vol-fill::after { opacity:1; transform:translateY(-50%) scale(1.15); }
+.vol-track.dragging .vol-fill::after { opacity:1; transform:translateY(-50%) scale(1.2); }
 .cf-label { font-size:.62rem; font-family:'Syne',sans-serif; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); flex-shrink:0; white-space:nowrap; cursor:pointer; transition:color .2s; }
 
 /* ── Keyboard shortcut hint (shown briefly on keypress) ── */
@@ -1261,8 +1269,17 @@ function cancelSleepTimer() {
 
 // ══════════════════════════════════════════════════
 //  STATISTICS
+//  stats = {
+//    totalSec: number,          — cumulative seconds listened
+//    plays: {                   — per track
+//      [trackId]: {
+//        title, artist,
+//        sec: number,           — seconds listened on this track
+//        completions: number    — times listened > 30s
+//      }
+//    }
+//  }
 // ══════════════════════════════════════════════════
-// stats = { totalSec: number, plays: { trackId: { count, title, artist } } }
 let stats = { totalSec: 0, plays: {} };
 
 async function loadStats() {
@@ -1273,22 +1290,33 @@ async function saveStats() {
   await idbPut('meta', { id: 'stats', data: stats });
 }
 
-// Called periodically while playing to accumulate listen time
 let statsInterval = null;
+let statsCurrentId = null;
+let statsSecOnTrack = 0; // seconds listened on current track this session
+
 function startStatsTracking(trackId, title, artist) {
   stopStatsTracking();
+  statsCurrentId   = trackId;
+  statsSecOnTrack  = 0;
+  if (!stats.plays[trackId]) stats.plays[trackId] = { title, artist, sec: 0, completions: 0 };
+  stats.plays[trackId].title  = title;
+  stats.plays[trackId].artist = artist;
+
   statsInterval = setInterval(async () => {
     if (!isPlaying) return;
-    stats.totalSec += 1;
-    if (!stats.plays[trackId]) stats.plays[trackId] = { count: 0, title, artist };
-    stats.plays[trackId].count += 1/30; // increment every second, count = ~plays (30s = 1 play)
-    stats.plays[trackId].title  = title;
-    stats.plays[trackId].artist = artist;
-    await saveStats();
+    stats.totalSec++;
+    statsSecOnTrack++;
+    stats.plays[trackId].sec++;
+    // Count as a "completion" (play) after 30 continuous seconds
+    if (statsSecOnTrack === 30) stats.plays[trackId].completions++;
+    // Save every 10s to avoid hammering IDB
+    if (stats.totalSec % 10 === 0) await saveStats();
   }, 1000);
 }
 function stopStatsTracking() {
   if (statsInterval) { clearInterval(statsInterval); statsInterval = null; }
+  statsCurrentId  = null;
+  statsSecOnTrack = 0;
 }
 
 function renderStats() {
@@ -1296,26 +1324,24 @@ function renderStats() {
   const top  = document.getElementById('stats-top');
   if (!grid || !top) return;
 
-  const totalMin  = Math.floor(stats.totalSec / 60);
-  const totalHour = (stats.totalSec / 3600).toFixed(1);
-  const totalPlays = Object.values(stats.plays).reduce((s, x) => s + Math.floor(x.count), 0);
-  const trackCount = Object.keys(stats.plays).length;
+  const totalMin   = Math.floor(stats.totalSec / 60);
+  const totalHour  = totalMin >= 60 ? `${(stats.totalSec/3600).toFixed(1)}h` : `${totalMin} min`;
+  const tracksDone = Object.values(stats.plays).filter(x => x.completions > 0).length;
+  const topTrack   = Object.values(stats.plays).sort((a,b) => b.completions - a.completions)[0];
 
   grid.innerHTML = `
-    <div class="stat-card"><div class="stat-value">${totalHour}h</div><div class="stat-key">Temps d'écoute</div></div>
-    <div class="stat-card"><div class="stat-value">${totalPlays}</div><div class="stat-key">Lectures totales</div></div>
-    <div class="stat-card"><div class="stat-value">${trackCount}</div><div class="stat-key">Morceaux joués</div></div>
-    <div class="stat-card"><div class="stat-value">${totalMin > 0 ? Math.floor(totalMin / Math.max(trackCount,1)) : 0} min</div><div class="stat-key">Durée moy. par titre</div></div>`;
+    <div class="stat-card"><div class="stat-value">${totalHour}</div><div class="stat-key">Temps d'écoute</div></div>
+    <div class="stat-card"><div class="stat-value">${tracksDone}</div><div class="stat-key">Titres écoutés</div></div>`;
 
-  // Top 3 most played
+  // Top 3 most completed tracks
   const sorted = Object.entries(stats.plays)
-    .map(([id, v]) => ({ id, count: Math.floor(v.count), title: v.title, artist: v.artist }))
-    .filter(x => x.count > 0)
-    .sort((a, b) => b.count - a.count)
+    .map(([id, v]) => ({ id, completions: v.completions, title: v.title, artist: v.artist, sec: v.sec }))
+    .filter(x => x.completions > 0)
+    .sort((a, b) => b.completions - a.completions)
     .slice(0, 3);
 
   if (sorted.length) {
-    top.innerHTML = '<div style="font-size:.62rem;font-family:Syne,sans-serif;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:6px">Top morceaux</div>';
+    top.innerHTML = '<div style="font-size:.62rem;font-family:Syne,sans-serif;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:6px;margin-top:4px">Top morceaux</div>';
     sorted.forEach((t, i) => {
       const row = document.createElement('div');
       row.className = 'stat-track-row';
@@ -1323,12 +1349,12 @@ function renderStats() {
         <span class="stat-track-rank">${i+1}</span>
         <div class="stat-track-info">
           <div class="stat-track-name">${t.title || 'Sans titre'}</div>
-          <div class="stat-track-plays">${t.count} lecture${t.count > 1 ? 's' : ''} · ${t.artist || ''}</div>
+          <div class="stat-track-plays">${t.completions} lecture${t.completions > 1 ? 's' : ''} · ${Math.floor(t.sec/60)} min écoutées · ${t.artist || ''}</div>
         </div>`;
       top.appendChild(row);
     });
   } else {
-    top.innerHTML = '<div style="font-size:.75rem;color:var(--muted);padding:8px 0">Écoute des musiques pour voir tes stats ici</div>';
+    top.innerHTML = '<div style="font-size:.75rem;color:var(--muted);padding:8px 0">Écoute des musiques pour voir tes stats</div>';
   }
 }
 
@@ -1358,7 +1384,35 @@ function renderStats() {
     }
   }, { passive: true });
 })();
-let tT;
+
+// ══════════════════════════════════════════════════
+//  MEDIA SESSION — contrôles écran verrouillé + fond
+// ══════════════════════════════════════════════════
+function updateMediaSession(t, coverUrl) {
+  if (!('mediaSession' in navigator)) return;
+  navigator.mediaSession.metadata = new MediaMetadata({
+    title:  t?.title  || 'Disky',
+    artist: t?.artist || '',
+    album:  t?.album  || '',
+    artwork: coverUrl && coverUrl !== FALLBACK
+      ? [{ src: coverUrl, sizes:'512x512', type:'image/jpeg' }]
+      : [],
+  });
+  navigator.mediaSession.setActionHandler('play',          () => { activeAudio.play(); setPlayState(true); });
+  navigator.mediaSession.setActionHandler('pause',         () => { activeAudio.pause(); setPlayState(false); });
+  navigator.mediaSession.setActionHandler('nexttrack',     () => nextTrackFn(true));
+  navigator.mediaSession.setActionHandler('previoustrack', () => {
+    if (activeAudio.currentTime > 3) activeAudio.currentTime = 0;
+    else loadTrack(currentIndex - 1, isPlaying);
+  });
+  try { navigator.mediaSession.setActionHandler('seekto', e => { if (e.seekTime !== undefined) activeAudio.currentTime = e.seekTime; }); } catch(e) {}
+}
+
+// Quand l'écran s'éteint ou qu'on change d'app, garder l'audio actif
+document.addEventListener('visibilitychange', () => {
+  if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume().catch(() => {});
+  if (!document.hidden && isPlaying && activeAudio.paused) activeAudio.play().catch(() => {});
+});
 function showToast(m){toastEl.textContent=m;toastEl.classList.add('show');clearTimeout(tT);tT=setTimeout(()=>toastEl.classList.remove('show'),2800);}
 
 // ══════════════════════════════════════════════════
@@ -1417,6 +1471,8 @@ async function loadTrack(index,autoplay=false){
   // Apply current playback speed
   audioA.playbackRate = playbackSpeed;
   audioB.playbackRate = playbackSpeed;
+  // Update lock screen / notification controls
+  updateMediaSession(t, coverUrl);
 }
 
 // ── Play a track from the queue (doesn't affect currentIndex/playlist) ──
@@ -1441,6 +1497,7 @@ async function loadQueueTrack(t, autoplay=false) {
     bindAudioEvents();
     setPlayState(autoplay);
     startStatsTracking(t.trackId, t.title, t.artist);
+    updateMediaSession(t, urls.coverUrl || FALLBACK);
   }
   updateQueueBadge();
   renderTrackList(); // refresh to show queue section
@@ -1469,6 +1526,7 @@ function setPlayState(p){
   isPlaying=p;
   iconPlay.style.display=p?'none':'';iconPause.style.display=p?'':'none';
   discWrap.classList.toggle('spinning',p);
+  if ('mediaSession' in navigator) navigator.mediaSession.playbackState = p ? 'playing' : 'paused';
   if(p){
     try { ensureAudioCtx(); if(audioCtx.state==='suspended')audioCtx.resume(); startViz(); } catch(e){}
   } else {
@@ -1519,9 +1577,41 @@ function fmt(s){const m=Math.floor(s/60),ss=Math.floor(s%60);return `${m}:${ss.t
 // ══════════════════════════════════════════════════
 //  VOLUME
 // ══════════════════════════════════════════════════
-function applyVol(){audioA.volume=isMuted?0:volLevel;audioB.volume=isMuted?0:volLevel;volFill.style.width=(volLevel*100)+'%';}
+function applyVol(){
+  audioA.volume=isMuted?0:volLevel;
+  audioB.volume=isMuted?0:volLevel;
+  volFill.style.width=(volLevel*100)+'%';
+}
 applyVol();
-volTrack.addEventListener('click',e=>{const r=volTrack.getBoundingClientRect();volLevel=Math.max(0,Math.min(1,(e.clientX-r.left)/r.width));if(isMuted&&volLevel>0){isMuted=false;updateVolIcon();}applyVol();});
+
+// ── Volume drag (mouse + touch) ──
+function setVolFromEvent(clientX) {
+  const r = volTrack.getBoundingClientRect();
+  volLevel = Math.max(0, Math.min(1, (clientX - r.left) / r.width));
+  if (isMuted && volLevel > 0) { isMuted = false; updateVolIcon(); }
+  applyVol();
+}
+// Mouse
+volTrack.addEventListener('mousedown', e => {
+  e.preventDefault();
+  volTrack.classList.add('dragging');
+  setVolFromEvent(e.clientX);
+  const onMove = e2 => setVolFromEvent(e2.clientX);
+  const onUp   = () => { volTrack.classList.remove('dragging'); window.removeEventListener('mousemove', onMove); window.removeEventListener('mouseup', onUp); };
+  window.addEventListener('mousemove', onMove);
+  window.addEventListener('mouseup',   onUp);
+});
+// Touch
+volTrack.addEventListener('touchstart', e => {
+  e.preventDefault();
+  volTrack.classList.add('dragging');
+  setVolFromEvent(e.touches[0].clientX);
+  const onMove = e2 => setVolFromEvent(e2.touches[0].clientX);
+  const onEnd  = () => { volTrack.classList.remove('dragging'); window.removeEventListener('touchmove', onMove); window.removeEventListener('touchend', onEnd); };
+  window.addEventListener('touchmove', onMove, { passive: true });
+  window.addEventListener('touchend',  onEnd);
+}, { passive: false });
+
 function toggleMute(){isMuted=!isMuted;applyVol();updateVolIcon();}
 function updateVolIcon(){document.getElementById('vol-svg').innerHTML=(isMuted||volLevel===0)?`<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/>`:` <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/>`;}
 
