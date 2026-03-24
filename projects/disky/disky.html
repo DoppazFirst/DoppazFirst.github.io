@@ -176,8 +176,15 @@ body.fullscreen .meta-artist { font-size:.88rem; }
 .volume-bar { display:flex; align-items:center; gap:12px; padding:10px 20px; border-radius:99px; background:var(--glass); border:1px solid var(--border); backdrop-filter:blur(24px); -webkit-backdrop-filter:blur(24px); box-shadow:0 4px 20px rgba(0,0,0,.18),inset 0 1px 0 rgba(255,255,255,.08); width:100%; max-width:360px; }
 .vol-icon { color:var(--muted); display:flex; align-items:center; cursor:pointer; transition:color .18s; flex-shrink:0; }
 .vol-icon:hover { color:var(--txt); }
-/* Bigger hitbox via padding without breaking layout */
-.vol-track { flex:1; height:4px; background:var(--track); border-radius:99px; position:relative; cursor:pointer; margin:10px 0; }
+/* Bigger hitbox via pseudo-element — stays inside .volume-bar, no layout impact */
+.vol-track {
+  flex:1; height:4px; background:var(--track); border-radius:99px;
+  position:relative; cursor:pointer;
+}
+.vol-track::before {
+  content:''; position:absolute;
+  top:-14px; bottom:-14px; left:0; right:0;
+}
 .vol-fill { height:100%; background:linear-gradient(90deg,rgba(var(--accent),1),rgba(var(--accent),.6)); border-radius:99px; width:80%; position:relative; pointer-events:none; transition:background .8s; }
 /* Cursor always visible, smooth left transition */
 .vol-fill::after {
@@ -709,6 +716,13 @@ body.light .settings-panel { background:rgba(240,240,245,.94); }
         <button class="delete-all-btn" onclick="deleteAllImported()">Tout supprimer</button>
       </div>
       <div class="track-list" id="imported-list"></div>
+      <div class="popup-action">
+        <input type="file" id="file-input-imported" accept="audio/*,.mp3,.flac,.ogg,.wav,.aac,.m4a,.opus,.wma" multiple style="display:none">
+        <button class="action-btn" onclick="document.getElementById('file-input-imported').click()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Importer une musique
+        </button>
+      </div>
     </div>
 
     <!-- Tab: playlists -->
@@ -743,8 +757,8 @@ body.light .settings-panel { background:rgba(240,240,245,.94); }
 
 <div class="toast" id="toast"></div>
 <div class="importing-badge" id="importing-badge">⏳ Import en cours…</div>
-<audio id="audio-a"></audio>
-<audio id="audio-b"></audio>
+<audio id="audio-a" playsinline webkit-playsinline preload="auto"></audio>
+<audio id="audio-b" playsinline webkit-playsinline preload="auto"></audio>
 <canvas id="color-canvas" width="8" height="8" style="display:none"></canvas>
 
 <script>
@@ -826,7 +840,7 @@ const idbDelete = (s,k) => new Promise((r,j) => { const q=db.transaction(s,'read
 const idbClear  = (s)   => new Promise((r,j) => { const q=db.transaction(s,'readwrite').objectStore(s).clear(); q.onsuccess=()=>r(); q.onerror=()=>j(q.error); });
 
 async function saveState() {
-  const savePlId = currentPlId === MIX_ID ? (playlists[0]?.id || 1) : currentPlId;
+  const savePlId = (currentPlId === MIX_ID || currentPlId === LIB_PL_ID) ? (playlists.find(p => p.id !== LIB_PL_ID)?.id || 1) : currentPlId;
   await idbPut('meta',{id:'state',playlists,currentPlId:savePlId,nextPlId,isDark,crossfadeOn});
 }
 
@@ -896,11 +910,14 @@ let isQueueMode = false; // true while playing from queue
 const MIX_ID = 'mix'; // virtual playlist ID
 
 function getMixTracks() {
-  // All unique imported tracks across all real playlists
   const seen = new Set(), all = [];
   for (const pl of playlists)
-    for (const t of pl.tracks)
-      if (!DEMO_COVERS[t.trackId] && !seen.has(t.trackId)) { seen.add(t.trackId); all.push(t); }
+    if (pl.id !== LIB_PL_ID) // exclude hidden lib
+      for (const t of pl.tracks)
+        if (!DEMO_COVERS[t.trackId] && !seen.has(t.trackId)) { seen.add(t.trackId); all.push(t); }
+  // Also include lib tracks in mix
+  const lib = playlists.find(p => p.id === LIB_PL_ID);
+  if (lib) for (const t of lib.tracks) if (!seen.has(t.trackId)) { seen.add(t.trackId); all.push(t); }
   return all;
 }
 
@@ -1413,6 +1430,35 @@ document.addEventListener('visibilitychange', () => {
   if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume().catch(() => {});
   if (!document.hidden && isPlaying && activeAudio.paused) activeAudio.play().catch(() => {});
 });
+
+// iOS PWA : l'AudioContext se suspend en arrière-plan même si le son joue
+// Solution : résumer l'AudioContext dès que possible + jouer un buffer silencieux
+// pour maintenir la session audio active sur iOS
+function iosAudioUnlock() {
+  if (!audioCtx) return;
+  if (audioCtx.state === 'suspended') audioCtx.resume().catch(() => {});
+  // Jouer un buffer silencieux de 0.1s pour garder la session active
+  try {
+    const buf = audioCtx.createBuffer(1, audioCtx.sampleRate * 0.1, audioCtx.sampleRate);
+    const src = audioCtx.createBufferSource();
+    src.buffer = buf;
+    src.connect(audioCtx.destination);
+    src.start();
+  } catch(e) {}
+}
+// Résumer sur chaque interaction utilisateur (requis par iOS)
+['touchstart','touchend','mousedown','keydown'].forEach(ev => {
+  document.addEventListener(ev, iosAudioUnlock, { passive: true, once: false });
+});
+// Résumer aussi quand la page redevient visible
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden) {
+    setTimeout(() => {
+      iosAudioUnlock();
+      if (isPlaying && activeAudio.paused) activeAudio.play().catch(() => {});
+    }, 100);
+  }
+});
 function showToast(m){toastEl.textContent=m;toastEl.classList.add('show');clearTimeout(tT);tT=setTimeout(()=>toastEl.classList.remove('show'),2800);}
 
 // ══════════════════════════════════════════════════
@@ -1807,8 +1853,8 @@ function renderPlList(){
   });
   plListEl.appendChild(mixEl);
 
-  // ── Real playlists ──
-  playlists.forEach(pl=>{
+  // ── Real playlists (hide __lib__) ──
+  playlists.filter(pl => pl.id !== LIB_PL_ID).forEach(pl=>{
     const isActive = pl.id === currentPlId;
     const el=document.createElement('div');
     el.className='pll-item'+(isActive?' active':'');
@@ -1847,7 +1893,8 @@ function renderPlList(){
 //  DELETE PLAYLIST
 // ══════════════════════════════════════════════════
 async function deletePlaylist(id) {
-  if (playlists.length <= 1) { showToast('Impossible de supprimer la dernière playlist'); return; }
+  if (id === LIB_PL_ID) return;
+  if (playlists.filter(p => p.id !== LIB_PL_ID).length <= 1) { showToast('Impossible de supprimer la dernière playlist'); return; }
   const pl = playlists.find(p => p.id === id);
   if (!pl) return;
 
@@ -1909,8 +1956,9 @@ async function playImportedTrack(t) {
 function getAllImported() {
   const seen = new Set(), all = [];
   for (const pl of playlists)
-    for (const t of pl.tracks)
-      if (!DEMO_COVERS[t.trackId] && !seen.has(t.trackId)) { seen.add(t.trackId); all.push(t); }
+    if (!DEMO_COVERS[pl.id]) // skip demo
+      for (const t of pl.tracks)
+        if (!DEMO_COVERS[t.trackId] && !seen.has(t.trackId)) { seen.add(t.trackId); all.push(t); }
   return all;
 }
 
@@ -2298,6 +2346,46 @@ async function importFiles(files){
   showToast(`${added} morceau${added>1?'x':''} ajouté${added>1?'s':''} ✓`);
 }
 document.getElementById('file-input').addEventListener('change',async function(){await importFiles(Array.from(this.files));this.value='';});
+
+// ── Import sans playlist (depuis l'onglet Importées) ──
+// Les pistes sont stockées dans IndexedDB mais rattachées à une playlist
+// cachée "__lib__" qui n'apparaît jamais dans l'UI.
+const LIB_PL_ID = '__lib__';
+
+function getLibPlaylist() {
+  let lib = playlists.find(p => p.id === LIB_PL_ID);
+  if (!lib) { lib = { id: LIB_PL_ID, name: '__lib__', tracks: [] }; playlists.push(lib); }
+  return lib;
+}
+
+async function importFilesNoPlaylist(files) {
+  if (!files.length) return;
+  importBadge.classList.add('show'); let added = 0;
+  const lib = getLibPlaylist();
+  for (const file of files) {
+    try {
+      let meta = { title:'', artist:'', album:'', coverBuf:null };
+      try { meta = await parseID3(file); } catch(e) {}
+      const tmpUrl = URL.createObjectURL(file);
+      const tmp = new Audio(tmpUrl);
+      await new Promise(r => { tmp.addEventListener('loadedmetadata',r,{once:true}); tmp.addEventListener('error',r,{once:true}); setTimeout(r,3000); });
+      const dur = isFinite(tmp.duration) ? fmt(tmp.duration) : '—';
+      URL.revokeObjectURL(tmpUrl);
+      const trackId = 'trk-' + Date.now() + '-' + (nextTrackId++);
+      const audioBlob = new Blob([await file.arrayBuffer()], { type: file.type || 'audio/mpeg' });
+      const coverBlob = meta.coverBuf ? new Blob([meta.coverBuf]) : null;
+      await idbPut('files', { id: trackId, audioBlob, coverBlob });
+      lib.tracks.push({ trackId, title: meta.title||file.name.replace(/\.[^.]+$/,''), artist: meta.artist||'Artiste inconnu', album: meta.album||'', duration: dur });
+      added++;
+    } catch(err) { console.error('Import error:', err); }
+  }
+  importBadge.classList.remove('show');
+  await saveState(); renderImportedList(); refreshStorageBar();
+  showToast(`${added} morceau${added>1?'x':''} importé${added>1?'s':''} ✓`);
+}
+document.getElementById('file-input-imported').addEventListener('change', async function() {
+  await importFilesNoPlaylist(Array.from(this.files)); this.value = '';
+});
 
 // ── Drag & drop files ──
 let dragCt=0;
