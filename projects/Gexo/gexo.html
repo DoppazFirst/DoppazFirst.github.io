@@ -1,0 +1,1041 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>GEXO OS v7.0</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <style>
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { margin: 0; background: #1a1a1a; overflow: hidden; display: flex; justify-content: center; align-items: center; height: 100vh; }
+
+        /* ── DESKTOP ── */
+        #gexo-wrap { display: flex; align-items: center; justify-content: center; }
+        canvas { height: 98vh; width: 98vh; image-rendering: pixelated; background: #000; border-radius: 12px; box-shadow: 0 20px 60px rgba(0,0,0,0.5); border: 4px solid #444; }
+        #mobile-controls { display: none; }
+
+        /* ── MOBILE : portrait ── */
+        @media (max-width: 600px), (max-aspect-ratio: 1/1) {
+            body { flex-direction: column; justify-content: flex-start; background: #111; }
+            #gexo-wrap { width: 100vw; padding-top: 8px; }
+            canvas { width: 96vw; height: 96vw; }
+            #mobile-controls {
+                display: flex; flex-direction: column; align-items: center;
+                width: 100vw; padding: 10px 0 6px;
+                gap: 10px; user-select: none;
+            }
+            #ctrl-row { display: flex; justify-content: space-between; align-items: center; width: 100%; padding: 0 8px; }
+        }
+
+        /* Boutons virtuels */
+        .vbtn {
+            background: #2a2a2a; border: 2px solid #555; border-radius: 8px;
+            color: #ccc; font-family: monospace; font-size: 11px; font-weight: bold;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; user-select: none; -webkit-user-select: none;
+            touch-action: none; transition: background 0.05s;
+        }
+        .vbtn:active, .vbtn.pressed { background: #555; border-color: #aaa; color: #fff; }
+
+        /* D-pad */
+        #dpad { display: grid; grid-template-columns: 44px 44px 44px; grid-template-rows: 44px 44px 44px; gap: 3px; }
+        #dpad .vbtn { border-radius: 6px; font-size: 16px; }
+        #dpad .empty { background: transparent; border: none; }
+
+        /* Boutons ABXY */
+        #abxy { display: grid; grid-template-columns: 44px 44px; grid-template-rows: 44px 44px; gap: 5px; }
+        #abxy .vbtn { border-radius: 50%; font-size: 13px; }
+        #abxy .btn-a { border-color: #22cc44; color: #22cc44; }
+        #abxy .btn-b { border-color: #ee2222; color: #ee2222; }
+        #abxy .btn-x { border-color: #2244ee; color: #2244ee; }
+        #abxy .btn-y { border-color: #eecc00; color: #eecc00; }
+        #abxy .vbtn.pressed { background: #333; }
+
+        /* Start / Select */
+        #sys-btns { display: flex; gap: 12px; justify-content: center; }
+        #sys-btns .vbtn { width: 70px; height: 28px; border-radius: 14px; font-size: 10px; border-color: #444; }
+    </style>
+</head>
+<body>
+    <input type="file" id="rom-input" style="display:none" accept=".gx,.json">
+    <div id="gexo-wrap">
+        <canvas id="gexo"></canvas>
+    </div>
+
+    <!-- Contrôles mobiles virtuels -->
+    <div id="mobile-controls">
+        <div id="ctrl-row">
+            <!-- D-pad gauche -->
+            <div id="dpad">
+                <div class="empty"></div>
+                <div class="vbtn" id="vup">▲</div>
+                <div class="empty"></div>
+                <div class="vbtn" id="vleft">◀</div>
+                <div class="empty"></div>
+                <div class="vbtn" id="vright">▶</div>
+                <div class="empty"></div>
+                <div class="vbtn" id="vdown">▼</div>
+                <div class="empty"></div>
+            </div>
+            <!-- Boutons système centre -->
+            <div style="display:flex;flex-direction:column;gap:8px;align-items:center;">
+                <div class="vbtn" id="vselect" style="width:60px;height:24px;border-radius:12px;font-size:10px;">SEL</div>
+                <div class="vbtn" id="vhome"   style="width:60px;height:24px;border-radius:12px;font-size:10px;">⌂ HOME</div>
+                <div class="vbtn" id="vstart"  style="width:60px;height:24px;border-radius:12px;font-size:10px;">START</div>
+            </div>
+            <!-- ABXY droite -->
+            <div id="abxy">
+                <div class="empty"></div>
+                <div class="vbtn btn-y" id="vbtn-y">Y</div>
+                <div class="vbtn btn-x" id="vbtn-x">X</div>
+                <div class="vbtn btn-a" id="vbtn-a">A</div>
+                <div class="empty"></div>
+                <div class="vbtn btn-b" id="vbtn-b">B</div>
+            </div>
+        </div>
+    </div>
+
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script>
+        const canvas = document.getElementById('gexo');
+        const ctx = canvas.getContext('2d', { alpha: false });
+        canvas.width = 128; canvas.height = 128;
+        ctx.imageSmoothingEnabled = false;
+
+        // ── VOLUME GLOBAL ──────────────────────────────────────────────────────
+        let globalVolume = parseFloat(localStorage.getItem('gexo_vol') ?? '0.5');
+        function saveVol() { localStorage.setItem('gexo_vol', globalVolume); }
+
+        // ── COULEUR D'ACCENTUATION ─────────────────────────────────────────────
+        const ACCENTS = ['#bb00ff', '#00c8ff', '#ff3c6e', '#00e676', '#ff9500'];
+        const ACCENT_NAMES = ['VIOLET', 'CYAN', 'ROSE', 'GREEN', 'ORANGE'];
+        let accentIndex = parseInt(localStorage.getItem('gexo_accent') ?? '0');
+        function accent() { return ACCENTS[accentIndex]; }
+        function saveAccent() { localStorage.setItem('gexo_accent', accentIndex); }
+
+        // ── AUDIO ──────────────────────────────────────────────────────────────
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const masterGain = audioCtx.createGain();
+        masterGain.gain.value = globalVolume;
+        masterGain.connect(audioCtx.destination);
+
+        window.sfx = {
+            play(freq, type, duration, vol = 0.1) {
+                try {
+                    if (audioCtx.state === 'suspended') audioCtx.resume();
+                    const o = audioCtx.createOscillator(); const g = audioCtx.createGain();
+                    o.type = type; o.frequency.setValueAtTime(freq, audioCtx.currentTime);
+                    g.gain.setValueAtTime(vol, audioCtx.currentTime);
+                    g.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
+                    o.connect(g); g.connect(masterGain); o.start(); o.stop(audioCtx.currentTime + duration);
+                } catch(e) {}
+            },
+            click()  { this.play(1200, 'sine',     0.05, 0.05); },
+            boot()   { this.play(200,  'square',   0.1);  setTimeout(() => this.play(400, 'square',   0.3),  100); },
+            start()  { this.play(600,  'triangle', 0.1);  setTimeout(() => this.play(900, 'triangle', 0.4),  80);  },
+            error()  { this.play(150,  'sawtooth', 0.5, 0.2); },
+            // vibration mobile
+            vibrate(ms = 30) { try { if (navigator.vibrate) navigator.vibrate(ms); } catch(e) {} },
+            // saveData par ROM — accessible depuis les ROMs via sfx.saveData
+            saveData: {},
+            // API dessin 2D simple pour les ROMs (sfx.draw.rect, .text, .clear...)
+            draw: {
+                clear(color)            { ctx.fillStyle=color||'#000'; ctx.fillRect(0,0,128,128); },
+                rect(x,y,w,h,color)    { ctx.fillStyle=color; ctx.fillRect(Math.floor(x),Math.floor(y),w,h); },
+                pixel(x,y,color)       { ctx.fillStyle=color; ctx.fillRect(Math.floor(x),Math.floor(y),1,1); },
+                line(x1,y1,x2,y2,col) {
+                    const dx=Math.abs(x2-x1),dy=Math.abs(y2-y1),sx=x1<x2?1:-1,sy=y1<y2?1:-1;
+                    let err=dx-dy,cx=Math.floor(x1),cy=Math.floor(y1);
+                    ctx.fillStyle=col;
+                    while(true){ ctx.fillRect(cx,cy,1,1); if(cx===Math.floor(x2)&&cy===Math.floor(y2))break; const e2=2*err; if(e2>-dy){err-=dy;cx+=sx;} if(e2<dx){err+=dx;cy+=sy;} }
+                },
+                circle(cx,cy,r,color) {
+                    ctx.fillStyle=color; let x=0,y=r,d=3-2*r;
+                    const pts=(bx,by)=>{[[bx+x,by+y],[bx-x,by+y],[bx+x,by-y],[bx-x,by-y],[bx+y,by+x],[bx-y,by+x],[bx+y,by-x],[bx-y,by-x]].forEach(([px,py])=>ctx.fillRect(Math.floor(px),Math.floor(py),1,1));};
+                    while(y>=x){pts(cx,cy);x++;if(d>0){y--;d+=4*(x-y)+10;}else d+=4*x+6;}
+                },
+                text(str,x,y,color)    { drawText(str,x,y,color); },
+                sprite(data,x,y,scale) { // data = tableau de strings, ex: ['PPP','PWP','PPP']
+                    const sc=scale||1;
+                    data.forEach((row,j)=>row.split('').forEach((c,i)=>{
+                        if(c!==' '){ ctx.fillStyle=c==='P'?'#bb00ff':c==='W'?'#fff':c==='R'?'#f00':c==='G'?'#0f0':c==='B'?'#00f':c==='Y'?'#ff0':c;
+                        ctx.fillRect(Math.floor(x+i*sc),Math.floor(y+j*sc),sc,sc); }
+                    }));
+                }
+            }
+        };
+
+        // ── FONT & DRAW TEXT ───────────────────────────────────────────────────
+        const font = {'A':[31,20,20,20,31],'B':[31,21,21,21,10],'C':[14,17,17,17,10],'D':[31,17,17,17,14],'E':[31,21,21,21,17],'F':[31,20,20,20,16],'G':[14,17,21,21,15],'H':[31,4,4,4,31],'I':[17,31,17],'J':[2,1,1,1,30],'K':[31,4,10,17],'L':[31,1,1,1],'M':[31,16,12,16,31],'N':[31,16,8,4,31],'O':[14,17,17,17,14],'P':[31,20,20,20,12],'Q':[14,17,19,18,13],'R':[31,20,22,21,9],'S':[9,21,21,21,18],'T':[16,16,31,16,16],'U':[30,1,1,1,30],'V':[28,2,1,2,28],'W':[31,2,4,2,31],'X':[17,10,4,10,17],'Y':[16,8,7,8,16],'Z':[17,19,21,25,17],'0':[14,17,17,17,14],'1':[0,9,31,1,0],'2':[19,21,21,21,25],'3':[17,21,21,21,10],'4':[28,4,31,4,4],'5':[25,21,21,21,19],'6':[30,21,21,21,10],'7':[16,17,18,20,24],'8':[10,21,21,21,10],'9':[18,21,21,21,14],':':[0,10,0],'.':[1],'?':[16,21,21,9,0],' ':[0,0,0],'+':[4,4,31,4,4],'-':[4,4,4,4,4]};
+        function drawText(str, x, y, color) { ctx.fillStyle = color; let curX = Math.floor(x); String(str).toUpperCase().split('').forEach(char => { const glyph = font[char] || font[' ']; glyph.forEach((col) => { for (let j = 0; j < 5; j++) { if ((col >> j) & 1) ctx.fillRect(curX, Math.floor(y) + (4 - j), 1, 1); } curX++; }); curX += 1; }); }
+
+        // ── STATE ──────────────────────────────────────────────────────────────
+        let state = "BOOT", bootFrame = 0, menuPos = 0, selectedItem = 0, confirmingDelete = false;
+        let fade = 1.0, pauseSelection = 0, settingsSelection = 0;
+        let roms = JSON.parse(localStorage.getItem('gexo_roms')) || [];
+        let romInit = null, romLoop = null, romCleanup = null, lastError = null;
+        let iconFrame = 0;
+        // Vue menu : 'carousel' ou 'grid'
+        let menuView = localStorage.getItem('gexo_view') || 'carousel';
+        // Tri ROMs : 'date' ou 'alpha'
+        let romSort = localStorage.getItem('gexo_sort') || 'date';
+        // Thème : 'light', 'dark', 'crt'
+        let theme = localStorage.getItem('gexo_theme') || 'light';
+        // Screensaver
+        let lastInput = Date.now(), screensaverActive = false;
+        // Controls
+        let ctrlSel = 0; // 0=P1 1=P2
+        // BIOS
+        let biosHoldStart = 0, biosHoldActive = false;
+        // Scores globaux (meilleur score par ROM)
+        let scores = JSON.parse(localStorage.getItem('gexo_scores') || '{}');
+        function saveScores() { localStorage.setItem('gexo_scores', JSON.stringify(scores)); }
+        function saveView()   { localStorage.setItem('gexo_view',   menuView); }
+        function saveSort()   { localStorage.setItem('gexo_sort',   romSort);  }
+        function saveTheme()  { localStorage.setItem('gexo_theme',  theme);    }
+        function save() { localStorage.setItem('gexo_roms', JSON.stringify(roms)); }
+        // Couleurs thème
+        function th(light, dark, crt) { return theme==='dark' ? dark : theme==='crt' ? crt : light; }
+        function bgColor()   { return th('#f4f4f4','#111','#0a0a00'); }
+        function fgColor()   { return th('#222','#eee','#00ff41'); }
+        function cardColor() { return th('#fff','#1e1e1e','#001400'); }
+        function card2Color(){ return th('#eee','#161616','#000f00'); }
+        function borderColor(){ return th('#ddd','#333','#005500'); }
+        // sfx.score — permet aux ROMs de soumettre un score
+        sfx.submitScore = function(val) {
+            if (!roms[selectedItem]) return;
+            const k = roms[selectedItem].name;
+            if (!scores[k] || val > scores[k]) { scores[k] = val; saveScores(); }
+        };
+
+        // ── FILE INPUT ─────────────────────────────────────────────────────────
+        const fileInput = document.getElementById('rom-input');
+        fileInput.onchange = (e) => {
+            const r = new FileReader(); r.onload = (ev) => {
+                const d = JSON.parse(ev.target.result);
+                roms.push({ name: d.name || "GAME", init: d.init || "", loop: d.loop || "", cleanup: d.cleanup || "", iconData: d.iconData, iconFrames: d.iconFrames || null, color: d.color || accent() });
+                save(); selectedItem = roms.length - 1; sfx.start(); sfx.vibrate(40);
+            }; r.readAsText(e.target.files[0]);
+        };
+
+        // ── THREE.JS SCENE ─────────────────────────────────────────────────────
+        const renderer = new THREE.WebGLRenderer({ antialias: false }); renderer.setSize(128, 128);
+        const scene = new THREE.Scene(); const camera = new THREE.PerspectiveCamera(75, 1, 0.1, 1000);
+        const ambient = new THREE.AmbientLight(0xffffff, 0.5); scene.add(ambient);
+        const grid = new THREE.GridHelper(100, 20, 0xbb00ff, 0x222222); scene.add(grid);
+        // Valeurs initiales de la grid pour restauration
+        const gridInitScale    = grid.scale.clone();
+        const gridInitPos      = grid.position.clone();
+        const gridInitRotation = grid.rotation.clone();
+
+        // ── RESET SCENE ────────────────────────────────────────────────────────
+        function resetScene() {
+            // Appelle le cleanup du ROM si fourni
+            if (romCleanup) { try { romCleanup(camera, grid, 0, btn, scene, sfx); } catch(e) {} }
+            // Vide la scène sauf ambient et grid
+            for (let i = scene.children.length - 1; i >= 0; i--) {
+                const obj = scene.children[i];
+                if (obj !== ambient && obj !== grid) scene.remove(obj);
+            }
+            // Restaure la grid à son état initial
+            grid.scale.copy(gridInitScale);
+            grid.position.copy(gridInitPos);
+            grid.rotation.copy(gridInitRotation);
+            grid.material.color.set(0xbb00ff); // couleur initiale fixe, indépendante de l'accent
+            scene.background = null;
+            // Reset caméra
+            camera.position.set(0, 0, 0);
+            camera.rotation.set(0, 0, 0);
+            // Reset boutons (évite les touches "collées" entre deux ROMs)
+            btn.up = btn.down = btn.left = btn.right = btn.a = btn.b = btn.x = btn.y = false;
+            btn2.up = btn2.down = btn2.left = btn2.right = btn2.a = btn2.b = btn2.x = btn2.y = false;
+            kbBtn.up = kbBtn.down = kbBtn.left = kbBtn.right = kbBtn.a = kbBtn.b = kbBtn.x = kbBtn.y = false;
+            // Vide les fonctions ROM
+            romInit = null; romLoop = null; romCleanup = null;
+            // Snap menuPos pour éviter le re-centrage flottant au retour
+            menuPos = selectedItem * -72;
+        }
+
+        // ── BOUTONS ────────────────────────────────────────────────────────────
+        const kbBtn = { up:false, down:false, left:false, right:false, a:false, b:false, x:false, y:false };
+        const btn   = { up:false, down:false, left:false, right:false, a:false, b:false, x:false, y:false };
+        const kbEdgePrev = {}; // Edge detection clavier/virtuel pour navigation
+
+
+        // ── GAMEPAD ───────────────────────────────────────────────────────────
+        const gp = {
+            // _prev et _axPrev indexés par [padIndex][btnIndex]
+            _prev: {}, _axPrev: {}, DEAD: 0.4,
+            // Retourne toutes les manettes connectées
+            all() { try { return [...(navigator.getGamepads ? navigator.getGamepads() : [])].filter(p => p && p.connected); } catch(e) { return []; } },
+            // Retourne une manette par index physique
+            byIndex(i) { try { const p = navigator.getGamepads ? navigator.getGamepads() : []; return p[i] || null; } catch(e) { return null; } },
+            pressed(pad, idx) {
+                const k = pad.index+'_'+idx;
+                const cur = pad.buttons[idx]?.pressed || false;
+                const prev = this._prev[k] || false;
+                this._prev[k] = cur; return cur && !prev;
+            },
+            held(pad, idx)    { return pad.buttons[idx]?.pressed || false; },
+            axis(pad, idx)    { const v = pad.axes[idx] || 0; return Math.abs(v) > this.DEAD ? v : 0; },
+            axisEdge(pad, idx) {
+                const k = pad.index+'_a'+idx;
+                const v = this.axis(pad, idx); const cur = v > 0 ? 1 : v < 0 ? -1 : 0;
+                const prev = this._axPrev[k] || 0; this._axPrev[k] = cur;
+                return (cur !== 0 && cur !== prev) ? cur : 0;
+            }
+        };
+
+        // ── ASSIGNATION PÉRIPHÉRIQUES ─────────────────────────────────────────
+        // Source : 'keyboard', 'pad0', 'pad1', 'pad2', 'pad3', 'none'
+        const isMobile = /Mobi|Android|iPhone|iPad|iPod|Touch/i.test(navigator.userAgent) || (navigator.maxTouchPoints > 1);
+        let ctrlAssign = JSON.parse(localStorage.getItem('gexo_ctrl') || '{"p1":"keyboard","p2":"none"}');
+        // Sur mobile : P1 = touch d'office (écrase le localStorage)
+        if (isMobile) ctrlAssign.p1 = 'touch';
+        function saveCtrl() { if (!isMobile) localStorage.setItem('gexo_ctrl', JSON.stringify(ctrlAssign)); }
+
+        // btn2 : état P2, exposé aux ROMs via sfx.btn2
+        const btn2 = { up:false, down:false, left:false, right:false, a:false, b:false, x:false, y:false };
+        sfx.btn2 = btn2;
+
+        // Retourne le pad physique selon la source ('pad0' → index 0, etc.)
+        function padFromSource(src) {
+            if (!src.startsWith('pad')) return null;
+            return gp.byIndex(parseInt(src.replace('pad','')));
+        }
+
+        // Lit l'état continu d'une source (directions + a/b)
+        function readHeld(src) {
+            if (src === 'none') return { up:false,down:false,left:false,right:false,a:false,b:false,x:false,y:false };
+            if (src === 'keyboard' || src === 'touch') return { up:kbBtn.up,down:kbBtn.down,left:kbBtn.left,right:kbBtn.right,a:kbBtn.a,b:kbBtn.b,x:kbBtn.x,y:kbBtn.y };
+            const pad = padFromSource(src);
+            if (!pad) return { up:false,down:false,left:false,right:false,a:false,b:false,x:false,y:false };
+            return {
+                up:    gp.held(pad,12) || gp.axis(pad,1) < 0,
+                down:  gp.held(pad,13) || gp.axis(pad,1) > 0,
+                left:  gp.held(pad,14) || gp.axis(pad,0) < 0,
+                right: gp.held(pad,15) || gp.axis(pad,0) > 0,
+                a:     gp.held(pad,0),
+                b:     gp.held(pad,1),
+                x:     gp.held(pad,2),
+                y:     gp.held(pad,3),
+            };
+        }
+
+        // Lit les edges d'une source (pour navigation système)
+        function readEdge(src) {
+            if (src === 'none') return { up:false,down:false,left:false,right:false,a:false,b:false,x:false,y:false,start:false,select:false };
+            if (src === 'keyboard' || src === 'touch') {
+                // Edge detection sur kbBtn (pour navigation système via boutons virtuels)
+                var kbe = {};
+                ['up','down','left','right','a','b','x','y'].forEach(function(k2) {
+                    var cur = kbBtn[k2];
+                    var prev = (kbEdgePrev[k2] !== undefined) ? kbEdgePrev[k2] : false;
+                    kbe[k2] = cur && !prev;
+                    kbEdgePrev[k2] = cur;
+                });
+                return { up:kbe.up, down:kbe.down, left:kbe.left, right:kbe.right, a:kbe.a, b:kbe.b, x:kbe.x, y:kbe.y, start:false, select:false };
+            } // géré dans onkeydown
+            const pad = padFromSource(src);
+            if (!pad) return { up:false,down:false,left:false,right:false,a:false,b:false,x:false,y:false,start:false,select:false };
+            return {
+                up:     gp.pressed(pad,12) || gp.axisEdge(pad,1) < 0,
+                down:   gp.pressed(pad,13) || gp.axisEdge(pad,1) > 0,
+                left:   gp.pressed(pad,14) || gp.axisEdge(pad,0) < 0,
+                right:  gp.pressed(pad,15) || gp.axisEdge(pad,0) > 0,
+                a:      gp.pressed(pad,0),
+                b:      gp.pressed(pad,1),
+                x:      gp.pressed(pad,2),
+                y:      gp.pressed(pad,3),
+                start:  gp.pressed(pad,9),
+                select: gp.pressed(pad,8),
+            };
+        }
+
+        // Liste de toutes les sources disponibles (pour le menu controls)
+        function availableSources() {
+            const srcs = isMobile ? ['touch', 'none'] : ['keyboard', 'none'];
+            gp.all().forEach(p => srcs.splice(1, 0, 'pad'+p.index));
+            return srcs;
+        }
+        // Nom lisible d'une source
+        function srcLabel(src) {
+            if (src === 'touch')    return 'TOUCH PAD';
+            if (src === 'keyboard') return 'KEYBOARD';
+            if (src === 'none')     return 'NONE';
+            const pad = padFromSource(src);
+            if (!pad) return src.toUpperCase();
+            // Nom court de la manette
+            const id = pad.id.substring(0,16).toUpperCase();
+            return 'PAD'+pad.index+' '+id;
+        }
+
+        function pollGamepad() {
+            // ── Lecture P1 ──
+            const h1 = readHeld(ctrlAssign.p1);
+            btn.up=h1.up; btn.down=h1.down; btn.left=h1.left; btn.right=h1.right; btn.a=h1.a; btn.b=h1.b; btn.x=h1.x; btn.y=h1.y;
+
+            // ── Lecture P2 ──
+            const h2 = readHeld(ctrlAssign.p2);
+            btn2.up=h2.up; btn2.down=h2.down; btn2.left=h2.left; btn2.right=h2.right; btn2.a=h2.a; btn2.b=h2.b; btn2.x=h2.x; btn2.y=h2.y;
+
+            // ── Edges P1 (pour navigation système, seulement si P1 est une manette) ──
+            const e1 = readEdge(ctrlAssign.p1);
+            // Toutes les manettes connectées peuvent aussi naviguer le système (Start/Select)
+            // pour éviter d'être bloqué si P1=keyboard et qu'on n'a qu'une manette
+            let eStart = e1.start, eSelect = e1.select;
+            let eUp = e1.up, eDown = e1.down, eLeft = e1.left, eRight = e1.right;
+            let eA = e1.a, eB = e1.b;
+            // Toutes les autres manettes connectées peuvent aussi envoyer Start
+            gp.all().forEach(p => {
+                if (ctrlAssign.p1 === 'pad'+p.index || ctrlAssign.p2 === 'pad'+p.index) return;
+                if (gp.pressed(p, 9)) eStart = true;
+                if (gp.pressed(p, 8)) eSelect = true;
+            });
+
+            if (state === "MENU") {
+                if (eLeft || eUp) {
+                    let disp=[...roms.entries()]; if(romSort==='alpha') disp.sort((a,b)=>a[1].name.localeCompare(b[1].name));
+                    const di=disp.findIndex(([oi])=>oi===selectedItem); selectedItem=disp[(di-1+disp.length)%disp.length][0]; sfx.click(); sfx.vibrate(15);
+                }
+                if (eRight || eDown) {
+                    let disp=[...roms.entries()]; if(romSort==='alpha') disp.sort((a,b)=>a[1].name.localeCompare(b[1].name));
+                    const di=disp.findIndex(([oi])=>oi===selectedItem); selectedItem=disp[(di+1)%disp.length][0]; sfx.click(); sfx.vibrate(15);
+                }
+                if (eStart) { state = "SETTINGS"; settingsSelection = 0; sfx.click(); }
+                if (eSelect) { fileInput.click(); }
+                if (eA && roms.length > 0) { const key='gexo_save_'+roms[selectedItem].name; try{sfx.saveData=JSON.parse(localStorage.getItem(key)||'{}');}catch(e2){sfx.saveData={};} fade=1.0; state="TRANSITION_TO_GAME"; sfx.start(); sfx.vibrate(30); }
+                if (eB && roms.length > 0) { if(!confirmingDelete){confirmingDelete=true;sfx.play(300,'square',0.1);}else{roms.splice(selectedItem,1);save();selectedItem=Math.max(0,selectedItem-1);confirmingDelete=false;sfx.error();sfx.vibrate(60);} }
+            } else if (state === "SETTINGS") {
+                if (eUp)    { settingsSelection=(settingsSelection-1+5)%5; sfx.click(); }
+                if (eDown)  { settingsSelection=(settingsSelection+1)%5; sfx.click(); }
+                if (eLeft)  {
+                    if(settingsSelection===0){globalVolume=Math.max(0,parseFloat((globalVolume-0.1).toFixed(1)));masterGain.gain.value=globalVolume;saveVol();sfx.click();}
+                    else if(settingsSelection===1){accentIndex=(accentIndex-1+ACCENTS.length)%ACCENTS.length;saveAccent();sfx.click();}
+                    else if(settingsSelection===2){romSort=romSort==='date'?'alpha':'date';saveSort();sfx.click();}
+                    else if(settingsSelection===3){const T=['light','dark','crt'];theme=T[(T.indexOf(theme)-1+3)%3];saveTheme();sfx.click();}
+                    else{menuView=menuView==='carousel'?'grid':'carousel';saveView();sfx.click();}
+                }
+                if (eRight) {
+                    if(settingsSelection===0){globalVolume=Math.min(1,parseFloat((globalVolume+0.1).toFixed(1)));masterGain.gain.value=globalVolume;saveVol();sfx.click();}
+                    else if(settingsSelection===1){accentIndex=(accentIndex+1)%ACCENTS.length;saveAccent();sfx.click();}
+                    else if(settingsSelection===2){romSort=romSort==='date'?'alpha':'date';saveSort();sfx.click();}
+                    else if(settingsSelection===3){const T=['light','dark','crt'];theme=T[(T.indexOf(theme)+1)%3];saveTheme();sfx.click();}
+                    else{menuView=menuView==='carousel'?'grid':'carousel';saveView();sfx.click();}
+                }
+                if (eStart || eB) { state="MENU"; sfx.click(); }
+            } else if (state === "GAME") {
+                if ((eSelect && !sfx.consumeSelect) || eStart) { state="PAUSE"; pauseSelection=0; sfx.click(); }
+                sfx.consumeSelect = false;
+            } else if (state === "PAUSE") {
+                var POPTS=[0,2,1];
+                if (eUp)   { var pi=POPTS.indexOf(pauseSelection); pauseSelection=POPTS[(pi-1+3)%3]; sfx.click(); }
+                if (eDown) { var pi=POPTS.indexOf(pauseSelection); pauseSelection=POPTS[(pi+1)%3]; sfx.click(); }
+                if (eA) {
+                    if(pauseSelection===0){state="GAME";}
+                    else if(pauseSelection===1){if(roms[selectedItem]){localStorage.setItem('gexo_save_'+roms[selectedItem].name,JSON.stringify(sfx.saveData));}fade=0;state="TRANSITION_TO_MENU";}
+                    else if(pauseSelection===2){state="CONTROLS";ctrlSel=0;}
+                    sfx.click();
+                }
+            } else if (state === "CONTROLS") {
+                if (eUp || eDown) { ctrlSel=1-ctrlSel; sfx.click(); }
+                if (eLeft || eRight) { cycleCtrl(ctrlSel, eRight?1:-1); sfx.click(); }
+                if (eB || eStart) { state="PAUSE"; sfx.click(); }
+            }
+        }
+
+        window.addEventListener('gamepadconnected',    (e) => { console.log('GEXO: manette connectée —', e.gamepad.id); lastInput=Date.now(); });
+        window.addEventListener('gamepaddisconnected', (e) => { console.log('GEXO: manette déconnectée —', e.gamepad.id); });
+
+        // ── CLAVIER ────────────────────────────────────────────────────────────
+        window.onkeydown = (e) => {
+            const k = e.key.toLowerCase();
+
+            lastInput = Date.now(); screensaverActive = false;
+            if (state === "MENU") {
+                if (k === "arrowleft" || k === "arrowup") {
+                    let disp=[...roms.entries()]; if(romSort==='alpha') disp.sort((a,b)=>a[1].name.localeCompare(b[1].name));
+                    const di=disp.findIndex(([oi])=>oi===selectedItem); const ni=(di-1+disp.length)%disp.length; selectedItem=disp[ni][0]; sfx.click(); sfx.vibrate(15);
+                }
+                if (k === "arrowright" || k === "arrowdown") {
+                    let disp=[...roms.entries()]; if(romSort==='alpha') disp.sort((a,b)=>a[1].name.localeCompare(b[1].name));
+                    const di=disp.findIndex(([oi])=>oi===selectedItem); const ni=(di+1)%disp.length; selectedItem=disp[ni][0]; sfx.click(); sfx.vibrate(15);
+                }
+                if (k === "i") fileInput.click();
+                if (k === "o") { state = "SETTINGS"; settingsSelection = 0; sfx.click(); }
+                if (k === "s" && roms.length > 0) {
+                    if (!confirmingDelete) { confirmingDelete = true; sfx.play(300, 'square', 0.1); }
+                    else { roms.splice(selectedItem, 1); save(); selectedItem = Math.max(0, selectedItem - 1); confirmingDelete = false; sfx.error(); sfx.vibrate(60); }
+                } else if (k !== "s") confirmingDelete = false;
+                if (k === "q" && roms.length > 0) {
+                    // Charge le saveData de ce ROM
+                    const key = 'gexo_save_' + roms[selectedItem].name;
+                    try { sfx.saveData = JSON.parse(localStorage.getItem(key) || '{}'); } catch(e) { sfx.saveData = {}; }
+                    fade = 1.0; state = "TRANSITION_TO_GAME"; sfx.start(); sfx.vibrate(30);
+                }
+            } else if (state === "SETTINGS") {
+                if (k === "arrowup")   { settingsSelection = (settingsSelection - 1 + 5) % 5; sfx.click(); }
+                if (k === "arrowdown") { settingsSelection = (settingsSelection + 1) % 5; sfx.click(); }
+                if (k === "arrowleft") {
+                    if (settingsSelection === 0) { globalVolume = Math.max(0, parseFloat((globalVolume - 0.1).toFixed(1))); masterGain.gain.value = globalVolume; saveVol(); sfx.click(); }
+                    else if (settingsSelection === 1) { accentIndex = (accentIndex - 1 + ACCENTS.length) % ACCENTS.length; saveAccent(); sfx.click(); }
+                    else if (settingsSelection === 2) { romSort = romSort === 'date' ? 'alpha' : 'date'; saveSort(); sfx.click(); }
+                    else if (settingsSelection === 3) { const T=['light','dark','crt']; theme=T[(T.indexOf(theme)-1+3)%3]; saveTheme(); sfx.click(); }
+                    else if (settingsSelection === 4) { menuView = menuView==='carousel'?'grid':'carousel'; saveView(); sfx.click(); }
+                }
+                if (k === "arrowright") {
+                    if (settingsSelection === 0) { globalVolume = Math.min(1, parseFloat((globalVolume + 0.1).toFixed(1))); masterGain.gain.value = globalVolume; saveVol(); sfx.click(); }
+                    else if (settingsSelection === 1) { accentIndex = (accentIndex + 1) % ACCENTS.length; saveAccent(); sfx.click(); }
+                    else if (settingsSelection === 2) { romSort = romSort === 'date' ? 'alpha' : 'date'; saveSort(); sfx.click(); }
+                    else if (settingsSelection === 3) { const T=['light','dark','crt']; theme=T[(T.indexOf(theme)+1)%3]; saveTheme(); sfx.click(); }
+                    else if (settingsSelection === 4) { menuView = menuView==='carousel'?'grid':'carousel'; saveView(); sfx.click(); }
+                }
+                if (k === "o" || k === "p" || k === "escape") { state = "MENU"; sfx.click(); }
+            } else if (state === "GAME") {
+                if (k === "p") { state = "PAUSE"; pauseSelection = 0; sfx.click(); }
+            } else if (state === "PAUSE") {
+                // 3 options : 0=CONTINUE, 1=QUIT, 2=CONTROLS
+                const PAUSE_OPTS = [0, 2, 1]; // ordre d'affichage
+                if (k === "arrowup")   { const i=PAUSE_OPTS.indexOf(pauseSelection); pauseSelection=PAUSE_OPTS[(i-1+3)%3]; sfx.click(); }
+                if (k === "arrowdown") { const i=PAUSE_OPTS.indexOf(pauseSelection); pauseSelection=PAUSE_OPTS[(i+1)%3]; sfx.click(); }
+                if (k === "q") {
+                    if (pauseSelection === 0) { state = "GAME"; }
+                    else if (pauseSelection === 2) { state = "CONTROLS"; ctrlSel = 0; }
+                    else { if(roms[selectedItem]){localStorage.setItem('gexo_save_'+roms[selectedItem].name,JSON.stringify(sfx.saveData));} fade=0; state="TRANSITION_TO_MENU"; }
+                    sfx.click();
+                }
+            } else if (state === "CONTROLS") {
+                if (k === "arrowup" || k === "arrowdown") { ctrlSel=1-ctrlSel; sfx.click(); }
+                if (k === "arrowleft")  { cycleCtrl(ctrlSel, -1); sfx.click(); }
+                if (k === "arrowright") { cycleCtrl(ctrlSel,  1); sfx.click(); }
+                if (k === "s" || k === "p" || k === "escape") { state="PAUSE"; sfx.click(); }
+            }
+
+            if (k === "arrowup")    kbBtn.up    = true;
+            if (k === "arrowdown")  kbBtn.down  = true;
+            if (k === "arrowleft")  kbBtn.left  = true;
+            if (k === "arrowright") kbBtn.right = true;
+            if (k === "q") kbBtn.a = true;
+            if (k === "s") kbBtn.b = true;
+            if (k === "z") kbBtn.x = true;
+            if (k === "a") kbBtn.y = true;
+        };
+
+        window.onkeyup = (e) => {
+            const k = e.key.toLowerCase();
+            if (k === "arrowup")    kbBtn.up    = false;
+            if (k === "arrowdown")  kbBtn.down  = false;
+            if (k === "arrowleft")  kbBtn.left  = false;
+            if (k === "arrowright") kbBtn.right = false;
+            if (k === "q") kbBtn.a = false;
+            if (k === "s") kbBtn.b = false;
+            if (k === "z") kbBtn.x = false;
+            if (k === "a") kbBtn.y = false;
+        };
+
+        // ── DRAW HELPERS ───────────────────────────────────────────────────────
+        function drawPixelIcon(data, x, y, size) {
+            const p = size / 10;
+            data.forEach((row, j) => { row.split('').forEach((pixel, i) => {
+                if (pixel !== ' ') {
+                    ctx.fillStyle = (pixel === 'P') ? "#bb00ff" : (pixel === 'W') ? "#ffffff" : "#222222";
+                    ctx.fillRect(Math.floor(x + i * p), Math.floor(y + j * p), Math.ceil(p), Math.ceil(p));
+                }
+            }); });
+        }
+
+        function drawStatus() {
+            const now = new Date(); const blink = now.getSeconds() % 2 === 0 ? ":" : " ";
+            ctx.fillStyle = theme==='crt' ? 'rgba(0,20,0,0.95)' : theme==='dark' ? 'rgba(20,20,20,0.97)' : 'rgba(255,255,255,0.95)';
+            ctx.fillRect(0, 0, 128, 12);
+            drawText(now.getHours().toString().padStart(2,'0') + blink + now.getMinutes().toString().padStart(2,'0'), 3, 4, accent());
+            ctx.fillStyle = accent(); ctx.fillRect(115, 4, 8, 4); ctx.fillRect(123, 5, 1, 2);
+            if (Math.sin(Date.now() * 0.01) > 0) ctx.fillRect(116, 5, 2, 2);
+        }
+
+        // ── DRAW SETTINGS ──────────────────────────────────────────────────────
+        // settingsSelection : 0=volume 1=couleur 2=tri 3=thème
+        function drawSettings() {
+            ctx.fillStyle = bgColor(); ctx.fillRect(0, 0, 128, 128);
+            drawStatus();
+            ctx.fillStyle = accent(); ctx.fillRect(0, 14, 128, 1);
+            drawText("SETTINGS", 38, 18, accent());
+            ctx.fillStyle = borderColor(); ctx.fillRect(0, 27, 128, 1);
+
+            // Layout : label x=8, valeur/widget aligné à x=58, max width=62px (jusqu'à x=120)
+            const LX=8, VX=58, VMAX=62;
+            const rows = [
+                { label:'VOL',   y:35 },
+                { label:'COLOR', y:52 },
+                { label:'SORT',  y:69 },
+                { label:'THEME', y:86 },
+                { label:'VIEW',  y:103 },
+            ];
+            rows.forEach((r,i) => {
+                const sel = settingsSelection===i;
+                // Curseur sélection
+                if (sel) { ctx.fillStyle=accent(); ctx.fillRect(LX-3, r.y, 1, 5); }
+                drawText(r.label, LX, r.y, sel ? accent() : '#666');
+            });
+
+            // ── VOL : barre seule, pas de texte ──
+            const barX=VX, barY=35, barW=VMAX, barH=5;
+            ctx.fillStyle=borderColor(); ctx.fillRect(barX,barY,barW,barH);
+            ctx.fillStyle=accent(); ctx.fillRect(barX,barY,Math.round(barW*globalVolume),barH);
+            if(settingsSelection===0){
+                ctx.fillStyle=accent();
+                ctx.fillRect(barX,barY,barW,1); ctx.fillRect(barX,barY+barH-1,barW,1);
+                ctx.fillRect(barX,barY,1,barH); ctx.fillRect(barX+barW-1,barY,1,barH);
+            }
+
+            // ── COLOR : swatches ──
+            ACCENTS.forEach((c,idx)=>{
+                const sw=10, sh=7, sx=VX+idx*12, sy=52;
+                ctx.fillStyle=c; ctx.fillRect(sx,sy,sw,sh);
+                if(idx===accentIndex){
+                    ctx.fillStyle=settingsSelection===1?'#fff':'#aaa';
+                    ctx.fillRect(sx-1,sy-1,sw+2,1); ctx.fillRect(sx-1,sy+sh,sw+2,1);
+                    ctx.fillRect(sx-1,sy-1,1,sh+2); ctx.fillRect(sx+sw,sy-1,1,sh+2);
+                }
+            });
+
+            // ── SORT ──
+            drawText(romSort==='date'?'DATE':'A-Z', VX, 69, settingsSelection===2?accent():'#888');
+
+            // ── THEME ──
+            drawText(theme.toUpperCase(), VX, 86, settingsSelection===3?accent():'#888');
+
+            // ── VIEW ──
+            drawText(menuView==='carousel'?'CRSL':'GRID', VX, 103, settingsSelection===4?accent():'#888');
+
+            // Hint bas
+            ctx.fillStyle=borderColor(); ctx.fillRect(0,114,128,1);
+            drawText('UP/DW  </> CHG  O CLOSE', 8, 120, '#555');
+        }
+
+        // ── CONTROLS HELPERS ─────────────────────────────────────────────────
+        function cycleCtrl(player, dir) {
+            const srcs = availableSources();
+            const key = player === 0 ? 'p1' : 'p2';
+            const other = player === 0 ? 'p2' : 'p1';
+            let idx = srcs.indexOf(ctrlAssign[key]);
+            if (idx < 0) idx = 0;
+            // Cycle en sautant la source déjà assignée à l'autre joueur
+            let tries = 0;
+            do {
+                idx = (idx + dir + srcs.length) % srcs.length;
+                tries++;
+            } while (srcs[idx] === ctrlAssign[other] && srcs[idx] !== 'none' && tries < srcs.length);
+            ctrlAssign[key] = srcs[idx];
+            saveCtrl();
+        }
+
+        function drawControls() {
+            ctx.fillStyle = 'rgba(0,0,0,0.88)'; ctx.fillRect(0,0,128,128);
+            ctx.fillStyle = accent(); ctx.fillRect(0,0,128,1);
+            drawText('CONTROLS', 37, 5, accent());
+            ctx.fillStyle = '#444'; ctx.fillRect(0,15,128,1);
+
+            const srcs = availableSources();
+            ['p1','p2'].forEach((p,i) => {
+                const y = 28 + i*38;
+                const sel = ctrlSel === i;
+                // Label joueur
+                drawText('P'+(i+1), 8, y, sel ? accent() : '#666');
+                // Box source
+                const src = ctrlAssign[p];
+                const lbl = srcLabel(src).substring(0,14);
+                ctx.fillStyle = sel ? '#222' : '#111';
+                ctx.fillRect(22, y-2, 98, 13);
+                if (sel) {
+                    ctx.fillStyle = accent();
+                    ctx.fillRect(22,y-2,98,1); ctx.fillRect(22,y+11,98,1);
+                    ctx.fillRect(22,y-2,1,13); ctx.fillRect(119,y-2,1,13);
+                    // Flèches
+                    drawText('<', 24, y, accent());
+                    drawText('>', 112, y, accent());
+                }
+                drawText(lbl, sel?33:24, y, sel?'#fff':'#888');
+                // Icône état : vert si connecté/dispo, rouge si pad absent
+                const avail = srcs.includes(src);
+                ctx.fillStyle = avail ? '#0f0' : '#f00';
+                ctx.fillRect(116, y+3, 3, 3);
+            });
+
+            // Infos manettes connectées
+            ctx.fillStyle='#333'; ctx.fillRect(0,78,128,1);
+            drawText('CONNECTED:', 8, 83, '#555');
+            const pads = gp.all();
+            if (pads.length === 0) { drawText('NONE', 74, 83, '#555'); }
+            else { pads.forEach((p,i) => drawText('PAD'+p.index+' '+p.id.substring(0,8).toUpperCase(), 8, 92+i*10, '#777')); }
+
+            ctx.fillStyle='#222'; ctx.fillRect(0,115,128,1);
+            drawText('UP/DW SEL  </> CHG  B BACK', 4, 120, '#555');
+        }
+
+        // ── DESSIN D'UNE CARTE ROM ────────────────────────────────────────────
+        function drawRomCard(rom, cx, cy, size, sel) {
+            if (sel) { ctx.shadowColor = accent()+'44'; ctx.shadowBlur = 10; ctx.shadowOffsetY = 3; }
+            ctx.fillStyle = sel ? cardColor() : card2Color();
+            ctx.fillRect(cx, cy, size, size);
+            ctx.shadowBlur = 0; ctx.shadowOffsetY = 0;
+            if (sel) {
+                ctx.fillStyle = accent();
+                ctx.fillRect(cx-2,cy-2,size+4,2); ctx.fillRect(cx-2,cy+size,size+4,2);
+                ctx.fillRect(cx-2,cy-2,2,size+4); ctx.fillRect(cx+size,cy-2,2,size+4);
+            } else {
+                ctx.fillStyle = borderColor();
+                ctx.fillRect(cx,cy,size,1); ctx.fillRect(cx,cy+size-1,size,1);
+                ctx.fillRect(cx,cy,1,size); ctx.fillRect(cx+size-1,cy,1,size);
+            }
+            if (rom.iconFrames && Array.isArray(rom.iconFrames) && rom.iconFrames.length > 0) {
+                const fps=rom.iconFps||8, fi=Math.floor(iconFrame/(60/fps))%rom.iconFrames.length;
+                drawPixelIcon(rom.iconFrames[fi], cx, cy, size);
+            } else if (rom.iconData) {
+                drawPixelIcon(rom.iconData, cx, cy, size);
+            } else {
+                ctx.fillStyle = rom.color || accent();
+                ctx.fillRect(cx, cy, size, size);
+                drawText(rom.name[0]||'?', cx+Math.floor(size/2)-3, cy+Math.floor(size/2)-3, '#fff');
+            }
+        }
+
+        // ── SCREENSAVER ───────────────────────────────────────────────────────
+        let ssAngle = 0;
+        function drawScreensaver() {
+            ctx.fillStyle = '#000'; ctx.fillRect(0,0,128,128);
+            ssAngle += 0.01;
+            // Grid Three.js qui tourne
+            camera.position.set(Math.sin(ssAngle)*5, 3+Math.sin(ssAngle*0.3), Math.cos(ssAngle)*5);
+            camera.lookAt(0,0,0);
+            grid.rotation.y = ssAngle * 0.5;
+            renderer.render(scene, camera); ctx.drawImage(renderer.domElement, 0, 0);
+            // Particules
+            for (let i=0;i<3;i++) {
+                const px=(Math.sin(ssAngle*7.3+i*2.1)*60+64)|0;
+                const py=(Math.cos(ssAngle*5.1+i*1.7)*50+64)|0;
+                ctx.fillStyle=accent(); ctx.fillRect(px,py,1,1);
+            }
+            drawText('GEXO', 47, 58, accent());
+            // Sortir sur n'importe quelle touche/bouton (géré dans lastInput)
+        }
+
+        // ── BIOS ──────────────────────────────────────────────────────────────
+        function drawBios() {
+            ctx.fillStyle='#000'; ctx.fillRect(0,0,128,128);
+            drawText('GEXO BIOS', 36, 15, accent());
+            ctx.fillStyle='#333'; ctx.fillRect(0,25,128,1);
+            drawText('Q  RESET ALL ROMS', 10, 35, '#0f0');
+            drawText('S  FACTORY RESET', 10, 48, '#f55');
+            drawText('O  EXIT BIOS', 10, 61, '#888');
+            ctx.fillStyle='#333'; ctx.fillRect(0,75,128,1);
+            drawText('ROMS: '+roms.length, 10, 82, '#666');
+            drawText('VER: 7.0', 10, 92, '#666');
+        }
+
+        // ── MAIN LOOP ──────────────────────────────────────────────────────────
+        function mainLoop() {
+            pollGamepad();
+            iconFrame++;
+
+            // ── Screensaver ──
+            if (screensaverActive && state === 'MENU') { drawScreensaver(); requestAnimationFrame(mainLoop); return; }
+            if (state === 'MENU' && Date.now() - lastInput > 30000) { screensaverActive = true; }
+
+            // ── BIOS (maintenir B pendant 2s au boot) ──
+            if (state === 'BIOS') {
+                drawBios();
+                requestAnimationFrame(mainLoop); return;
+            }
+
+            if (state === "GAME" || state === "PAUSE" || state.startsWith("TRANSITION")) {
+                if (state === "TRANSITION_TO_GAME") {
+                    fade -= 0.05;
+                    if (fade <= 0) {
+                        state = "GAME";
+                        romInit    = new Function('camera', 'grid', 'v', 'btn', 'scene', 'sfx', roms[selectedItem].init);
+                        romLoop    = new Function('camera', 'grid', 'v', 'btn', 'scene', 'sfx', roms[selectedItem].loop);
+                        romCleanup = roms[selectedItem].cleanup
+                            ? new Function('camera', 'grid', 'v', 'btn', 'scene', 'sfx', roms[selectedItem].cleanup)
+                            : null;
+                        try { romInit(camera, grid, 0, btn, scene, sfx); lastError = null; }
+                        catch(e) { lastError = e.message; state = "TRANSITION_TO_MENU"; sfx.error(); sfx.vibrate(80); }
+                    } else {
+                        // Écran de chargement
+                        const rom = roms[selectedItem];
+                        ctx.fillStyle = '#000'; ctx.fillRect(0,0,128,128);
+                        ctx.fillStyle = rom.color || accent(); ctx.fillRect(0,0,128,128);
+                        ctx.fillStyle = 'rgba(0,0,0,0.5)'; ctx.fillRect(0,0,128,128);
+                        drawText(rom.name, 64 - Math.floor(rom.name.length*3), 50, '#fff');
+                        const prog = 1 - Math.max(0, fade);
+                        ctx.fillStyle = 'rgba(255,255,255,0.2)'; ctx.fillRect(20, 70, 88, 4);
+                        ctx.fillStyle = '#fff'; ctx.fillRect(20, 70, Math.round(88*prog), 4);
+                        ctx.fillStyle = `rgba(0,0,0,${fade})`; ctx.fillRect(0,0,128,128);
+                    }
+                } else if (state === "TRANSITION_TO_MENU") {
+                    fade += 0.05;
+                    if (fade >= 1.0) {
+                        if (roms[selectedItem]) { localStorage.setItem('gexo_save_' + roms[selectedItem].name, JSON.stringify(sfx.saveData)); }
+                        state = "MENU"; resetScene();
+                    }
+                    renderer.render(scene, camera); ctx.drawImage(renderer.domElement, 0, 0);
+                    try { if (romLoop) romLoop(camera, grid, 0, btn, scene, sfx); } catch(e) {}
+                    ctx.fillStyle = `rgba(0,0,0,${fade})`; ctx.fillRect(0,0,128,128);
+                } else {
+                    renderer.render(scene, camera); ctx.drawImage(renderer.domElement, 0, 0);
+                    try { if (romLoop && state !== "PAUSE") romLoop(camera, grid, 0, btn, scene, sfx); }
+                    catch(e) { lastError = e.message; state = "TRANSITION_TO_MENU"; sfx.error(); sfx.vibrate(80); }
+                    // Effet CRT par-dessus le jeu aussi
+                    if (theme === 'crt') {
+                        for (let y=0;y<128;y+=2) { ctx.fillStyle='rgba(0,0,0,0.18)'; ctx.fillRect(0,y,128,1); }
+                        ctx.fillStyle='rgba(0,255,65,0.03)'; ctx.fillRect(0,0,128,128);
+                    }
+                    if (state === "PAUSE") {
+                        ctx.fillStyle = "rgba(0,0,0,0.75)"; ctx.fillRect(0, 0, 128, 128);
+                        drawText("PAUSED", 46, 30, "#fff");
+                        ctx.fillStyle='#333'; ctx.fillRect(20,41,88,1);
+                        drawText("CONTINUE", 40, 50, pauseSelection === 0 ? accent() : "#888");
+                        drawText("CONTROLS", 40, 65, pauseSelection === 2 ? accent() : "#888");
+                        drawText("QUIT",     54, 80, pauseSelection === 1 ? accent() : "#888");
+                    }
+                    ctx.fillStyle = `rgba(0,0,0,${fade})`; ctx.fillRect(0, 0, 128, 128);
+                }
+
+            } else if (state === "CONTROLS") {
+                // Rendu jeu en arrière-plan + overlay controls
+                renderer.render(scene, camera); ctx.drawImage(renderer.domElement, 0, 0);
+                try { if (romLoop) romLoop(camera, grid, 0, btn, scene, sfx); } catch(e) {}
+                if (theme === 'crt') { for(let y=0;y<128;y+=2){ctx.fillStyle='rgba(0,0,0,0.18)';ctx.fillRect(0,y,128,1);} }
+                drawControls();
+
+            } else if (state === "SETTINGS") {
+                drawSettings();
+                if (theme === 'crt') { for(let y=0;y<128;y+=2){ctx.fillStyle='rgba(0,0,0,0.15)';ctx.fillRect(0,y,128,1);} }
+
+            } else {
+                ctx.fillStyle = bgColor(); ctx.fillRect(0, 0, 128, 128);
+
+                if (state === "BOOT") {
+                    // BIOS hold detection
+                    if (kbBtn.b || btn.b) {
+                        if (!biosHoldStart) biosHoldStart = Date.now();
+                        const held = Date.now() - biosHoldStart;
+                        drawText("GEXO OS", 45, 50, accent());
+                        drawText("HOLD B FOR BIOS", 19, 65, '#888');
+                        const bw = Math.round(88 * Math.min(1, held/2000));
+                        ctx.fillStyle='#333'; ctx.fillRect(20,78,88,3);
+                        ctx.fillStyle=accent(); ctx.fillRect(20,78,bw,3);
+                        if (held >= 2000) { state = 'BIOS'; biosHoldStart = 0; sfx.click(); }
+                    } else {
+                        biosHoldStart = 0;
+                        if (bootFrame === 1) sfx.boot();
+                        drawText("GEXO OS", 45, 60, accent());
+                        bootFrame++;
+                        if (bootFrame > 40) { state = "MENU"; fade = 0; }
+                    }
+                } else {
+                    // ── MENU ──
+                    drawStatus();
+
+                    // Tri des ROMs
+                    let displayRoms = [...roms.entries()]; // [[origIdx, rom], ...]
+                    if (romSort === 'alpha') displayRoms.sort((a,b) => a[1].name.localeCompare(b[1].name));
+
+                    if (displayRoms.length === 0) {
+                        drawText("EMPTY", 47, 55, '#888');
+                        drawText("PRESS I TO LOAD", 21, 68, '#bbb');
+                    } else if (menuView === 'grid') {
+                        // ── Vue grille : 2 colonnes ──
+                        const GSIZ=52, GPAD=6, GCOLS=2;
+                        displayRoms.forEach(([origIdx, rom], i) => {
+                            const col=i%GCOLS, row=Math.floor(i/GCOLS);
+                            const gx=GPAD+col*(GSIZ+GPAD+2), gy=16+row*(GSIZ+12);
+                            const sel=(origIdx===selectedItem);
+                            drawRomCard(rom, gx, gy, GSIZ, sel);
+                            if (sel) {
+                                const lbl=rom.name.substring(0,9);
+                                drawText(lbl, gx+Math.floor((GSIZ-lbl.length*6)/2), gy+GSIZ+3, accent());
+                            }
+                            const sc=scores[rom.name];
+                            if(sc!==undefined){ drawText(''+sc, gx+1, gy+GSIZ-7, '#fff'); }
+                        });
+                        // Navigation grille : gauche/droite changent selectedItem dans l'ordre affiché
+                    } else {
+                        // ── Vue carousel ──
+                        const CARD = 60, CARD_Y = 28;
+                        // Trouve l'index d'affichage du selectedItem
+                        const dispIdx = displayRoms.findIndex(([oi]) => oi === selectedItem);
+                        menuPos += (dispIdx * -72 - menuPos) * 0.2;
+                        displayRoms.forEach(([origIdx, rom], i) => {
+                            const x = 34 + (i * 72) + menuPos;
+                            const sel = (origIdx === selectedItem);
+                            const cx = Math.floor(x);
+                            drawRomCard(rom, cx, CARD_Y, CARD, sel);
+                            if (sel) {
+                                const label = rom.name.substring(0, 9);
+                                const labelW = label.length * 6;
+                                drawText(label, cx + Math.floor((CARD - labelW) / 2), CARD_Y + CARD + 5, accent());
+                                // Score sous le nom
+                                const sc = scores[rom.name];
+                                if (sc !== undefined) drawText('HI:'+sc, cx+Math.floor((CARD-30)/2), CARD_Y+CARD+13, '#888');
+                            }
+                        });
+                    }
+
+                    if (confirmingDelete) { ctx.fillStyle="rgba(200,0,0,0.95)"; ctx.fillRect(0,105,128,23); drawText("S: CONFIRM DELETE?",8,114,"#fff"); }
+                    if (lastError)        { ctx.fillStyle="rgba(200,0,0,0.95)"; ctx.fillRect(0,105,128,23); drawText("ERR:"+lastError.substring(0,14),5,114,"#fff"); }
+                }
+
+                // CRT overlay
+                if (theme === 'crt') {
+                    for(let y=0;y<128;y+=2){ctx.fillStyle='rgba(0,0,0,0.15)';ctx.fillRect(0,y,128,1);}
+                    ctx.fillStyle='rgba(0,255,65,0.04)'; ctx.fillRect(0,0,128,128);
+                }
+            }
+            requestAnimationFrame(mainLoop);
+        }
+
+        // ── BIOS keyboard ─────────────────────────────────────────────────────
+        document.addEventListener('keydown', (e) => {
+            if (state !== 'BIOS') return;
+            if (e.key.toLowerCase() === 'q') { roms=[]; save(); sfx.start(); state='BOOT'; bootFrame=0; }
+            if (e.key.toLowerCase() === 's') { roms=[]; scores={}; save(); saveScores(); localStorage.removeItem('gexo_vol'); localStorage.removeItem('gexo_accent'); localStorage.removeItem('gexo_view'); localStorage.removeItem('gexo_sort'); localStorage.removeItem('gexo_theme'); sfx.error(); state='BOOT'; bootFrame=0; location.reload(); }
+            if (e.key.toLowerCase() === 'o' || e.key === 'Escape') { state='BOOT'; bootFrame=0; sfx.click(); }
+        });
+
+        mainLoop();
+
+        // ── CONTRÔLES VIRTUELS MOBILES ────────────────────────────────────────
+        // Injecté après mainLoop pour que state/sfx/roms/etc. soient déclarés
+        var VMAP = {
+            'vup':'up','vdown':'down','vleft':'left','vright':'right',
+            'vbtn-a':'a','vbtn-b':'b','vbtn-x':'x','vbtn-y':'y'
+        };
+
+        function vpress(id, active) {
+            lastInput = Date.now(); screensaverActive = false;
+
+            // kbBtn : toujours mis à jour pour les ROMs en jeu
+            if (VMAP[id] !== undefined) {
+                kbBtn[VMAP[id]] = active;
+            }
+            // Hors jeu : la navigation est gérée directement ci-dessous.
+            // On bloque pollGamepad en forçant kbEdgePrev à l'état actuel
+            // pour éviter le double trigger (vpress + pollGamepad).
+            if (VMAP[id] !== undefined && state !== 'GAME' && !state.startsWith('TRANSITION')) {
+                kbEdgePrev[VMAP[id]] = active; // consomme l'edge côté pollGamepad
+            }
+
+            // Navigation système directe sur le press (pas d'attente pollGamepad)
+            if (active) {
+                var disp = function() {
+                    var d = [...roms.entries()];
+                    if (romSort === 'alpha') d.sort(function(a,b){return a[1].name.localeCompare(b[1].name);});
+                    return d;
+                };
+
+                if (state === 'MENU') {
+                    if (id === 'vleft' || id === 'vup') {
+                        var d=disp(), di=d.findIndex(function(x){return x[0]===selectedItem;});
+                        selectedItem=d[(di-1+d.length)%d.length][0]; sfx.click(); sfx.vibrate(15);
+                    } else if (id === 'vright' || id === 'vdown') {
+                        var d=disp(), di=d.findIndex(function(x){return x[0]===selectedItem;});
+                        selectedItem=d[(di+1)%d.length][0]; sfx.click(); sfx.vibrate(15);
+                    } else if (id === 'vbtn-a' && roms.length > 0) {
+                        var key='gexo_save_'+roms[selectedItem].name;
+                        try{sfx.saveData=JSON.parse(localStorage.getItem(key)||'{}');}catch(e2){sfx.saveData={};}
+                        fade=1.0; state='TRANSITION_TO_GAME'; sfx.start(); sfx.vibrate(30);
+                    } else if (id === 'vbtn-b' && roms.length > 0) {
+                        if(!confirmingDelete){confirmingDelete=true;sfx.play(300,'square',0.1);}
+                        else{roms.splice(selectedItem,1);save();selectedItem=Math.max(0,selectedItem-1);confirmingDelete=false;sfx.error();sfx.vibrate(60);}
+                    }
+                } else if (state === 'SETTINGS') {
+                    if (id === 'vup')   { settingsSelection=(settingsSelection-1+5)%5; sfx.click(); }
+                    if (id === 'vdown') { settingsSelection=(settingsSelection+1)%5; sfx.click(); }
+                    if (id === 'vleft' || id === 'vright') {
+                        var dir = id==='vright' ? 1 : -1;
+                        if(settingsSelection===0){globalVolume=Math.max(0,Math.min(1,parseFloat((globalVolume+dir*0.1).toFixed(1))));masterGain.gain.value=globalVolume;saveVol();}
+                        else if(settingsSelection===1){accentIndex=(accentIndex+dir+ACCENTS.length)%ACCENTS.length;saveAccent();}
+                        else if(settingsSelection===2){romSort=romSort==='date'?'alpha':'date';saveSort();}
+                        else if(settingsSelection===3){var T=['light','dark','crt'];theme=T[(T.indexOf(theme)+dir+3)%3];saveTheme();}
+                        else{menuView=menuView==='carousel'?'grid':'carousel';saveView();}
+                        sfx.click();
+                    }
+                } else if (state === 'PAUSE') {
+                    var PO=[0,2,1];
+                    if (id === 'vup')   { pauseSelection=PO[(PO.indexOf(pauseSelection)-1+3)%3]; sfx.click(); }
+                    if (id === 'vdown') { pauseSelection=PO[(PO.indexOf(pauseSelection)+1)%3]; sfx.click(); }
+                    if (id === 'vbtn-a') {
+                        if(pauseSelection===0){state='GAME';}
+                        else if(pauseSelection===1){if(roms[selectedItem]){localStorage.setItem('gexo_save_'+roms[selectedItem].name,JSON.stringify(sfx.saveData));}fade=0;state='TRANSITION_TO_MENU';}
+                        else if(pauseSelection===2){state='CONTROLS';ctrlSel=0;}
+                        sfx.click();
+                    }
+                } else if (state === 'CONTROLS') {
+                    if (id === 'vup' || id === 'vdown') { ctrlSel=1-ctrlSel; sfx.click(); }
+                    if (id === 'vleft')  { cycleCtrl(ctrlSel,-1); sfx.click(); }
+                    if (id === 'vright') { cycleCtrl(ctrlSel, 1); sfx.click(); }
+                }
+            }
+
+            if (!active) return;
+            // Boutons système (home/start/select gérés plus bas)
+            if (VMAP[id] !== undefined) return; // déjà traité
+
+            sfx.click();
+            if (id === 'vhome') {
+                if (state === 'GAME' || state === 'PAUSE' || state === 'CONTROLS' ||
+                    state === 'TRANSITION_TO_GAME' || state === 'TRANSITION_TO_MENU') {
+                    if (roms[selectedItem]) { localStorage.setItem('gexo_save_'+roms[selectedItem].name, JSON.stringify(sfx.saveData)); }
+                    romLoop = null; romInit = null; romCleanup = null; // stop ROM immédiat
+                    resetScene(); fade = 0; state = 'MENU';
+                } else if (state === 'SETTINGS' || state === 'BIOS') {
+                    state = 'MENU';
+                } else {
+                    screensaverActive = false;
+                }
+            } else if (id === 'vstart') {
+                if      (state === 'MENU')     { state = 'SETTINGS'; settingsSelection = 0; }
+                else if (state === 'SETTINGS') { state = 'MENU'; }
+                else if (state === 'GAME')     { state = 'PAUSE'; pauseSelection = 0; }
+                else if (state === 'PAUSE')    {
+                    if (pauseSelection===0) { state='GAME'; }
+                    else if (pauseSelection===1) { if(roms[selectedItem]){localStorage.setItem('gexo_save_'+roms[selectedItem].name,JSON.stringify(sfx.saveData));} fade=0; state='TRANSITION_TO_MENU'; }
+                    else if (pauseSelection===2) { state='CONTROLS'; ctrlSel=0; }
+                }
+            } else if (id === 'vselect') {
+                if      (state === 'MENU')    { fileInput.click(); return; } // return : pas de sfx.click sur file picker
+                else if (state === 'GAME' && !sfx.consumeSelect) { state='PAUSE'; pauseSelection=0; }
+                else if (state === 'PAUSE')   { var PO=[0,2,1]; pauseSelection=PO[(PO.indexOf(pauseSelection)+1)%3]; }
+                else if (state === 'CONTROLS'){ state='PAUSE'; }
+            }
+        }
+
+        // Attache les events sur tous les boutons virtuels
+        // Utilise Pointer Events (unifié touch+mouse, meilleur support mobile)
+        ['vup','vdown','vleft','vright','vbtn-a','vbtn-b','vbtn-x','vbtn-y','vstart','vselect','vhome'].forEach(function(id) {
+            var el = document.getElementById(id);
+            if (!el) return;
+            el.style.touchAction = 'none'; // requis pour pointer events sur mobile
+            el.addEventListener('pointerdown', function(e) {
+                e.preventDefault();
+                el.setPointerCapture(e.pointerId);
+                vpress(id, true);
+                el.classList.add('pressed');
+            });
+            el.addEventListener('pointerup', function(e) {
+                e.preventDefault();
+                vpress(id, false);
+                el.classList.remove('pressed');
+            });
+            el.addEventListener('pointercancel', function(e) {
+                vpress(id, false);
+                el.classList.remove('pressed');
+            });
+        });
+
+        // Bloque le scroll sur le pad virtuel
+        var mc = document.getElementById('mobile-controls');
+        if (mc) mc.addEventListener('touchmove', function(e){ e.preventDefault(); }, {passive:false});
+    </script>
+</body>
+</html>
