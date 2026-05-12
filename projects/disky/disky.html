@@ -281,13 +281,14 @@ body.light .popup { background:rgba(240,240,245,.92); }
 
 /* ── Playlist export button ── */
 .pll-export {
-  background:none; border:none; cursor:pointer;
-  color:rgba(0,0,0,0); padding:6px; border-radius:6px; flex-shrink:0;
+  background:rgba(128,128,128,.08); border:1px solid rgba(128,128,128,.12);
+  cursor:pointer; color:rgba(255,255,255,.45); padding:6px; border-radius:6px; flex-shrink:0;
   display:flex; align-items:center; justify-content:center;
-  transition:color .18s, background .18s;
+  transition:color .18s, background .18s, border-color .18s, transform .14s;
 }
-.pll-item:hover .pll-export { color:rgba(128,128,128,.4); }
-.pll-export:hover { color:rgba(100,200,255,.9)!important; background:rgba(100,180,255,.1); }
+body.light .pll-export { color:rgba(0,0,0,.48); }
+.pll-item:hover .pll-export { color:rgba(100,200,255,.9); border-color:rgba(100,180,255,.28); }
+.pll-export:hover { color:rgba(100,200,255,.98)!important; background:rgba(100,180,255,.14); }
 .pll-export:active { transform:scale(.88); }
 
 /* ── Add to playlist button & dropdown (onglet importées) ── */
@@ -422,6 +423,43 @@ body.light .toast { background:rgba(255,255,255,.96); color:rgba(0,0,0,.85); bor
 .tl-queue:active { transform:scale(.88); }
 .tl-queue.queued { color:rgba(255,200,80,.8) !important; }
 
+/* ── Edit track button (onglet importées) ── */
+.tl-edit {
+  background:none; border:none; cursor:pointer;
+  color:rgba(0,0,0,0); padding:5px; border-radius:6px; flex-shrink:0;
+  display:flex; align-items:center; justify-content:center;
+  transition:color .18s, background .18s;
+}
+.tl-item:hover .tl-edit { color:rgba(128,128,128,.45); }
+.tl-edit:hover { color:rgba(110,190,255,.95)!important; background:rgba(90,170,255,.12); }
+.tl-edit:active { transform:scale(.88); }
+
+/* ── Edit modal ── */
+.edit-modal .create-box {
+  gap:14px;
+}
+.edit-box h3 {
+  font-family:'Syne',sans-serif; font-weight:800; font-size:1rem; color:var(--txt);
+}
+.edit-cover-row {
+  display:flex; gap:12px; align-items:center;
+}
+.edit-cover-preview {
+  width:72px; height:72px; border-radius:16px;
+  background-size:cover; background-position:center;
+  background-color:rgba(128,128,128,.12);
+  border:1px solid rgba(128,128,128,.16);
+  box-shadow:0 10px 24px rgba(0,0,0,.22);
+  flex-shrink:0;
+}
+.edit-cover-actions {
+  display:flex; flex-direction:column; gap:8px; flex:1;
+}
+.edit-cover-actions .action-btn,
+.edit-cover-actions .btn-cancel {
+  width:100%;
+}
+
 /* ── Queue indicator on pill ── */
 .pill-queue-badge {
   display:none; font-size:.6rem; font-family:'Syne',sans-serif; font-weight:700;
@@ -448,6 +486,39 @@ body.light .toast { background:rgba(255,255,255,.96); color:rgba(0,0,0,.85); bor
   transition:color .15s, background .15s;
 }
 .queue-clear-btn:hover { color:#ff6b6b; background:rgba(255,80,80,.1); }
+
+/* ── Equalizer visualizer ── */
+#eq-canvas {
+  position:fixed; inset:0; width:100%; height:100%;
+  pointer-events:none; z-index:0;
+  opacity:0; transition:opacity .6s ease;
+}
+#eq-canvas.active { opacity:1; }
+
+/* Settings toggle row */
+.settings-toggle-row {
+  display:flex; align-items:center; justify-content:space-between;
+}
+.toggle-switch {
+  position:relative; width:38px; height:22px; cursor:pointer;
+  -webkit-tap-highlight-color:transparent;
+}
+.toggle-switch input { opacity:0; width:0; height:0; position:absolute; }
+.toggle-track {
+  position:absolute; inset:0; border-radius:11px;
+  background:rgba(128,128,128,.18); border:1px solid rgba(128,128,128,.25);
+  transition:background .2s, border-color .2s;
+}
+.toggle-switch input:checked ~ .toggle-track {
+  background:rgba(var(--accent),.55); border-color:rgba(var(--accent),.6);
+}
+.toggle-knob {
+  position:absolute; top:3px; left:3px; width:16px; height:16px;
+  border-radius:50%; background:#fff;
+  box-shadow:0 1px 4px rgba(0,0,0,.35);
+  transition:transform .2s cubic-bezier(.22,1,.36,1);
+}
+.toggle-switch input:checked ~ .toggle-track .toggle-knob { transform:translateX(16px); }
 
 /* ── Settings panel ── */
 .settings-overlay {
@@ -551,10 +622,12 @@ body.light .settings-panel { background:rgba(240,240,245,.94); }
 
 #file-input { display:none; }
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 </head>
 <body>
 
 <div id="bg"></div>
+<canvas id="eq-canvas"></canvas>
 <div class="key-hint" id="key-hint"></div>
 
 <div class="drop-overlay" id="drop-overlay">
@@ -669,6 +742,17 @@ body.light .settings-panel { background:rgba(240,240,245,.94); }
       </div>
     </div>
 
+    <!-- Visualiseur equalizer -->
+    <div class="settings-section">
+      <div class="settings-toggle-row">
+        <span class="settings-label" style="margin-bottom:0">Visualiseur equalizer</span>
+        <label class="toggle-switch">
+          <input type="checkbox" id="viz-toggle" onchange="toggleEqViz(this.checked)">
+          <div class="toggle-track"><div class="toggle-knob"></div></div>
+        </label>
+      </div>
+    </div>
+
     <!-- Statistiques -->
     <div class="settings-section">
       <span class="settings-label">Statistiques</span>
@@ -733,6 +817,10 @@ body.light .settings-panel { background:rgba(240,240,245,.94); }
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           Créer une playlist
         </button>
+        <button class="action-btn" onclick="exportCurrentPlaylist()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          Exporter la playlist sélectionnée
+        </button>
         <input type="file" id="import-pl-input" accept=".zip" style="display:none">
         <button class="action-btn" onclick="document.getElementById('import-pl-input').click()">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
@@ -751,6 +839,27 @@ body.light .settings-panel { background:rgba(240,240,245,.94); }
     <div class="create-actions">
       <button class="btn-cancel"  onclick="closeCreateModal()">Annuler</button>
       <button class="btn-confirm" onclick="confirmCreate()">Créer</button>
+    </div>
+  </div>
+</div>
+
+<div class="create-modal edit-modal" id="edit-modal" onclick="editOverlayClick(event)">
+  <div class="create-box edit-box">
+    <h3>Modifier le morceau</h3>
+    <div class="edit-cover-row">
+      <div class="edit-cover-preview" id="edit-cover-preview"></div>
+      <div class="edit-cover-actions">
+        <input id="edit-cover-input" type="file" accept="image/*" style="display:none">
+        <button class="action-btn" onclick="document.getElementById('edit-cover-input').click()">Choisir une image</button>
+        <button class="btn-cancel" onclick="clearEditCover()">Retirer la pochette</button>
+      </div>
+    </div>
+    <input class="create-input" id="edit-title-input" type="text" placeholder="Titre">
+    <input class="create-input" id="edit-artist-input" type="text" placeholder="Auteur / artiste">
+    <input class="create-input" id="edit-album-input" type="text" placeholder="Album">
+    <div class="create-actions">
+      <button class="btn-cancel" onclick="closeEditModal()">Annuler</button>
+      <button class="btn-confirm" onclick="confirmEditTrack()">Enregistrer</button>
     </div>
   </div>
 </div>
@@ -841,7 +950,7 @@ const idbClear  = (s)   => new Promise((r,j) => { const q=db.transaction(s,'read
 
 async function saveState() {
   const savePlId = (currentPlId === MIX_ID || currentPlId === LIB_PL_ID) ? (playlists.find(p => p.id !== LIB_PL_ID)?.id || 1) : currentPlId;
-  await idbPut('meta',{id:'state',playlists,currentPlId:savePlId,nextPlId,isDark,crossfadeOn});
+  await idbPut('meta',{id:'state',playlists,currentPlId:savePlId,nextPlId,isDark,crossfadeOn,eqVizOn});
 }
 
 async function getBlobUrls(trackId) {
@@ -899,7 +1008,8 @@ const DEMO_COVERS = {};
 let playlists=[],currentPlId=1,nextPlId=4,nextTrackId=1;
 let currentIndex=0,isPlaying=false,isShuffle=false,isRepeat=false;
 let volLevel=0.8,isMuted=false,dragSrcIndex=null;
-let isDark=true,crossfadeOn=false,crossfadeSec=4,isFullscreen=false;
+let isDark=true,crossfadeOn=false,crossfadeSec=4,isFullscreen=false,eqVizOn=false;
+let activeTrackId = null;
 
 // ── Queue (file d'attente) ──
 // queue = array of track objects { trackId, title, artist, album, duration }
@@ -1104,12 +1214,121 @@ function startViz() {
 
 function stopViz() {
   if (vizRAF) { cancelAnimationFrame(vizRAF); vizRAF = null; }
-  // Reset to default box-shadow
   discEl.style.boxShadow = '';
 }
 
 // no-op — kept for fullscreen toggle compat
 function switchVizMode() {}
+
+// ══════════════════════════════════════════════════
+//  EQUALIZER BACKGROUND VISUALIZER
+// ══════════════════════════════════════════════════
+let eqRAF = null;
+const eqCanvas = document.getElementById('eq-canvas');
+const eqCtx    = eqCanvas.getContext('2d');
+
+function resizeEqCanvas() {
+  eqCanvas.width  = window.innerWidth;
+  eqCanvas.height = window.innerHeight;
+}
+window.addEventListener('resize', resizeEqCanvas);
+resizeEqCanvas();
+
+function toggleEqViz(on) {
+  eqVizOn = on;
+  saveState();
+  if (on) {
+    ensureAudioCtx();
+    startEqViz();
+  } else {
+    stopEqViz();
+  }
+}
+
+function startEqViz() {
+  if (eqRAF) return;
+  eqCanvas.classList.add('active');
+
+  const BAR_COUNT = 64;
+  const HALF      = BAR_COUNT / 2;
+  const freqData  = new Uint8Array(analyser ? analyser.frequencyBinCount : 128);
+
+  // Per-bar random wave phase/speed/amp for organic variation
+  const waveOffset = Array.from({length: HALF}, () => Math.random() * Math.PI * 2);
+  const waveSpeed  = Array.from({length: HALF}, () => 0.4 + Math.random() * 0.6);
+  const waveAmp    = Array.from({length: HALF}, () => 0.08 + Math.random() * 0.12);
+  let   waveT      = 0;
+
+  function frame() {
+    eqRAF = requestAnimationFrame(frame);
+    waveT += 0.016;
+
+    const W = eqCanvas.width, H = eqCanvas.height;
+    eqCtx.clearRect(0, 0, W, H);
+
+    if (analyser) analyser.getByteFrequencyData(freqData);
+
+    const accentStr = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '120,120,255';
+    const [r,g,b]   = accentStr.split(',').map(s => parseInt(s.trim(), 10));
+
+    const isLight     = document.body.classList.contains('light');
+    const isBig       = document.body.classList.contains('fullscreen');
+    const barAlphaMax = isLight ? 0.18 : 0.28;
+    const glowAlpha   = isLight ? 0.10 : 0.18;
+
+    // Normal: cap at 50% height. Big mode: 85%
+    const maxFrac = isBig ? 0.85 : 0.50;
+
+    const gap     = W * 0.004;
+    const barW    = (W - gap * (BAR_COUNT + 1)) / BAR_COUNT;
+    const binStep = Math.max(1, Math.floor(freqData.length / HALF));
+
+    function drawBar(i, x) {
+      let sum = 0;
+      for (let k = 0; k < binStep; k++) sum += (freqData[i * binStep + k] || 0);
+      const raw = sum / binStep / 255;
+      const val = Math.pow(raw, 1.4);
+
+      // Wave modulation proportional to signal — creates valleys without fake movement at silence
+      const wave   = Math.sin(waveT * waveSpeed[i] + waveOffset[i]) * waveAmp[i];
+      const modVal = Math.max(0, Math.min(1, val + val * wave));
+
+      const barH = Math.max(2, modVal * H * maxFrac);
+      const y    = H - barH;
+
+      const grad = eqCtx.createLinearGradient(0, y, 0, H);
+      grad.addColorStop(0,   `rgba(${r},${g},${b},${barAlphaMax})`);
+      grad.addColorStop(0.5, `rgba(${r},${g},${b},${barAlphaMax * 0.6})`);
+      grad.addColorStop(1,   `rgba(${r},${g},${b},0.02)`);
+
+      eqCtx.beginPath();
+      const radius = Math.min(barW / 2, 4);
+      eqCtx.roundRect(x, y, barW, barH, [radius, radius, 0, 0]);
+      eqCtx.fillStyle = grad;
+      eqCtx.fill();
+
+      if (modVal > 0.3) {
+        eqCtx.shadowColor = `rgba(${r},${g},${b},${glowAlpha})`;
+        eqCtx.shadowBlur  = 18;
+        eqCtx.fillStyle   = `rgba(${r},${g},${b},${glowAlpha * modVal})`;
+        eqCtx.fill();
+        eqCtx.shadowBlur  = 0;
+      }
+    }
+
+    const centerX = W / 2;
+    for (let i = 0; i < HALF; i++) {
+      drawBar(i, centerX - gap - barW - i * (barW + gap));
+      drawBar(i, centerX + gap + i * (barW + gap));
+    }
+  }
+  frame();
+}
+function stopEqViz() {
+  if (eqRAF) { cancelAnimationFrame(eqRAF); eqRAF = null; }
+  eqCtx.clearRect(0, 0, eqCanvas.width, eqCanvas.height);
+  eqCanvas.classList.remove('active');
+}
 
 // ══════════════════════════════════════════════════
 //  CROSSFADE
@@ -1459,6 +1678,7 @@ document.addEventListener('visibilitychange', () => {
     }, 100);
   }
 });
+let tT;
 function showToast(m){toastEl.textContent=m;toastEl.classList.add('show');clearTimeout(tT);tT=setTimeout(()=>toastEl.classList.remove('show'),2800);}
 
 // ══════════════════════════════════════════════════
@@ -1494,6 +1714,7 @@ async function loadTrack(index,autoplay=false){
   if(!tracks.length){titleEl.textContent='—';artistEl.textContent='';albumEl.textContent='';checkMq();setCover(null);setPlayState(false);stopViz();return;}
   currentIndex=((index%tracks.length)+tracks.length)%tracks.length;
   const t=tracks[currentIndex];
+  activeTrackId = t.trackId;
   titleEl.textContent=t.title||'—';artistEl.textContent=t.artist||'';albumEl.textContent=t.album||'';checkMq();
 
   let coverUrl=DEMO_COVERS[t.trackId]||null,audioUrl=null;
@@ -1525,6 +1746,8 @@ async function loadTrack(index,autoplay=false){
 async function loadQueueTrack(t, autoplay=false) {
   clearCF();
   isQueueMode = true;
+  activeTrackId = t.trackId;
+  activeTrackId = t.trackId;
   titleEl.textContent  = t.title  || '—';
   artistEl.textContent = t.artist || '';
   albumEl.textContent  = t.album  || '';
@@ -1574,9 +1797,10 @@ function setPlayState(p){
   discWrap.classList.toggle('spinning',p);
   if ('mediaSession' in navigator) navigator.mediaSession.playbackState = p ? 'playing' : 'paused';
   if(p){
-    try { ensureAudioCtx(); if(audioCtx.state==='suspended')audioCtx.resume(); startViz(); } catch(e){}
+    try { ensureAudioCtx(); if(audioCtx.state==='suspended')audioCtx.resume(); startViz(); if(eqVizOn)startEqViz(); } catch(e){}
   } else {
     stopViz();
+    if(!eqVizOn)stopEqViz();
     stopStatsTracking();
   }
 }
@@ -1934,6 +2158,7 @@ document.addEventListener('click', () => {
 });
 
 async function playImportedTrack(t) {
+  activeTrackId = t.trackId;
   const idx = currentTracks().findIndex(x => x.trackId === t.trackId);
   if (idx !== -1) { await loadTrack(idx, true); return; }
   const urls = await getBlobUrls(t.trackId);
@@ -1950,6 +2175,134 @@ async function playImportedTrack(t) {
   bindAudioEvents(); setPlayState(true);
   progFill.style.width = '0%';
   curTimeEl.textContent = '0:00'; totTimeEl.textContent = '0:00';
+  updateMediaSession(t, urls.coverUrl || FALLBACK);
+}
+
+// ── Edit metadata modal ──
+let editTrackId = null;
+let editCoverBlob = null;
+let editCoverPreviewUrl = '';
+
+function getTrackById(trackId) {
+  for (const pl of playlists) {
+    const track = pl.tracks.find(t => t.trackId === trackId);
+    if (track) return track;
+  }
+  return null;
+}
+
+function updateImportedTrackRefs(trackId, patch, coverBlob = undefined) {
+  for (const pl of playlists) {
+    for (const t of pl.tracks) {
+      if (t.trackId !== trackId) continue;
+      if (patch.title !== undefined) t.title = patch.title;
+      if (patch.artist !== undefined) t.artist = patch.artist;
+      if (patch.album !== undefined) t.album = patch.album;
+    }
+  }
+  return Promise.resolve();
+}
+
+async function openEditModal(trackId) {
+  const t = getTrackById(trackId);
+  if (!t) return;
+
+  editTrackId = trackId;
+  editCoverBlob = null;
+
+  const modal = document.getElementById('edit-modal');
+  const title = document.getElementById('edit-title-input');
+  const artist = document.getElementById('edit-artist-input');
+  const album = document.getElementById('edit-album-input');
+  const preview = document.getElementById('edit-cover-preview');
+  const coverInput = document.getElementById('edit-cover-input');
+
+  title.value = t.title || '';
+  artist.value = t.artist || '';
+  album.value = t.album || '';
+  coverInput.value = '';
+
+  const urls = await getBlobUrls(trackId);
+  if (editCoverPreviewUrl) URL.revokeObjectURL(editCoverPreviewUrl);
+  editCoverPreviewUrl = urls.coverUrl || FALLBACK;
+  preview.style.backgroundImage = `url('${editCoverPreviewUrl}')`;
+
+  modal.classList.add('show');
+  setTimeout(() => title.focus(), 80);
+}
+
+function closeEditModal() {
+  const modal = document.getElementById('edit-modal');
+  modal.classList.remove('show');
+  if (editCoverPreviewUrl && editCoverPreviewUrl !== FALLBACK) {
+    URL.revokeObjectURL(editCoverPreviewUrl);
+  }
+  editCoverPreviewUrl = '';
+  editCoverBlob = null;
+  editTrackId = null;
+}
+
+function editOverlayClick(e) {
+  if (e.target === document.getElementById('edit-modal')) closeEditModal();
+}
+
+function clearEditCover() {
+  editCoverBlob = null;
+  const preview = document.getElementById('edit-cover-preview');
+  preview.style.backgroundImage = `url('${FALLBACK}')`;
+  const input = document.getElementById('edit-cover-input');
+  input.value = '';
+}
+
+document.getElementById('edit-cover-input').addEventListener('change', async function() {
+  const file = this.files && this.files[0];
+  if (!file) return;
+  if (editCoverPreviewUrl && editCoverPreviewUrl !== FALLBACK) URL.revokeObjectURL(editCoverPreviewUrl);
+  editCoverBlob = new Blob([await file.arrayBuffer()], { type: file.type || 'image/jpeg' });
+  editCoverPreviewUrl = URL.createObjectURL(editCoverBlob);
+  document.getElementById('edit-cover-preview').style.backgroundImage = `url('${editCoverPreviewUrl}')`;
+});
+
+async function confirmEditTrack() {
+  if (!editTrackId) return;
+
+  const title = document.getElementById('edit-title-input').value.trim();
+  const artist = document.getElementById('edit-artist-input').value.trim();
+  const album = document.getElementById('edit-album-input').value.trim();
+
+  const row = await idbGet('files', editTrackId);
+  if (!row) { showToast('Morceau introuvable'); return; }
+
+  const coverBlob = editCoverBlob === null ? null : editCoverBlob;
+  await idbPut('files', {
+    id: editTrackId,
+    audioBlob: row.audioBlob,
+    coverBlob
+  });
+
+  await updateImportedTrackRefs(editTrackId, {
+    title: title || 'Sans titre',
+    artist: artist || 'Artiste inconnu',
+    album
+  });
+
+  const current = getTrackById(editTrackId);
+  if (current && activeTrackId === editTrackId) {
+    titleEl.textContent = current.title || '—';
+    artistEl.textContent = current.artist || '';
+    albumEl.textContent = current.album || '';
+    const urls = await getBlobUrls(editTrackId);
+    setCover(urls.coverUrl || FALLBACK);
+    updateMediaSession(current, urls.coverUrl || FALLBACK);
+  }
+
+  await saveState();
+  renderImportedList();
+  renderTrackList();
+  renderPlList();
+  refreshStorageBar();
+  closeEditModal();
+  showToast('Morceau modifié');
 }
 
 // Collect all unique imported tracks
@@ -2030,6 +2383,9 @@ async function renderImportedList() {
         <div class="tl-artist">${t.artist||'Artiste inconnu'}${t.album?' · <em style="opacity:.55">'+t.album+'</em>':''}</div>
       </div>
       <span class="tl-dur">${t.duration||'—'}</span>
+      <button class="tl-edit" title="Modifier">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+      </button>
       <button class="tl-queue" title="Ajouter à la file d'attente">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
       </button>
@@ -2040,6 +2396,18 @@ async function renderImportedList() {
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
       </button>
       <div class="add-dropdown"></div>`;
+
+    // Click row → play
+    el.addEventListener('click', async e => {
+      if (e.target.closest('.tl-edit') || e.target.closest('.tl-add') || e.target.closest('.tl-del') || e.target.closest('.add-dropdown') || e.target.closest('.tl-queue')) return;
+      await playImportedTrack(t);
+    });
+
+    // Edit button
+    el.querySelector('.tl-edit').addEventListener('click', e => {
+      e.stopPropagation();
+      openEditModal(t.trackId);
+    });
 
     // Click row → play
     el.addEventListener('click', async e => {
@@ -2106,6 +2474,15 @@ async function renderImportedList() {
 //  EXPORT PLAYLIST → ZIP
 //  Format: playlist.json + audio files named by trackId
 // ══════════════════════════════════════════════════
+async function exportCurrentPlaylist() {
+  const pl = playlists.find(p => p.id === currentPlId);
+  if (!pl || pl.id === LIB_PL_ID || pl.id === MIX_ID) {
+    showToast('Sélectionne une vraie playlist à exporter');
+    return;
+  }
+  await exportPlaylist(pl.id);
+}
+
 async function exportPlaylist(plId) {
   const pl = playlists.find(p => p.id === plId);
   if (!pl) return;
@@ -2114,135 +2491,73 @@ async function exportPlaylist(plId) {
   showToast('⏳ Export en cours…');
 
   try {
-    // We'll build a zip manually using a simple concatenation approach
-    // Using the JSZip-compatible structure via a DataView builder
-    const files = []; // { name, data: Uint8Array }
+    // Vérifie que JSZip est bien chargé
+    if (typeof JSZip === 'undefined') {
+      showToast('❌ JSZip non chargé (vérifie ta connexion)');
+      console.error('JSZip is not defined — CDN script failed to load');
+      return;
+    }
 
+    const zip  = new JSZip();
     const meta = { name: pl.name, tracks: [] };
+    let addedCount = 0;
 
     for (const t of pl.tracks) {
-      if (DEMO_COVERS[t.trackId]) continue; // skip demo tracks
-      const row = await idbGet('files', t.trackId);
-      if (!row || !row.audioBlob) continue;
+      if (DEMO_COVERS[t.trackId]) { console.log('Skip démo:', t.trackId); continue; }
+      let row;
+      try {
+        row = await idbGet('files', t.trackId);
+      } catch(idbErr) {
+        console.error('idbGet error pour', t.trackId, idbErr);
+        showToast('❌ Erreur lecture IndexedDB');
+        return;
+      }
+      if (!row || !row.audioBlob) { console.warn('Pas de blob pour', t.trackId); continue; }
 
       const ext = row.audioBlob.type.includes('ogg') ? 'ogg'
                 : row.audioBlob.type.includes('wav') ? 'wav'
                 : row.audioBlob.type.includes('flac') ? 'flac'
                 : 'mp3';
       const filename = `${t.trackId}.${ext}`;
-      const audioArr = new Uint8Array(await row.audioBlob.arrayBuffer());
-      files.push({ name: filename, data: audioArr });
+      zip.file(filename, row.audioBlob);
+      addedCount++;
+      console.log(`Ajouté: ${filename} (${(row.audioBlob.size/1024/1024).toFixed(1)} Mo)`);
 
       if (row.coverBlob) {
-        const covArr = new Uint8Array(await row.coverBlob.arrayBuffer());
-        files.push({ name: `${t.trackId}_cover`, data: covArr });
+        zip.file(`${t.trackId}_cover`, row.coverBlob);
         meta.tracks.push({ ...t, audioFile: filename, coverFile: `${t.trackId}_cover` });
       } else {
         meta.tracks.push({ ...t, audioFile: filename, coverFile: null });
       }
     }
 
-    if (!files.length) { showToast('Aucune piste exportable (les démos ne sont pas exportées)'); return; }
+    if (addedCount === 0) {
+      showToast('Aucune piste exportable (les démos ne sont pas exportées)');
+      return;
+    }
 
-    const metaStr = JSON.stringify(meta, null, 2);
-    files.unshift({ name: 'playlist.json', data: new TextEncoder().encode(metaStr) });
+    zip.file('playlist.json', JSON.stringify(meta, null, 2));
+    console.log(`Génération ZIP (${addedCount} pistes)…`);
 
-    // Build ZIP
-    const zip = buildZip(files);
-    const blob = new Blob([zip], { type: 'application/zip' });
+    const blob = await zip.generateAsync(
+      { type: 'blob', compression: 'DEFLATE', compressionOptions: { level: 1 } },
+      meta => { if (meta.percent % 25 < 2) console.log(`ZIP: ${Math.round(meta.percent)}%`); }
+    );
+    console.log(`ZIP généré: ${(blob.size/1024/1024).toFixed(1)} Mo`);
+
     const url  = URL.createObjectURL(blob);
     const a    = document.createElement('a');
-    a.href = url;
+    a.href     = url;
     a.download = `${pl.name.replace(/[^a-z0-9]/gi,'_')}.zip`;
+    document.body.appendChild(a);
     a.click();
-    setTimeout(() => URL.revokeObjectURL(url), 5000);
-    showToast(`✓ "${pl.name}" exportée`);
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 15000);
+    showToast(`✅ "${pl.name}" exportée`);
   } catch(e) {
-    console.error(e);
-    showToast('Erreur lors de l\'export');
+    console.error('Export error:', e);
+    showToast(`❌ Erreur: ${e.message || 'inconnue'}`);
   }
-}
-
-// Minimal ZIP builder (Store method, no compression — fast, universal)
-function buildZip(files) {
-  const enc = new TextEncoder();
-  const localHeaders = [];
-  const centralDir   = [];
-  let offset = 0;
-
-  function crc32(data) {
-    let crc = 0xFFFFFFFF;
-    const table = crc32.t || (crc32.t = (() => {
-      const t = new Uint32Array(256);
-      for (let i=0;i<256;i++){let c=i;for(let k=0;k<8;k++)c=c&1?(0xEDB88320^(c>>>1)):(c>>>1);t[i]=c;}
-      return t;
-    })());
-    for (let i=0;i<data.length;i++) crc = table[(crc^data[i])&0xFF]^(crc>>>8);
-    return (crc^0xFFFFFFFF)>>>0;
-  }
-
-  function u16(v){const b=new Uint8Array(2);new DataView(b.buffer).setUint16(0,v,true);return b;}
-  function u32(v){const b=new Uint8Array(4);new DataView(b.buffer).setUint32(0,v,true);return b;}
-
-  for (const {name, data} of files) {
-    const nameBytes = enc.encode(name);
-    const crc  = crc32(data);
-    const size = data.length;
-    const modDate = 0x5400, modTime = 0x0000; // fixed date
-
-    // Local file header
-    const lh = concat([
-      new Uint8Array([0x50,0x4B,0x03,0x04]), // sig
-      u16(20),           // version needed
-      u16(0),            // flags
-      u16(0),            // compression: store
-      u16(modTime),u16(modDate),
-      u32(crc),
-      u32(size),u32(size), // compressed = uncompressed
-      u16(nameBytes.length),
-      u16(0),            // extra
-      nameBytes,
-      data,
-    ]);
-    localHeaders.push(lh);
-
-    // Central directory entry
-    centralDir.push(concat([
-      new Uint8Array([0x50,0x4B,0x01,0x02]), // sig
-      u16(20),u16(20),   // versions
-      u16(0),u16(0),     // flags, compression
-      u16(modTime),u16(modDate),
-      u32(crc),
-      u32(size),u32(size),
-      u16(nameBytes.length),
-      u16(0),u16(0),     // extra, comment
-      u16(0),u16(0),     // disk, attrs
-      u32(0),            // external attrs
-      u32(offset),       // local header offset
-      nameBytes,
-    ]));
-    offset += lh.length;
-  }
-
-  const cdSize   = centralDir.reduce((s,b)=>s+b.length,0);
-  const eocd     = concat([
-    new Uint8Array([0x50,0x4B,0x05,0x06]),
-    u16(0),u16(0),
-    u16(files.length),u16(files.length),
-    u32(cdSize),
-    u32(offset),
-    u16(0),
-  ]);
-
-  return concat([...localHeaders, ...centralDir, eocd]);
-}
-
-function concat(arrays) {
-  const total = arrays.reduce((s,a)=>s+a.length,0);
-  const out   = new Uint8Array(total);
-  let pos = 0;
-  for (const a of arrays) { out.set(a,pos); pos+=a.length; }
-  return out;
 }
 
 // ══════════════════════════════════════════════════
@@ -2440,7 +2755,7 @@ async function parseID3(file){
   const saved=await idbGet('meta','state');
   if(saved){
     playlists=saved.playlists;currentPlId=saved.currentPlId;nextPlId=saved.nextPlId;
-    isDark=saved.isDark!==undefined?saved.isDark:true;crossfadeOn=saved.crossfadeOn||false;
+    isDark=saved.isDark!==undefined?saved.isDark:true;crossfadeOn=saved.crossfadeOn||false;eqVizOn=saved.eqVizOn||false;
     playlists.forEach(pl=>pl.tracks.forEach(t=>{const m=t.trackId?.match(/trk-\d+-(\d+)/);if(m)nextTrackId=Math.max(nextTrackId,parseInt(m[1])+1);}));
   }else{
     playlists=DEFAULT_PLAYLISTS.map(p=>({...p,tracks:p.tracks.map(t=>({...t}))}));currentPlId=1;nextPlId=4;await saveState();
@@ -2448,6 +2763,8 @@ async function parseID3(file){
   applyTheme();
   await loadStats();
   const lbl=document.getElementById('cf-label');lbl.style.opacity=crossfadeOn?'1':'.5';lbl.style.color=crossfadeOn?'var(--txt)':'';
+  const vizToggle=document.getElementById('viz-toggle');if(vizToggle)vizToggle.checked=eqVizOn;
+  if(eqVizOn)startEqViz();
   pillName.textContent=currentPlaylist()?.name||'—';
   bindAudioEvents();await loadTrack(0);
 })();
