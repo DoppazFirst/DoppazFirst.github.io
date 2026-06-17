@@ -30,17 +30,17 @@
   #bg-cover {
     position:fixed; inset:-100px;
     background-size:cover; background-position:center;
-    filter:blur(80px) saturate(1.8) brightness(0.42);
+    filter:blur(80px) saturate(2) brightness(0.85);
     transform:scale(1.15);
     opacity:0; transition:opacity 1.4s ease, background-image 1.2s ease; z-index:0; pointer-events:none;
   }
   #bg-cover::after {
-    content:''; position:absolute; inset:0; background:rgba(0,0,0,0.28);
+    content:''; position:absolute; inset:0; background:rgba(0,0,0,0.12);
   }
   #bg-cover.visible { opacity:1; }
-  #bg-vignette { position:fixed; inset:0; background:radial-gradient(ellipse at center, transparent 20%, rgba(5,8,16,0.88) 100%); z-index:1; pointer-events:none; }
+  #bg-vignette { position:fixed; inset:0; background:radial-gradient(ellipse at center, transparent 30%, rgba(5,8,16,0.38) 100%); z-index:1; pointer-events:none; }
 
-  canvas { display:block; touch-action:none; cursor:none; position:relative; z-index:2; }
+  canvas { display:block; touch-action:none; cursor:none; position:relative; z-index:2; background:transparent; }
 
   /* HUD — fixed widths to prevent shifting */
   #hud {
@@ -833,7 +833,7 @@ function update(dt){
 
 function draw(){
   ctx.clearRect(0,0,W,H);
-  ctx.fillStyle='rgba(12,12,12,0.75)';ctx.fillRect(0,0,W,H);
+  ctx.fillStyle='rgba(12,12,12,0.38)';ctx.fillRect(0,0,W,H);
   if(hitFlashes.length){ctx.fillStyle=`rgba(244,63,94,${hitFlashes[0].life*0.35})`;ctx.fillRect(0,0,W,H);}
   if(beatFlash>0){const br=document.getElementById('beat-ring');const sz=RADIUS*2*(1+beatFlash*0.1);br.style.width=sz+'px';br.style.height=sz+'px';br.style.left=CX+'px';br.style.top=CY+'px';br.style.opacity=beatFlash*0.6;br.style.borderColor=`rgba(0,255,255,${beatFlash})`;}
   // Cercle principal — glassmorphism
@@ -935,8 +935,8 @@ window.addEventListener('mousemove',e=>{if(state==='playing'){mouseX=e.clientX;m
 window.addEventListener('mousedown',e=>{if(state!=='playing'){ensureAudio();return;}mouseX=e.clientX;mouseY=e.clientY;});
 window.addEventListener('keydown',e=>{const k=e.key.toLowerCase();if(k==='arrowleft'||k==='a')arrowLeft=true;if(k==='arrowright'||k==='d')arrowRight=true;if((k==='arrowleft'||k==='arrowright')&&state==='playing')mouseX=-1;});
 window.addEventListener('keyup',e=>{const k=e.key.toLowerCase();if(k==='arrowleft'||k==='a')arrowLeft=false;if(k==='arrowright'||k==='d')arrowRight=false;});
-canvas.addEventListener('touchstart',e=>{e.preventDefault();ensureAudio();const t=e.touches[0];lastTouchX=t.clientX;lastTouchY=t.clientY;if(state==='playing')mouseX=-1;},{passive:false});
-canvas.addEventListener('touchmove',e=>{e.preventDefault();if(state!=='playing')return;const t=e.touches[0];const tx=t.clientX,ty=t.clientY;shieldAngle+=angleDiff(Math.atan2(lastTouchY-CY,lastTouchX-CX),Math.atan2(ty-CY,tx-CX))*1.4;lastTouchX=tx;lastTouchY=ty;},{passive:false});
+canvas.addEventListener('touchstart',e=>{e.preventDefault();ensureAudio();const t=e.touches[0];if(state==='playing'){shieldAngle=Math.atan2(t.clientY-CY,t.clientX-CX);mouseX=-1;}},{passive:false});
+canvas.addEventListener('touchmove',e=>{e.preventDefault();if(state!=='playing')return;const t=e.touches[0];shieldAngle=Math.atan2(t.clientY-CY,t.clientX-CX);},{passive:false});
 canvas.addEventListener('touchend',e=>e.preventDefault(),{passive:false});
 
 // ─── IMPORT MODAL ─────────────────────────────────────────────────────────
