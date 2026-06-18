@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tier List Maker</title>
+
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<style>
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:Arial,Helvetica,sans-serif;
+}
+
+body{
+background:#1a1a1a;
+color:white;
+padding:20px;
+}
+
+h1{
+text-align:center;
+margin-bottom:20px;
+}
+
+.controls{
+display:flex;
+justify-content:center;
+gap:10px;
+margin-bottom:20px;
+flex-wrap:wrap;
+}
+
+button,label{
+background:#ff5722;
+color:white;
+border:none;
+padding:12px 20px;
+border-radius:8px;
+cursor:pointer;
+font-weight:bold;
+}
+
+button:hover,
+label:hover{
+opacity:0.9;
+}
+
+input[type=file]{
+display:none;
+}
+
+#tierlist{
+max-width:1200px;
+margin:auto;
+border:3px solid #333;
+}
+
+.tier{
+display:flex;
+min-height:120px;
+border-bottom:3px solid #333;
+}
+
+.rank{
+width:100px;
+display:flex;
+align-items:center;
+justify-content:center;
+font-size:2rem;
+font-weight:bold;
+color:black;
+}
+
+.s{background:#ff7f7f;}
+.a{background:#ffbf7f;}
+.b{background:#ffff7f;}
+.c{background:#7fff7f;}
+
+.items{
+flex:1;
+background:#2b2b2b;
+display:flex;
+flex-wrap:wrap;
+padding:8px;
+gap:8px;
+min-height:120px;
+}
+
+.item{
+width:100px;
+height:100px;
+cursor:grab;
+user-select:none;
+}
+
+.item img{
+width:100%;
+height:100%;
+object-fit:cover;
+pointer-events:none;
+border:2px solid #444;
+}
+
+#pool{
+max-width:1200px;
+margin:20px auto;
+background:#2b2b2b;
+padding:15px;
+border:3px solid #333;
+min-height:120px;
+display:flex;
+flex-wrap:wrap;
+gap:8px;
+}
+
+.pool-title{
+max-width:1200px;
+margin:20px auto 5px;
+font-size:1.2rem;
+font-weight:bold;
+}
+
+.drop-hover{
+outline:3px dashed white;
+}
+
+@media(max-width:700px){
+.rank{
+width:70px;
+font-size:1.5rem;
+}
+.item{
+width:70px;
+height:70px;
+}
+}
+</style>
+</head>
+<body>
+
+<h1>Tier List Maker</h1>
+
+<div class="controls">
+<label for="upload">Importer des images</label>
+<input type="file" id="upload" multiple accept="image/*">
+
+<button id="exportPNG">Exporter PNG</button>
+<button id="exportPDF">Exporter PDF</button>
+</div>
+
+<div id="tierlist">
+
+<div class="tier">
+<div class="rank s">S</div>
+<div class="items"></div>
+</div>
+
+<div class="tier">
+<div class="rank a">A</div>
+<div class="items"></div>
+</div>
+
+<div class="tier">
+<div class="rank b">B</div>
+<div class="items"></div>
+</div>
+
+<div class="tier">
+<div class="rank c">C</div>
+<div class="items"></div>
+</div>
+
+</div>
+
+<div class="pool-title">
+Personnages / Images disponibles
+</div>
+
+<div id="pool"></div>
+
+<script>
+const upload = document.getElementById("upload");
+const pool = document.getElementById("pool");
+
+upload.addEventListener("change",(e)=>{
+
+[...e.target.files].forEach(file=>{
+
+const reader = new FileReader();
+
+reader.onload = function(ev){
+
+const item = document.createElement("div");
+item.className = "item";
+item.draggable = true;
+
+item.innerHTML =
+`<img src="${ev.target.result}">`;
+
+addDragEvents(item);
+
+pool.appendChild(item);
+
+};
+
+reader.readAsDataURL(file);
+
+});
+
+});
+
+function addDragEvents(item){
+
+item.addEventListener("dragstart",()=>{
+item.classList.add("dragging");
+});
+
+item.addEventListener("dragend",()=>{
+item.classList.remove("dragging");
+});
+
+}
+
+const containers = document.querySelectorAll(".items,#pool");
+
+containers.forEach(container=>{
+
+container.addEventListener("dragover",(e)=>{
+e.preventDefault();
+container.classList.add("drop-hover");
+});
+
+container.addEventListener("dragleave",()=>{
+container.classList.remove("drop-hover");
+});
+
+container.addEventListener("drop",(e)=>{
+e.preventDefault();
+
+const dragging =
+document.querySelector(".dragging");
+
+if(dragging){
+container.appendChild(dragging);
+}
+
+container.classList.remove("drop-hover");
+});
+
+});
+
+document.getElementById("exportPNG")
+.addEventListener("click",()=>{
+
+html2canvas(document.getElementById("tierlist"),{
+backgroundColor:"#1a1a1a",
+scale:2
+}).then(canvas=>{
+
+const link = document.createElement("a");
+link.download = "tierlist.png";
+link.href = canvas.toDataURL();
+link.click();
+
+});
+
+});
+
+document.getElementById("exportPDF")
+.addEventListener("click",()=>{
+
+html2canvas(document.getElementById("tierlist"),{
+backgroundColor:"#1a1a1a",
+scale:2
+}).then(canvas=>{
+
+const img = canvas.toDataURL("image/png");
+
+const { jsPDF } = window.jspdf;
+
+const pdf = new jsPDF(
+'landscape',
+'mm',
+'a4'
+);
+
+const width = 280;
+const height =
+(canvas.height * width) /
+canvas.width;
+
+pdf.addImage(
+img,
+'PNG',
+10,
+10,
+width,
+height
+);
+
+pdf.save("tierlist.pdf");
+
+});
+
+});
+</script>
+
+</body>
+</html>
