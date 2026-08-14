@@ -1,0 +1,869 @@
+<!DOCTYPE html>
+<html lang="fr" class="h-full bg-slate-50">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tierly - LA vraie bonne tierlist</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #f1f5f9;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+
+    /* Rank Colors - Palette Pastel */
+    .rank-S { background-color: #FFB3BA; color: #721C24; border-color: #FF8A95; }
+    .rank-A { background-color: #FFDFBA; color: #7A4300; border-color: #FFC585; }
+    .rank-B { background-color: #FFFFBA; color: #5E5E00; border-color: #E6E67A; }
+    .rank-C { background-color: #BAFFC9; color: #0F6B26; border-color: #82F09A; }
+    .rank-D { background-color: #BAE1FF; color: #0F487A; border-color: #7AC5FF; }
+    .rank-E { background-color: #E8AEFF; color: #580F7A; border-color: #D37AFF; }
+
+    /* Badge Soft Fills */
+    .badge-S { background-color: rgba(255, 179, 186, 0.4); color: #8A1C24; }
+    .badge-A { background-color: rgba(255, 223, 186, 0.5); color: #8A4B00; }
+    .badge-B { background-color: rgba(255, 255, 186, 0.75); color: #666600; }
+    .badge-C { background-color: rgba(186, 255, 201, 0.5); color: #0A5C1F; }
+    .badge-D { background-color: rgba(186, 225, 255, 0.5); color: #0C3E69; }
+    .badge-E { background-color: rgba(232, 174, 255, 0.5); color: #4A0C69; }
+
+    /* Animation d'ouverture des Modales */
+    .animate-modal-in {
+      animation: modalIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+    @keyframes modalIn {
+      from {
+        opacity: 0;
+        transform: scale(0.95) translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+      }
+    }
+  </style>
+</head>
+
+<body class="min-h-full bg-slate-50 text-slate-800 flex flex-col antialiased selection:bg-slate-200">
+
+  <header class="bg-white border-b border-slate-200/80 sticky top-0 z-30 shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-20">
+        
+        <div class="flex items-center gap-3">
+          <div class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-pink-200 via-purple-200 to-sky-200 flex items-center justify-center shadow-inner border border-white">
+            <i data-lucide="layers" class="w-6 h-6 text-slate-700"></i>
+          </div>
+          <div>
+            <h1 class="text-2xl font-extrabold tracking-tight text-slate-900 flex items-center gap-2">
+              Tierly
+              <span class="text-xs px-2.5 py-0.5 rounded-full bg-purple-100 text-purple-700 font-bold border border-purple-200">v2.3</span>
+            </h1>
+            <p class="text-xs text-slate-500 font-medium">Classeur universel & tierlists collaboratives</p>
+          </div>
+        </div>
+
+        <nav class="hidden md:flex items-center bg-slate-100/80 p-1.5 rounded-2xl border border-slate-200/60">
+          <button id="nav-mega" onclick="switchView('mega')" class="flex items-center gap-2 px-5 py-2 rounded-xl text-sm font-semibold transition-all duration-200 bg-white text-slate-900 shadow-sm border border-slate-200/60">
+            <i data-lucide="grid" class="w-4 h-4"></i>
+            Mega-Tierlist Globale
+          </button>
+          <button id="nav-dedicated" onclick="switchView('dedicated')" class="flex items-center gap-2 px-5 py-2 rounded-xl text-sm font-semibold transition-all duration-200 text-slate-600 hover:text-slate-900">
+            <i data-lucide="folder-heart" class="w-4 h-4"></i>
+            Tierlists Dédiées
+          </button>
+        </nav>
+
+        <button onclick="openAddModal()" class="flex items-center gap-2 bg-gradient-to-r from-pink-200 via-purple-200 to-sky-200 hover:from-pink-300 hover:via-purple-300 hover:to-sky-300 text-slate-800 font-bold text-sm px-5 py-2.5 rounded-2xl shadow-sm hover:shadow transition-all duration-200 active:scale-95 border border-white/60">
+          <i data-lucide="plus-circle" class="w-5 h-5 text-slate-700"></i>
+          <span>Ajouter un élément</span>
+        </button>
+
+      </div>
+    </div>
+
+    <div class="md:hidden flex border-t border-slate-100 bg-slate-50 p-1">
+      <button onclick="switchView('mega')" id="mob-nav-mega" class="flex-1 py-2 text-xs font-bold text-center rounded-lg bg-white shadow-xs text-slate-800">
+        Mega-Tierlist Globale
+      </button>
+      <button onclick="switchView('dedicated')" id="mob-nav-dedicated" class="flex-1 py-2 text-xs font-medium text-center rounded-lg text-slate-500">
+        Tierlists Dédiées
+      </button>
+    </div>
+  </header>
+
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+    <section class="mb-8 space-y-4">
+      <div class="flex flex-col sm:flex-row gap-4 items-stretch sm:items-center justify-between">
+        
+        <div class="relative flex-1 max-w-md">
+          <i data-lucide="search" class="w-5 h-5 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"></i>
+          <input type="text" id="search-input" oninput="handleSearch(this.value)" placeholder="Rechercher un élément..." 
+                 class="w-full pl-11 pr-4 py-2.5 bg-white border border-slate-200 rounded-2xl text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-purple-200 focus:border-purple-300 transition-all shadow-xs">
+        </div>
+
+        <div class="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 scrollbar-none" id="tag-filters">
+        </div>
+
+      </div>
+    </section>
+
+    <div id="view-mega" class="space-y-4">
+      <div class="flex items-center justify-between px-1 mb-2">
+        <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+          <i data-lucide="sparkles" class="w-5 h-5 text-amber-400"></i>
+          Classement Général
+        </h2>
+        <span id="items-count-badge" class="text-xs font-semibold px-3 py-1 bg-slate-200/70 text-slate-600 rounded-full">
+          -- éléments
+        </span>
+      </div>
+
+      <div class="space-y-3" id="tierlist-rows-container">
+      </div>
+    </div>
+
+
+    <div id="view-dedicated" class="hidden space-y-6">
+      <div class="bg-gradient-to-r from-purple-100/60 via-pink-100/60 to-blue-100/60 p-6 rounded-3xl border border-slate-200/60 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div>
+          <h2 class="text-xl font-extrabold text-slate-900 mb-1">Explorer par Catégorie Dédiée</h2>
+          <p class="text-sm text-slate-600">Sélectionnez ou créez un univers spécifique pour filtrer vos tierlists.</p>
+        </div>
+        <button onclick="promptCreateCategory()" class="flex items-center gap-2 bg-white text-slate-800 font-bold text-xs px-4 py-2.5 rounded-2xl shadow-sm hover:bg-slate-50 transition-all border border-slate-200">
+          <i data-lucide="plus" class="w-4 h-4 text-purple-600"></i>
+          <span>Créer une Tierlist / Tag</span>
+        </button>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4" id="categories-grid">
+      </div>
+
+      <div class="mt-8 pt-6 border-t border-slate-200">
+        <div class="flex items-center justify-between mb-4">
+          <h3 id="dedicated-title" class="text-lg font-bold text-slate-800 flex items-center gap-2"></h3>
+          <button onclick="selectCategory('Tous'); switchView('mega')" class="text-xs text-purple-600 font-bold hover:underline">
+            Voir dans la Mega-Tierlist →
+          </button>
+        </div>
+
+        <div class="space-y-3" id="dedicated-rows-container">
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <footer class="bg-white border-t border-slate-200 py-6 mt-12">
+    <div class="max-w-7xl mx-auto px-4 text-center text-xs text-slate-400 flex flex-col sm:flex-row items-center justify-between gap-3">
+      <div class="flex items-center gap-2">
+        <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+        <span>OmniList &copy; 2026 — Interface d'évaluation & ranking collaborative</span>
+      </div>
+      <p class="text-slate-400">Conçu avec le style Pastel & Soft UI</p>
+    </div>
+  </footer>
+
+  <div id="add-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm hidden">
+    <div class="bg-white rounded-3xl max-w-lg w-full shadow-2xl border border-slate-100 overflow-hidden animate-modal-in max-h-[90vh] overflow-y-auto">
+      
+      <div class="px-6 py-5 bg-slate-50 border-b border-slate-100 flex items-center justify-between">
+        <div class="flex items-center gap-2.5">
+          <div class="w-9 h-9 rounded-xl bg-pink-100 flex items-center justify-center text-pink-600">
+            <i data-lucide="plus" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <h3 class="font-bold text-slate-800 text-base">Ajouter un élément</h3>
+            <p class="text-xs text-slate-500">Classer un nouvel objet dans la Tierlist</p>
+          </div>
+        </div>
+        <button onclick="closeAddModal()" class="w-8 h-8 rounded-full bg-slate-200/60 text-slate-500 hover:text-slate-800 flex items-center justify-center transition-colors">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+      <form id="add-item-form" onsubmit="handleAddItemSubmit(event)" class="p-6 space-y-4">
+        
+        <div>
+          <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">Nom de l'élément *</label>
+          <input type="text" id="add-name" required list="autocomplete-suggestions" placeholder="ex: Chips Lay's, Matrix..."
+                 class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-purple-200 focus:bg-white transition-all">
+          <datalist id="autocomplete-suggestions"></datalist>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">Attribuer un Rang *</label>
+          <div class="grid grid-cols-6 gap-2" id="rank-selector">
+            <button type="button" onclick="selectModalRank('S')" id="rank-btn-S" class="rank-btn py-2.5 rounded-xl font-extrabold text-sm border-2 transition-all rank-S scale-105 shadow-sm">S</button>
+            <button type="button" onclick="selectModalRank('A')" id="rank-btn-A" class="rank-btn py-2.5 rounded-xl font-extrabold text-sm border-2 transition-all bg-slate-100 text-slate-600 border-slate-200 hover:bg-amber-100">A</button>
+            <button type="button" onclick="selectModalRank('B')" id="rank-btn-B" class="rank-btn py-2.5 rounded-xl font-extrabold text-sm border-2 transition-all bg-slate-100 text-slate-600 border-slate-200 hover:bg-yellow-100">B</button>
+            <button type="button" onclick="selectModalRank('C')" id="rank-btn-C" class="rank-btn py-2.5 rounded-xl font-extrabold text-sm border-2 transition-all bg-slate-100 text-slate-600 border-slate-200 hover:bg-emerald-100">C</button>
+            <button type="button" onclick="selectModalRank('D')" id="rank-btn-D" class="rank-btn py-2.5 rounded-xl font-extrabold text-sm border-2 transition-all bg-slate-100 text-slate-600 border-slate-200 hover:bg-sky-100">D</button>
+            <button type="button" onclick="selectModalRank('E')" id="rank-btn-E" class="rank-btn py-2.5 rounded-xl font-extrabold text-sm border-2 transition-all bg-slate-100 text-slate-600 border-slate-200 hover:bg-purple-100">E</button>
+          </div>
+          <input type="hidden" id="add-rank-value" value="S">
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">Catégorie / Tag *</label>
+          <select id="add-category" required class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-purple-200 focus:bg-white transition-all">
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">Justification / Avis</label>
+          <textarea id="add-justification" rows="3" placeholder="Pourquoi ce rang ? Donne ton avis..." 
+                    class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-purple-200 focus:bg-white transition-all resize-none"></textarea>
+        </div>
+
+        <div class="space-y-2">
+          <label class="block text-xs font-bold uppercase tracking-wider text-slate-500">Image / GIF de l'élément</label>
+          
+          <div class="flex bg-slate-100 p-1 rounded-xl text-xs font-bold">
+            <button type="button" onclick="switchImageTab('file')" id="img-tab-file" class="flex-1 py-1.5 rounded-lg bg-white shadow-xs text-slate-800 transition-all">Fichier / URL</button>
+            <button type="button" onclick="switchImageTab('gif')" id="img-tab-gif" class="flex-1 py-1.5 rounded-lg text-slate-500 hover:text-slate-800 transition-all flex items-center justify-center gap-1">
+              <i data-lucide="search" class="w-3.5 h-3.5"></i> Rechercher un GIF
+            </button>
+          </div>
+
+          <div id="img-content-file" class="space-y-2">
+            <input type="file" id="add-image-file" accept="image/*" class="w-full text-xs text-slate-500 file:mr-4 file:py-2 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-purple-50 file:text-purple-700 hover:file:bg-purple-100 cursor-pointer bg-slate-50 border border-slate-200 rounded-xl">
+            <input type="url" id="add-image-url" placeholder="Ou coller un lien direct d'image (https://...)" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-purple-200">
+          </div>
+
+          <div id="img-content-gif" class="hidden space-y-2">
+            <div class="flex gap-2">
+              <input type="text" id="gif-search-input" placeholder="ex: chat rigolo, anime, fire..." class="flex-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-purple-200">
+              <button type="button" onclick="searchGifsAPI()" class="px-3 py-2 bg-purple-600 text-white font-bold text-xs rounded-xl hover:bg-purple-700 transition-colors">Chercher</button>
+            </div>
+            <input type="hidden" id="selected-gif-url" value="">
+            <div id="gif-results-container" class="grid grid-cols-4 gap-2 max-h-36 overflow-y-auto p-1.5 bg-slate-50 border border-slate-200 rounded-xl">
+              <p class="text-[11px] text-slate-400 col-span-4 text-center py-4">Tapez un mot-clé pour chercher un GIF</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="p-3 bg-purple-50/60 rounded-2xl border border-purple-100 flex items-center justify-between">
+          <div class="flex items-center gap-2.5">
+            <i data-lucide="users" class="w-5 h-5 text-purple-600"></i>
+            <div>
+              <p class="text-xs font-bold text-purple-900">Notation Multi-joueurs</p>
+              <p class="text-[11px] text-purple-600">Permet aux amis de donner leur propre note</p>
+            </div>
+          </div>
+          <label class="relative inline-flex items-center cursor-pointer">
+            <input type="checkbox" id="add-multiplayer" checked class="sr-only peer">
+            <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-500"></div>
+          </label>
+        </div>
+
+        <div class="pt-2 flex items-center gap-3">
+          <button type="button" onclick="closeAddModal()" class="flex-1 py-2.5 rounded-xl font-bold text-sm text-slate-600 bg-slate-100 hover:bg-slate-200 transition-colors">
+            Annuler
+          </button>
+          <button type="submit" class="flex-1 py-2.5 rounded-xl font-bold text-sm text-slate-800 bg-gradient-to-r from-pink-200 via-purple-200 to-sky-200 hover:from-pink-300 hover:via-purple-300 hover:to-sky-300 shadow-sm transition-all border border-white">
+            Valider & Classer
+          </button>
+        </div>
+
+      </form>
+    </div>
+  </div>
+
+
+  <div id="detail-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm hidden">
+    <div class="bg-white rounded-3xl max-w-xl w-full shadow-2xl border border-slate-100 overflow-hidden animate-modal-in max-h-[90vh] flex flex-col">
+      
+      <div class="relative h-48 bg-slate-100 overflow-hidden flex-shrink-0" id="detail-header-bg">
+        <img id="detail-img" src="" alt="" class="w-full h-full object-cover">
+        <div class="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-slate-900/20 to-transparent"></div>
+        
+        <button onclick="closeDetailModal()" class="absolute top-4 right-4 w-8 h-8 rounded-full bg-slate-900/50 text-white hover:bg-slate-900 flex items-center justify-center backdrop-blur-md transition-colors">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+
+        <div class="absolute bottom-4 left-6 right-6 flex items-end justify-between">
+          <div>
+            <span id="detail-tag" class="text-xs font-bold px-2.5 py-1 rounded-md bg-white/90 text-slate-800 backdrop-blur-md shadow-xs mb-1.5 inline-block">
+              #Tag
+            </span>
+            <h3 id="detail-title" class="text-2xl font-black text-white drop-shadow-sm">Nom de l'élément</h3>
+          </div>
+          <div id="detail-rank-badge" class="w-14 h-14 rounded-2xl flex items-center justify-center font-black text-2xl shadow-lg border-2 border-white">
+            S
+          </div>
+        </div>
+      </div>
+
+      <div class="p-6 overflow-y-auto space-y-6 flex-1">
+        
+        <div class="p-3.5 bg-purple-50/70 rounded-2xl border border-purple-100 flex items-center justify-between">
+          <span class="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+            <i data-lucide="award" class="w-4 h-4 text-purple-600"></i>
+            Modifier le rang :
+          </span>
+          <select id="detail-rank-change" onchange="changeItemRank(this.value)" class="px-3 py-1.5 text-xs bg-white border border-slate-200 rounded-xl font-extrabold text-slate-800 focus:outline-none focus:ring-2 focus:ring-purple-300">
+            <option value="S">Rang S</option>
+            <option value="A">Rang A</option>
+            <option value="B">Rang B</option>
+            <option value="C">Rang C</option>
+            <option value="D">Rang D</option>
+            <option value="E">Rang E</option>
+          </select>
+        </div>
+
+        <div>
+          <h4 class="text-xs font-extrabold uppercase tracking-wider text-slate-400 mb-2 flex items-center gap-1.5">
+            <i data-lucide="message-square" class="w-4 h-4 text-purple-500"></i>
+            Avis & Justification
+          </h4>
+          <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 text-sm text-slate-700 italic leading-relaxed" id="detail-justification">
+            "Aucune justification fournie."
+          </div>
+        </div>
+
+        <div class="pt-2 border-t border-slate-100">
+          <div class="flex items-center justify-between mb-3">
+            <h4 class="text-xs font-extrabold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+              <i data-lucide="users" class="w-4 h-4 text-sky-500"></i>
+              Avis des Amis (Multi-joueurs)
+            </h4>
+            <span id="detail-avg-badge" class="text-xs font-bold px-2.5 py-1 bg-purple-100 text-purple-700 rounded-lg">
+              Moyenne : Rang S
+            </span>
+          </div>
+
+          <div class="grid grid-cols-2 sm:grid-cols-3 gap-2.5 mb-4" id="friends-ratings-list">
+          </div>
+
+          <form id="add-friend-form" onsubmit="handleAddFriendRating(event)" class="bg-slate-50 p-3 rounded-2xl border border-slate-200 flex flex-col sm:flex-row gap-2">
+            <input type="text" id="friend-name-input" required placeholder="Nom de l'ami..." 
+                   class="flex-1 px-3 py-1.5 text-xs bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-purple-300">
+            
+            <select id="friend-rank-select" class="px-3 py-1.5 text-xs bg-white border border-slate-200 rounded-xl font-bold focus:outline-none focus:ring-1 focus:ring-purple-300">
+              <option value="S">Rang S</option>
+              <option value="A">Rang A</option>
+              <option value="B">Rang B</option>
+              <option value="C">Rang C</option>
+              <option value="D">Rang D</option>
+              <option value="E">Rang E</option>
+            </select>
+
+            <button type="submit" class="px-4 py-1.5 bg-slate-800 text-white font-bold text-xs rounded-xl hover:bg-slate-900 transition-colors">
+              + Voter
+            </button>
+          </form>
+        </div>
+
+      </div>
+
+      <div class="px-6 py-4 bg-slate-50 border-t border-slate-100 flex items-center justify-between">
+        <button onclick="deleteCurrentItem()" class="px-4 py-2 bg-rose-100 text-rose-700 font-bold text-xs rounded-xl hover:bg-rose-200 transition-colors flex items-center gap-1.5">
+          <i data-lucide="trash-2" class="w-4 h-4"></i> Supprimer l'élément
+        </button>
+        <button onclick="closeDetailModal()" class="px-5 py-2 bg-slate-200 text-slate-700 font-bold text-xs rounded-xl hover:bg-slate-300 transition-colors">
+          Fermer
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <div id="toast" class="fixed bottom-6 right-6 z-50 transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none">
+    <div class="bg-slate-900 text-white px-5 py-3 rounded-2xl shadow-xl flex items-center gap-3 border border-slate-700">
+      <div class="w-6 h-6 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center">
+        <i data-lucide="check-circle" class="w-4 h-4"></i>
+      </div>
+      <p id="toast-message" class="text-xs font-bold">Action réussie !</p>
+    </div>
+  </div>
+
+
+  <script>
+    /* 1. INITIALISATION & LOCALSTORAGE */
+    const RANKS = ['S', 'A', 'B', 'C', 'D', 'E'];
+    const RANK_CONFIG = {
+      'S': { label: 'Rang S', badgeClass: 'badge-S', rankClass: 'rank-S', score: 5 },
+      'A': { label: 'Rang A', badgeClass: 'badge-A', rankClass: 'rank-A', score: 4 },
+      'B': { label: 'Rang B', badgeClass: 'badge-B', rankClass: 'rank-B', score: 3 },
+      'C': { label: 'Rang C', badgeClass: 'badge-C', rankClass: 'rank-C', score: 2 },
+      'D': { label: 'Rang D', badgeClass: 'badge-D', rankClass: 'rank-D', score: 1 },
+      'E': { label: 'Rang E', badgeClass: 'badge-E', rankClass: 'rank-E', score: 0 }
+    };
+
+    let categoriesData = JSON.parse(localStorage.getItem('omnilist_categories')) || ['Nourriture', 'Examen', 'Cinema', 'Livre', 'Jeu Vidéo', 'Autre'];
+    
+    let itemsData = JSON.parse(localStorage.getItem('omnilist_items')) || [
+      {
+        id: '1',
+        name: "Chips Lay's (Moutarde)",
+        category: "Nourriture",
+        rank: "S",
+        justification: "Inégalable lors des apéros. La saveur moutarde apporte le piquant idéal sans masquer la pomme de terre.",
+        image: "https://images.unsplash.com/photo-1566478989037-eec170784d0b?w=500&auto=format&fit=crop&q=80",
+        isMultiplayer: true,
+        friendsRatings: [ { name: "Toi", rank: "S" }, { name: "Lucas", rank: "A" }, { name: "Sarah", rank: "B" } ]
+      },
+      {
+        id: '2',
+        name: "Examen de Maths",
+        category: "Examen",
+        rank: "E",
+        justification: "Source constante de sueurs froides. Trop d'intégrales triples.",
+        image: "https://images.unsplash.com/photo-1509228468518-180dd4864904?w=500&auto=format&fit=crop&q=80",
+        isMultiplayer: true,
+        friendsRatings: [ { name: "Toi", rank: "E" }, { name: "Lucas", rank: "D" }, { name: "Sarah", rank: "E" } ]
+      }
+    ];
+
+    let currentView = 'mega';
+    let selectedCategory = 'Tous';
+    let searchQuery = '';
+    let currentDetailItemId = null;
+
+    function saveAppData() {
+      localStorage.setItem('omnilist_items', JSON.stringify(itemsData));
+      localStorage.setItem('omnilist_categories', JSON.stringify(categoriesData));
+    }
+
+    /* 2. LOGIQUE DE RENDU */
+    document.addEventListener('DOMContentLoaded', () => {
+      renderTagFilters();
+      renderApp();
+      populateAutocomplete();
+      populateCategorySelect();
+      setupCategorySelectListener();
+      lucide.createIcons();
+    });
+
+    function renderApp() {
+      populateCategorySelect();
+      if (currentView === 'mega') renderMegaTierlist();
+      else renderDedicatedTierlists();
+      lucide.createIcons();
+    }
+
+    function getFilteredItems() {
+      return itemsData.filter(item => {
+        const matchCat = (selectedCategory === 'Tous') || (item.category === selectedCategory);
+        const matchSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                            item.category.toLowerCase().includes(searchQuery.toLowerCase());
+        return matchCat && matchSearch;
+      });
+    }
+
+    function renderTagFilters() {
+      const cats = ['Tous', ...categoriesData];
+      document.getElementById('tag-filters').innerHTML = cats.map(cat => {
+        const isActive = cat === selectedCategory;
+        const cls = isActive ? 'bg-slate-900 text-white font-bold shadow-sm' : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200';
+        return `<button onclick="selectCategory('${cat}')" class="px-3.5 py-2 rounded-xl text-xs whitespace-nowrap transition-all ${cls}">${cat === 'Tous' ? 'Tous les tags' : '#' + cat}</button>`;
+      }).join('');
+    }
+
+    function renderMegaTierlist() {
+      const filtered = getFilteredItems();
+      document.getElementById('items-count-badge').textContent = `${filtered.length} élément(s)`;
+      const container = document.getElementById('tierlist-rows-container');
+      container.innerHTML = '';
+
+      RANKS.forEach(rank => {
+        const rankItems = filtered.filter(i => i.rank === rank);
+        const config = RANK_CONFIG[rank];
+        container.insertAdjacentHTML('beforeend', `
+          <div class="flex flex-col md:flex-row rounded-3xl bg-white border border-slate-200/80 shadow-xs overflow-hidden transition-all duration-200 hover:shadow-md">
+            <div class="${config.rankClass} md:w-32 py-4 md:py-0 flex items-center justify-center font-black text-3xl tracking-wider uppercase border-b md:border-b-0 md:border-r border-black/10 flex-shrink-0">
+              ${rank}
+            </div>
+            <div class="flex-1 p-3 flex flex-wrap items-center gap-3 min-h-[100px] bg-slate-50/50">
+              ${rankItems.length ? rankItems.map(item => renderItemCard(item)).join('') : `<div class="text-xs font-medium text-slate-400 italic px-3 py-2">Aucun élément classé ${rank}</div>`}
+            </div>
+          </div>
+        `);
+      });
+    }
+
+    function renderItemCard(item) {
+      const config = RANK_CONFIG[item.rank];
+      const friendsCount = item.friendsRatings ? item.friendsRatings.length : 0;
+      const defaultImg = "https://images.unsplash.com/photo-1579546929518-9e396f3cc809?w=500&auto=format&fit=crop&q=80";
+      return `
+        <div onclick="openDetailModal('${item.id}')" class="group relative flex items-center gap-3 bg-white p-2.5 pr-4 rounded-2xl border border-slate-200/80 shadow-xs hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 cursor-pointer max-w-xs w-full sm:w-auto">
+          <div class="w-12 h-12 rounded-xl bg-slate-100 overflow-hidden flex-shrink-0 relative border border-slate-100">
+            <img src="${item.image || defaultImg}" alt="${item.name}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
+          </div>
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center gap-1.5 mb-0.5">
+              <span class="text-[10px] font-bold px-2 py-0.5 rounded-md ${config.badgeClass}">#${item.category}</span>
+              ${item.isMultiplayer ? `<span class="text-[10px] font-semibold text-slate-400 flex items-center gap-0.5"><i data-lucide="users" class="w-3 h-3"></i> ${friendsCount}</span>` : ''}
+            </div>
+            <h4 class="text-xs font-bold text-slate-800 truncate group-hover:text-purple-600 transition-colors">${item.name}</h4>
+          </div>
+          <i data-lucide="chevron-right" class="w-4 h-4 text-slate-300 group-hover:text-slate-600 group-hover:translate-x-0.5 transition-all"></i>
+        </div>
+      `;
+    }
+
+    function renderDedicatedTierlists() {
+      const grid = document.getElementById('categories-grid');
+      const iconsList = ['utensils', 'graduation-cap', 'film', 'book-open', 'gamepad-2', 'heart', 'star', 'tag'];
+      
+      grid.innerHTML = categoriesData.map((cat, idx) => {
+        const count = itemsData.filter(i => i.category === cat).length;
+        const sel = selectedCategory === cat ? 'border-purple-400 ring-2 ring-purple-200' : 'border-white';
+        const iconName = iconsList[idx % iconsList.length];
+        return `
+          <div class="relative group p-5 rounded-3xl bg-gradient-to-br from-purple-100/60 to-pink-100/60 border ${sel} shadow-xs hover:shadow-md transition-all cursor-pointer">
+            <div onclick="selectCategory('${cat}')">
+              <div class="flex items-center justify-between mb-3">
+                <div class="w-10 h-10 rounded-2xl bg-white/80 flex items-center justify-center text-purple-600 shadow-xs"><i data-lucide="${iconName}" class="w-5 h-5"></i></div>
+                <span class="text-xs font-extrabold px-2.5 py-1 bg-white/80 rounded-full text-slate-700">${count} élém.</span>
+              </div>
+              <h3 class="font-extrabold text-slate-900 text-base">Tierlist ${cat}</h3>
+            </div>
+            <button onclick="event.stopPropagation(); deleteCategory('${cat}')" title="Supprimer cette tierlist" class="absolute top-3 right-3 w-7 h-7 rounded-full bg-white/80 text-slate-400 hover:text-rose-600 hover:bg-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-xs">
+              <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+            </button>
+          </div>
+        `;
+      }).join('') + `
+        <div onclick="promptCreateCategory()" class="p-5 rounded-3xl border-2 border-dashed border-slate-300 hover:border-purple-400 hover:bg-purple-50/30 transition-all cursor-pointer flex flex-col items-center justify-center text-center">
+          <div class="w-10 h-10 rounded-2xl bg-purple-100 text-purple-600 flex items-center justify-center mb-2">
+            <i data-lucide="plus" class="w-5 h-5"></i>
+          </div>
+          <h3 class="font-extrabold text-slate-700 text-sm">Créer une tierlist / tag</h3>
+        </div>
+      `;
+
+      document.getElementById('dedicated-title').innerHTML = `<i data-lucide="bookmark" class="w-5 h-5 text-purple-500"></i> ${selectedCategory === 'Tous' ? 'Toutes les catégories' : `Catégorie: ${selectedCategory}`}`;
+      const container = document.getElementById('dedicated-rows-container');
+      container.innerHTML = '';
+      const filtered = getFilteredItems();
+
+      RANKS.forEach(rank => {
+        const rankItems = filtered.filter(item => item.rank === rank);
+        container.insertAdjacentHTML('beforeend', `
+          <div class="flex flex-col md:flex-row rounded-3xl bg-white border border-slate-200/80 shadow-xs overflow-hidden">
+            <div class="${RANK_CONFIG[rank].rankClass} md:w-28 py-3 md:py-0 flex items-center justify-center font-black text-2xl uppercase border-b md:border-b-0 md:border-r border-black/10 flex-shrink-0">${rank}</div>
+            <div class="flex-1 p-3 flex flex-wrap items-center gap-3 min-h-[80px] bg-slate-50/40">
+              ${rankItems.length ? rankItems.map(item => renderItemCard(item)).join('') : `<span class="text-xs text-slate-400 italic px-2">Aucun élément dans cette catégorie.</span>`}
+            </div>
+          </div>
+        `);
+      });
+    }
+
+    /* 3. GESTION DES CATÉGORIES & RECHERCHE GIF */
+    function promptCreateCategory() {
+      const name = prompt("Nom de la nouvelle tierlist / tag :");
+      if (name && name.trim()) {
+        const cleanName = name.trim();
+        if (!categoriesData.includes(cleanName)) {
+          categoriesData.push(cleanName);
+          saveAppData();
+          renderTagFilters();
+          renderApp();
+          showToast(`Tierlist "<strong>${cleanName}</strong>" créée avec succès !`);
+        } else {
+          alert("Cette catégorie existe déjà.");
+        }
+      }
+    }
+
+    function deleteCategory(cat) {
+      if (categoriesData.length <= 1) {
+        alert("Vous devez conserver au moins une tierlist.");
+        return;
+      }
+      if (confirm(`Voulez-vous vraiment supprimer la tierlist "${cat}" ? Les éléments associés seront basculés dans "Autre".`)) {
+        if (!categoriesData.includes('Autre')) categoriesData.push('Autre');
+        itemsData.forEach(item => {
+          if (item.category === cat) item.category = 'Autre';
+        });
+        categoriesData = categoriesData.filter(c => c !== cat);
+        if (selectedCategory === cat) selectedCategory = 'Tous';
+        saveAppData();
+        renderTagFilters();
+        renderApp();
+        showToast(`Tierlist "${cat}" supprimée.`);
+      }
+    }
+
+    // Onglets de sélection d'image (Fichier/URL vs Recherche GIF)
+    function switchImageTab(tab) {
+      const isFile = tab === 'file';
+      document.getElementById('img-content-file').classList.toggle('hidden', !isFile);
+      document.getElementById('img-content-gif').classList.toggle('hidden', isFile);
+      document.getElementById('img-tab-file').className = isFile ? "flex-1 py-1.5 rounded-lg bg-white shadow-xs text-slate-800 transition-all font-bold" : "flex-1 py-1.5 rounded-lg text-slate-500 hover:text-slate-800 transition-all font-medium";
+      document.getElementById('img-tab-gif').className = !isFile ? "flex-1 py-1.5 rounded-lg bg-white shadow-xs text-slate-800 transition-all font-bold flex items-center justify-center gap-1" : "flex-1 py-1.5 rounded-lg text-slate-500 hover:text-slate-800 transition-all font-medium flex items-center justify-center gap-1";
+    }
+
+    async function searchGifsAPI() {
+      const query = document.getElementById('gif-search-input').value.trim();
+      const container = document.getElementById('gif-results-container');
+      if (!query) return;
+      container.innerHTML = '<p class="text-[11px] text-slate-400 col-span-4 text-center py-4">Recherche en cours...</p>';
+      try {
+        const response = await fetch(`https://g.tenor.com/v1/search?q=${encodeURIComponent(query)}&key=LIVDSRZULELA&limit=8`);
+        const data = await response.json();
+        if (data.results && data.results.length > 0) {
+          container.innerHTML = data.results.map(item => {
+            const gifUrl = item.media[0].gif.url;
+            return `<div onclick="selectGif('${gifUrl}', this)" class="cursor-pointer rounded-lg overflow-hidden border-2 border-transparent hover:border-purple-500 h-16 bg-slate-200 transition-all">
+              <img src="${gifUrl}" class="w-full h-full object-cover">
+            </div>`;
+          }).join('');
+        } else {
+          container.innerHTML = '<p class="text-[11px] text-slate-400 col-span-4 text-center py-4">Aucun GIF trouvé.</p>';
+        }
+      } catch(err) {
+        container.innerHTML = `<p class="text-[11px] text-rose-500 col-span-4 text-center py-2">Erreur réseau. Utilisez l'onglet Fichier/URL directe.</p>`;
+      }
+    }
+
+    function selectGif(url, element) {
+      document.getElementById('selected-gif-url').value = url;
+      document.querySelectorAll('#gif-results-container > div').forEach(el => el.classList.remove('border-purple-600', 'ring-2', 'ring-purple-300'));
+      element.classList.add('border-purple-600', 'ring-2', 'ring-purple-300');
+      showToast("GIF sélectionné !");
+    }
+
+    /* 4. INTERACTIONS (Vues, Recherche, Modales) */
+    function switchView(view) {
+      currentView = view;
+      document.getElementById('view-mega').classList.toggle('hidden', view !== 'mega');
+      document.getElementById('view-dedicated').classList.toggle('hidden', view !== 'dedicated');
+      renderApp();
+    }
+    function selectCategory(cat) { selectedCategory = cat; renderTagFilters(); renderApp(); }
+    function handleSearch(query) { searchQuery = query; renderApp(); }
+    function populateAutocomplete() {
+      document.getElementById('autocomplete-suggestions').innerHTML = itemsData.map(item => `<option value="${item.name}">`).join('');
+    }
+    
+    function populateCategorySelect() {
+      const select = document.getElementById('add-category');
+      if (select) {
+        let html = categoriesData.map(cat => `<option value="${cat}">#${cat}</option>`).join('');
+        html += `<option value="__NEW__" style="font-weight: bold; color: #7c3aed;">+ Créer un nouveau tag...</option>`;
+        select.innerHTML = html;
+      }
+    }
+
+    function setupCategorySelectListener() {
+      const select = document.getElementById('add-category');
+      if (select) {
+        select.addEventListener('change', function(e) {
+          if (e.target.value === '__NEW__') {
+            const newTag = prompt("Nom du nouveau tag / catégorie :");
+            if (newTag && newTag.trim()) {
+              const cleanTag = newTag.trim();
+              if (!categoriesData.includes(cleanTag)) {
+                categoriesData.push(cleanTag);
+                saveAppData();
+                renderTagFilters();
+                renderApp();
+                document.getElementById('add-category').value = cleanTag;
+                showToast(`Tag "<strong>${cleanTag}</strong>" créé !`);
+              } else {
+                alert("Ce tag existe déjà.");
+                document.getElementById('add-category').value = categoriesData[0];
+              }
+            } else {
+              document.getElementById('add-category').value = categoriesData[0];
+            }
+          }
+        });
+      }
+    }
+
+    // Modal Ajout
+    function openAddModal() { document.getElementById('add-modal').classList.remove('hidden'); document.getElementById('add-name').focus(); }
+    function closeAddModal() { 
+      document.getElementById('add-modal').classList.add('hidden'); 
+      document.getElementById('add-item-form').reset(); 
+      document.getElementById('selected-gif-url').value = '';
+      document.getElementById('gif-results-container').innerHTML = '<p class="text-[11px] text-slate-400 col-span-4 text-center py-4">Tapez un mot-clé pour chercher un GIF</p>';
+      switchImageTab('file');
+      selectModalRank('S'); 
+    }
+
+    function selectModalRank(rank) {
+      document.getElementById('add-rank-value').value = rank;
+      RANKS.forEach(r => {
+        const btn = document.getElementById(`rank-btn-${r}`);
+        btn.className = (r === rank) ? `rank-btn py-2.5 rounded-xl font-extrabold text-sm border-2 transition-all rank-${r} scale-105 shadow-sm` : `rank-btn py-2.5 rounded-xl font-extrabold text-sm border-2 transition-all bg-slate-100 text-slate-600 border-slate-200 hover:bg-slate-200`;
+      });
+    }
+
+    function handleAddItemSubmit(e) {
+      e.preventDefault();
+      const name = document.getElementById('add-name').value.trim();
+      const rank = document.getElementById('add-rank-value').value;
+      const category = document.getElementById('add-category').value;
+      const justification = document.getElementById('add-justification').value.trim();
+      const isMultiplayer = document.getElementById('add-multiplayer').checked;
+      const fileInput = document.getElementById('add-image-file');
+      const urlInput = document.getElementById('add-image-url').value.trim();
+      const gifUrl = document.getElementById('selected-gif-url').value;
+
+      if (!name || category === '__NEW__') return;
+
+      const finishAdd = (imageUrl) => {
+        itemsData.unshift({
+          id: Date.now().toString(),
+          name,
+          rank,
+          category,
+          justification,
+          image: imageUrl || "https://images.unsplash.com/photo-1579546929518-9e396f3cc809?w=500&auto=format&fit=crop&q=80",
+          isMultiplayer,
+          friendsRatings: [{ name: "Toi", rank: rank }]
+        });
+        saveAppData();
+        populateAutocomplete(); 
+        renderApp(); 
+        closeAddModal(); 
+        showToast(`"<strong>${name}</strong>" ajouté au Rang ${rank} !`);
+      };
+
+      if (gifUrl) {
+        finishAdd(gifUrl);
+      } else if (fileInput.files && fileInput.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function(event) {
+          finishAdd(event.target.result);
+        };
+        reader.readAsDataURL(fileInput.files[0]);
+      } else if (urlInput) {
+        finishAdd(urlInput);
+      } else {
+        finishAdd(null);
+      }
+    }
+
+    // Modal Détails & Changement de Rang / Suppression
+    function openDetailModal(id) {
+      const item = itemsData.find(i => i.id === id);
+      if (!item) return;
+      currentDetailItemId = id;
+      document.getElementById('detail-title').textContent = item.name;
+      document.getElementById('detail-tag').textContent = `#${item.category}`;
+      document.getElementById('detail-img').src = item.image || "https://images.unsplash.com/photo-1579546929518-9e396f3cc809?w=500&auto=format&fit=crop&q=80";
+      document.getElementById('detail-justification').textContent = item.justification ? `"${item.justification}"` : "Aucune justification disponible.";
+      
+      const badge = document.getElementById('detail-rank-badge');
+      badge.textContent = item.rank;
+      badge.className = `w-14 h-14 rounded-2xl flex items-center justify-center font-black text-2xl shadow-lg border-2 border-white ${RANK_CONFIG[item.rank].rankClass}`;
+      
+      document.getElementById('detail-rank-change').value = item.rank;
+
+      renderFriendsRatingsList(item);
+      document.getElementById('detail-modal').classList.remove('hidden');
+      lucide.createIcons();
+    }
+
+    function closeDetailModal() { document.getElementById('detail-modal').classList.add('hidden'); currentDetailItemId = null; }
+
+    function changeItemRank(newRank) {
+      if (!currentDetailItemId) return;
+      const item = itemsData.find(i => i.id === currentDetailItemId);
+      if (!item) return;
+      
+      item.rank = newRank;
+      
+      const toiRating = item.friendsRatings.find(r => r.name === "Toi");
+      if (toiRating) toiRating.rank = newRank;
+      else item.friendsRatings.unshift({ name: "Toi", rank: newRank });
+
+      saveAppData();
+      renderApp();
+      openDetailModal(currentDetailItemId);
+      showToast(`Rang mis à jour : <strong>${newRank}</strong>`);
+    }
+
+    function deleteCurrentItem() {
+      if (!currentDetailItemId) return;
+      if (confirm("Voulez-vous vraiment supprimer cet élément de la tierlist ?")) {
+        itemsData = itemsData.filter(i => i.id !== currentDetailItemId);
+        saveAppData();
+        closeDetailModal();
+        renderApp();
+        showToast("Élément supprimé avec succès.");
+      }
+    }
+
+    function renderFriendsRatingsList(item) {
+      const container = document.getElementById('friends-ratings-list');
+      const ratings = item.friendsRatings || [];
+      if (!ratings.length) {
+        container.innerHTML = `<p class="text-xs text-slate-400 italic col-span-3">Aucun vote.</p>`;
+        document.getElementById('detail-avg-badge').textContent = `Moyenne : Rang ${item.rank}`;
+        return;
+      }
+      
+      let total = 0;
+      ratings.forEach(r => total += (RANK_CONFIG[r.rank]?.score || 0));
+      const avgScore = Math.round(total / ratings.length);
+      const avgRank = Object.keys(RANK_CONFIG).find(k => RANK_CONFIG[k].score === avgScore) || 'C';
+      document.getElementById('detail-avg-badge').textContent = `Moyenne Amis : Rang ${avgRank} (${(total / ratings.length).toFixed(1)}/5)`;
+      
+      container.innerHTML = ratings.map(r => `
+        <div class="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 border border-slate-200">
+          <span class="text-xs font-bold text-slate-700 truncate">${r.name}</span>
+          <span class="text-xs font-extrabold px-2 py-0.5 rounded-lg ${RANK_CONFIG[r.rank]?.badgeClass}">Rang ${r.rank}</span>
+        </div>
+      `).join('');
+    }
+
+    function handleAddFriendRating(e) {
+      e.preventDefault();
+      const item = itemsData.find(i => i.id === currentDetailItemId);
+      const name = document.getElementById('friend-name-input').value.trim();
+      const rank = document.getElementById('friend-rank-select').value;
+      if (!item || !name) return;
+      
+      const idx = item.friendsRatings.findIndex(r => r.name.toLowerCase() === name.toLowerCase());
+      if (idx >= 0) item.friendsRatings[idx].rank = rank;
+      else item.friendsRatings.push({ name, rank });
+      
+      saveAppData();
+      document.getElementById('friend-name-input').value = '';
+      renderFriendsRatingsList(item); 
+      renderApp(); 
+      showToast(`Avis de <strong>${name}</strong> pris en compte !`);
+    }
+
+    /* TOAST NOTIFICATION */
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      document.getElementById('toast-message').innerHTML = msg;
+      toast.classList.remove('translate-y-20', 'opacity-0');
+      setTimeout(() => toast.classList.add('translate-y-20', 'opacity-0'), 3000);
+    }
+  </script>
+</body>
+</html>
