@@ -1,75 +1,39 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WobNet</title>
-    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700;9..144,800&family=DM+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
     <style>
         :root {
-            --purple: #ae00ff;
-            --purple-glow: rgba(174, 0, 255, 0.4);
-            --purple-soft: rgba(174, 0, 255, 0.1);
-            --glass: rgba(255,255,255,0.045);
-            --glass-border: rgba(255,255,255,0.09);
-            --glass-hover: rgba(255,255,255,0.08);
-            --text: rgba(255,255,255,0.92);
-            --muted: rgba(255,255,255,0.4);
-            --dim: rgba(255,255,255,0.65);
+            --cream: #FAF6EF;
+            --cream-deep: #F1EADA;
+            --card: #FFFFFF;
+            --blue: #A9C6E8;
+            --blue-deep: #7FA6D6;
+            --blue-ink: #4C6D93;
+            --ink: #33322E;
+            --muted: #8C887C;
+            --line: #E7DFCF;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
             font-family: 'DM Sans', sans-serif;
-            background: #07070f;
-            color: var(--text);
+            background: var(--cream);
+            color: var(--ink);
             min-height: 100vh;
-            overflow-x: hidden;
         }
 
-        .bg {
-            position: fixed;
-            inset: 0;
-            z-index: 0;
-            pointer-events: none;
-            overflow: hidden;
-        }
-        .blob {
-            position: absolute;
-            border-radius: 50%;
-            filter: blur(80px);
-        }
-        .blob-1 {
-            width: 500px; height: 400px;
-            background: radial-gradient(circle, rgba(174,0,255,0.18) 0%, transparent 70%);
-            top: -100px; left: -100px;
-            animation: drift 12s ease-in-out infinite alternate;
-        }
-        .blob-2 {
-            width: 400px; height: 500px;
-            background: radial-gradient(circle, rgba(100,0,200,0.12) 0%, transparent 70%);
-            bottom: -80px; right: -80px;
-            animation: drift 16s ease-in-out infinite alternate-reverse;
-        }
-        .blob-3 {
-            width: 300px; height: 300px;
-            background: radial-gradient(circle, rgba(174,0,255,0.08) 0%, transparent 70%);
-            top: 50%; left: 50%;
-            transform: translate(-50%, -50%);
-            animation: drift 20s ease-in-out infinite alternate;
-        }
-        @keyframes drift {
-            from { transform: translate(0, 0); }
-            to   { transform: translate(30px, 20px); }
-        }
-
-        body::after {
+        body::before {
             content: '';
             position: fixed;
             inset: 0;
-            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
-            background-size: 180px;
+            background:
+                radial-gradient(600px 400px at 10% -5%, rgba(169,198,232,0.35), transparent 60%),
+                radial-gradient(500px 380px at 105% 10%, rgba(169,198,232,0.28), transparent 60%);
             pointer-events: none;
             z-index: 0;
         }
@@ -77,384 +41,299 @@
         .page {
             position: relative;
             z-index: 1;
-            max-width: 900px;
+            max-width: 1040px;
             margin: 0 auto;
-            padding: 40px 20px 60px;
+            padding: 56px 24px 70px;
         }
 
-        .bento {
-            display: grid;
-            grid-template-columns: repeat(12, 1fr);
-            grid-auto-rows: 80px;
-            gap: 12px;
-        }
-
-        .card {
-            background: var(--glass);
-            border: 1px solid var(--glass-border);
-            border-radius: 18px;
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            box-shadow:
-                0 4px 24px rgba(0,0,0,0.35),
-                inset 0 1px 0 rgba(255,255,255,0.07);
-            transition: all 0.3s ease;
-            overflow: hidden;
-            position: relative;
-        }
-
-        /* Hero */
-        .card-hero {
-            grid-column: 1 / 8;
-            grid-row: 1 / 3;
-            padding: 28px 32px;
+        /* Header */
+        header {
             display: flex;
-            flex-direction: column;
-            justify-content: center;
-            background: linear-gradient(135deg, rgba(174,0,255,0.12) 0%, rgba(255,255,255,0.03) 60%);
-            border-color: rgba(174,0,255,0.2);
-        }
-        .card-hero::before {
-            content: '';
-            position: absolute;
-            top: -40px; right: -40px;
-            width: 180px; height: 180px;
-            background: radial-gradient(circle, rgba(174,0,255,0.2) 0%, transparent 70%);
-            pointer-events: none;
+            align-items: baseline;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 40px;
+            padding-bottom: 26px;
+            border-bottom: 1px solid var(--line);
         }
         .logo {
-            font-family: 'Syne', sans-serif;
-            font-size: clamp(2rem, 5vw, 3rem);
-            font-weight: 800;
-            letter-spacing: -0.03em;
-            color: transparent;
-            background: linear-gradient(130deg, #fff 20%, var(--purple) 100%);
-            -webkit-background-clip: text;
-            background-clip: text;
-            filter: drop-shadow(0 0 18px var(--purple-glow));
-            line-height: 1;
+            font-family: 'Fraunces', serif;
+            font-size: clamp(2.4rem, 6vw, 3.4rem);
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            color: var(--ink);
         }
+        .logo span { color: var(--blue-deep); }
         .logo-sub {
-            font-size: 0.78rem;
-            letter-spacing: 0.18em;
-            text-transform: uppercase;
+            font-size: 0.82rem;
+            letter-spacing: 0.08em;
             color: var(--muted);
-            margin-top: 8px;
         }
 
-        /* Stat cards */
-        .card-stat {
-            padding: 16px 20px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
+        /* Stat strip */
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 14px;
+            margin-bottom: 52px;
         }
-        .card-stat-1 { grid-column: 8 / 10;  grid-row: 1 / 2; }
-        .card-stat-2 { grid-column: 10 / 13; grid-row: 1 / 2; }
-        .card-stat-3 { grid-column: 8 / 10;  grid-row: 2 / 3; }
-        .card-stat-4 { grid-column: 10 / 13; grid-row: 2 / 3; }
-
+        .stat {
+            background: var(--card);
+            border: 1px solid var(--line);
+            border-radius: 20px;
+            padding: 18px 20px;
+            box-shadow: 0 6px 20px rgba(140,120,80,0.06);
+        }
         .stat-num {
-            font-family: 'Syne', sans-serif;
-            font-size: 1.8rem;
-            font-weight: 800;
-            color: var(--purple);
-            line-height: 1;
+            font-family: 'Fraunces', serif;
+            font-size: 1.7rem;
+            font-weight: 700;
+            color: var(--blue-ink);
         }
         .stat-label {
             font-size: 0.72rem;
-            letter-spacing: 0.1em;
+            letter-spacing: 0.08em;
             text-transform: uppercase;
             color: var(--muted);
             margin-top: 4px;
         }
 
-        /* Section label rows */
-        .card-label {
-            display: flex;
-            align-items: center;
-            padding: 0 4px;
-            background: transparent !important;
-            border: none !important;
-            backdrop-filter: none !important;
-            box-shadow: none !important;
-        }
-        .card-label-html  { grid-column: 1 / 13; grid-row: 3 / 4; }
-        .card-label-other { grid-column: 1 / 13; grid-row: 8 / 9; }
-
+        /* Section */
+        .section { margin-bottom: 54px; }
         .section-title {
-            font-family: 'Syne', sans-serif;
-            font-size: 0.7rem;
-            font-weight: 700;
-            letter-spacing: 0.22em;
-            text-transform: uppercase;
-            color: var(--purple);
             display: flex;
             align-items: center;
-            gap: 12px;
-            width: 100%;
+            gap: 14px;
+            font-family: 'Fraunces', serif;
+            font-size: 1.15rem;
+            font-weight: 600;
+            color: var(--ink);
+            margin-bottom: 22px;
         }
         .section-title::after {
             content: '';
             flex: 1;
             height: 1px;
-            background: linear-gradient(to right, rgba(174,0,255,0.35), transparent);
+            background: var(--line);
         }
-
-        /* Project cards */
-        .card-project {
-            padding: 22px 24px;
-            cursor: pointer;
-            text-decoration: none;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            color: inherit;
-        }
-        .card-project:hover {
-            background: var(--glass-hover);
-            border-color: rgba(174,0,255,0.3);
-            box-shadow:
-                0 8px 32px rgba(0,0,0,0.5),
-                0 0 24px var(--purple-soft),
-                inset 0 1px 0 rgba(255,255,255,0.1);
-            transform: translateY(-3px);
-        }
-        .card-project::after {
-            content: '↗';
-            position: absolute;
-            top: 18px; right: 20px;
-            font-size: 1rem;
-            color: var(--muted);
-            transition: color 0.2s, transform 0.2s;
-        }
-        .card-project:hover::after {
-            color: var(--purple);
-            transform: translate(2px, -2px);
-        }
-
-        .card-shynet { grid-column: 1 / 7;  grid-row: 4 / 7; }
-        .card-disky  { grid-column: 7 / 13; grid-row: 4 / 8; }
-
-        .project-name {
-            font-family: 'Syne', sans-serif;
-            font-size: 1.3rem;
-            font-weight: 700;
-            color: var(--text);
-        }
-        .project-desc {
-            font-size: 0.84rem;
-            line-height: 1.65;
-            color: var(--dim);
-            margin-top: 10px;
-        }
-        .project-footer {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin-top: 14px;
-        }
-
-        /* Status pill */
-        .status {
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
+        .section-tag {
             font-size: 0.68rem;
             font-weight: 600;
-            letter-spacing: 0.07em;
+            letter-spacing: 0.08em;
             text-transform: uppercase;
-            padding: 4px 10px;
+            color: var(--blue-ink);
+            background: rgba(169,198,232,0.28);
+            padding: 3px 10px;
             border-radius: 20px;
         }
-        .status::before {
-            content: '';
-            width: 5px; height: 5px;
-            border-radius: 50%;
-            animation: pulse 2.2s ease infinite;
-        }
-        .goodstate  { color: #4ade80; background: rgba(74,222,128,0.1);  border: 1px solid rgba(74,222,128,0.25); }
-        .goodstate::before  { background: #4ade80; box-shadow: 0 0 6px #4ade80; }
-        .devstate   { color: #fbbf24; background: rgba(251,191,36,0.1);  border: 1px solid rgba(251,191,36,0.25); }
-        .devstate::before   { background: #fbbf24; box-shadow: 0 0 6px #fbbf24; }
-        .badstate   { color: #f87171; background: rgba(248,113,113,0.1); border: 1px solid rgba(248,113,113,0.25); }
-        .badstate::before   { background: #f87171; box-shadow: 0 0 6px #f87171; }
-        @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.3; } }
 
-        /* Empty */
-        .card-empty {
-            grid-column: 1 / 13;
-            grid-row: 9 / 11;
+        /* Cartouche grid */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+            gap: 22px;
+        }
+
+        .cartouche {
+            display: block;
+            text-decoration: none;
+            color: inherit;
+            background: var(--card);
+            border: 1px solid var(--line);
+            border-radius: 24px;
+            overflow: hidden;
+            box-shadow: 0 6px 20px rgba(140,120,80,0.06);
+            transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+        }
+        .cartouche:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 14px 32px rgba(79,109,147,0.16);
+            border-color: var(--blue);
+        }
+
+        .cartouche-img {
+            aspect-ratio: 1 / 1;
+            width: 100%;
+            background: linear-gradient(135deg, var(--blue) 0%, var(--cream-deep) 100%);
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 10px;
-            border-style: dashed;
-            border-color: rgba(255,255,255,0.07);
-            color: var(--muted);
-            font-size: 0.82rem;
-            letter-spacing: 0.05em;
+            position: relative;
+            overflow: hidden;
         }
-        .dot { width:6px; height:6px; border-radius:50%; background:var(--purple); opacity:0.4; }
+        .cartouche-img img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .cartouche-initial {
+            font-family: 'Fraunces', serif;
+            font-size: 3rem;
+            font-weight: 700;
+            color: rgba(255,255,255,0.85);
+            text-shadow: 0 2px 10px rgba(76,109,147,0.35);
+        }
 
-        /* Footer */
-        .card-footer {
-            grid-column: 1 / 13;
-            grid-row: 11 / 12;
+        .cartouche-info {
+            padding: 14px 16px 16px;
+            border-top: 1px solid var(--line);
+        }
+        .cartouche-name {
+            font-family: 'Fraunces', serif;
+            font-weight: 600;
+            font-size: 1rem;
+            color: var(--ink);
+            line-height: 1.25;
+        }
+        .cartouche-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 0.65rem;
+            font-weight: 600;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            margin-top: 8px;
+            color: #5C9A6D;
+        }
+        .cartouche-status::before {
+            content: '';
+            width: 6px; height: 6px;
+            border-radius: 50%;
+            background: #6FBE82;
+        }
+        .cartouche-status.dev { color: #C79A3C; }
+        .cartouche-status.dev::before { background: #E0B04C; }
+
+        /* Empty state */
+        .empty {
+            border: 1.5px dashed var(--line);
+            border-radius: 20px;
+            padding: 26px;
+            text-align: center;
+            color: var(--muted);
+            font-size: 0.85rem;
+            letter-spacing: 0.02em;
+        }
+
+        footer {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 0 20px;
-            font-size: 0.75rem;
+            flex-wrap: wrap;
+            gap: 8px;
+            padding-top: 26px;
+            margin-top: 10px;
+            border-top: 1px solid var(--line);
+            font-size: 0.78rem;
             color: var(--muted);
-            letter-spacing: 0.05em;
-            background: transparent !important;
-            border: none !important;
-            backdrop-filter: none !important;
-            box-shadow: none !important;
         }
-        .card-footer .accent { color: var(--purple); opacity: 0.8; }
+        footer .accent { color: var(--blue-ink); font-weight: 600; }
 
-        /* Staggered fade-in */
-        .card { animation: fadeUp 0.5s ease both; }
-        .card-hero     { animation-delay: 0s; }
-        .card-stat-1   { animation-delay: 0.05s; }
-        .card-stat-2   { animation-delay: 0.08s; }
-        .card-stat-3   { animation-delay: 0.1s; }
-        .card-stat-4   { animation-delay: 0.13s; }
-        .card-shynet   { animation-delay: 0.2s; }
-        .card-disky    { animation-delay: 0.25s; }
-        .card-empty    { animation-delay: 0.3s; }
-        @keyframes fadeUp {
-            from { opacity:0; transform:translateY(14px); }
-            to   { opacity:1; transform:translateY(0); }
-        }
-
-        /* Responsive */
-        @media (max-width: 640px) {
-            .bento { grid-template-columns: 1fr; grid-auto-rows: auto; }
-            .card-hero, .card-stat-1, .card-stat-2, .card-stat-3, .card-stat-4,
-            .card-label, .card-label-html, .card-label-other,
-            .card-shynet, .card-disky, .card-empty, .card-footer {
-                grid-column: 1 / 2;
-                grid-row: auto;
-            }
-            .card-project { min-height: 160px; }
-            .card-footer { flex-direction: column; gap: 4px; text-align: center; }
+        @media (max-width: 560px) {
+            .stats { grid-template-columns: repeat(2, 1fr); }
+            header { flex-direction: column; align-items: flex-start; }
         }
     </style>
 </head>
 <body>
 
-<div class="bg">
-    <div class="blob blob-1"></div>
-    <div class="blob blob-2"></div>
-    <div class="blob blob-3"></div>
-</div>
-
 <div class="page">
-    <div class="bento">
 
-        <!-- Hero -->
-        <div class="card card-hero">
-            <div class="logo">WobNet</div>
+    <header>
+        <div>
+            <div class="logo">Wob<span>Net</span></div>
             <div class="logo-sub">Projects by doppaz</div>
         </div>
+    </header>
 
-        <!-- Stats -->
-        <div class="card card-stat card-stat-1">
+    <div class="stats">
+        <div class="stat">
+            <div class="stat-num">5</div>
+            <div class="stat-label">Projets</div>
+        </div>
+        <div class="stat">
+            <div class="stat-num">5</div>
+            <div class="stat-label">Fonctionnels</div>
+        </div>
+        <div class="stat">
             <div class="stat-num">2</div>
-            <div class="stat-label">Projects</div>
+            <div class="stat-label">Jeux vidéo</div>
         </div>
-        <div class="card card-stat card-stat-2">
-            <div class="stat-num">2</div>
-            <div class="stat-label">Functional</div>
-        </div>
-        <div class="card card-stat card-stat-3">
-            <div class="stat-num">HTML</div>
-            <div class="stat-label">Stack</div>
-        </div>
-        <div class="card card-stat card-stat-4">
+        <div class="stat">
             <div class="stat-num">∞</div>
-            <div class="stat-label">Coming soon</div>
+            <div class="stat-label">À venir</div>
         </div>
-
-        <!-- HTML projects section -->
-        <div class="card card-label card-label-html">
-            <p class="section-title">HTML Projects</p>
-        </div>
-
-        <!-- ShyNet -->
-        <a class="card card-project card-shynet" href="projects/shynet/shynet.html">
-            <div>
-                <div class="project-name">ShyNet</div>
-                <p class="project-desc">A chatting website where you have no identity — everybody becomes a complete unknown. Anonymous by design.</p>
-            </div>
-            <div class="project-footer">
-                <span class="status goodstate">Functional</span>
-            </div>
-        </a>
-
-        <!-- Disky -->
-        <a class="card card-project card-disky" href="projects/disky/disky.html">
-            <div>
-                <div class="project-name">Disky</div>
-                <p class="project-desc">Interface de lecture de musique avec un style unique. Importez vos musiques, appréciez-les visuellement autant qu'à l'oreille. Partagez vos playlists avec la fonction d'import/export.</p>
-            </div>
-            <div class="project-footer">
-                <span class="status goodstate">Functional</span>
-            </div>
-        </a>
-
-         <a class="card card-project card-gexo" href="projects/Gexo/gexo.html">
-            <div>
-                <div class="project-name">Gexo console</div>
-                <p class="project-desc">An imaginary 128x128px console that handles 3D and 2D</p>
-            </div>
-            <div class="project-footer">
-                <span class="status goodstate">Functional</span>
-            </div>
-        </a>
-
-        <a class="card card-project card-gexo" href="projects/shield/shield.html">
-            <div>
-                <div class="project-name">Shield-musical rhytm game</div>
-                <p class="project-desc">A game where you have to eliminate orbs with a shield that slides around a circle</p>
-            </div>
-            <div class="project-footer">
-                <span class="status goodstate">Functional</span>
-            </div>
-        </a>
-
-        <a class="card card-project card-gexo" href="projects/tierly/tierly.html">
-            <div>
-                <div class="project-name">Tierly</div>
-                <p class="project-desc">Classez tout dans une seule et meme tierlist</p>
-            </div>
-            <div class="project-footer">
-                <span class="status goodstate">Functional</span>
-            </div>
-        </a>
-
-        <!-- Other projects section -->
-        <div class="card card-label card-label-other">
-            <p class="section-title">Other Projects</p>
-        </div>
-
-        <!-- Empty state -->
-        <div class="card card-empty">
-            <div class="dot"></div>
-            No other projects for now — check back later
-            <div class="dot"></div>
-        </div>
-
-        <!-- Footer -->
-        <div class="card card-footer">
-            <span>© 2024 WobNet. All rights reserved.</span>
-            <span>made by <span class="accent">doppaz</span></span>
-        </div>
-
     </div>
+
+    <!-- Sites web -->
+    <div class="section">
+        <div class="section-title">Sites web <span class="section-tag">3</span></div>
+        <div class="grid">
+
+            <a class="cartouche" href="projects/shynet/shynet.html">
+                <div class="cartouche-img"><span class="cartouche-initial">S</span></div>
+                <div class="cartouche-info">
+                    <div class="cartouche-name">ShyNet</div>
+                    <span class="cartouche-status">Fonctionnel</span>
+                </div>
+            </a>
+
+            <a class="cartouche" href="projects/disky/disky.html">
+                <div class="cartouche-img"><span class="cartouche-initial">D</span></div>
+                <div class="cartouche-info">
+                    <div class="cartouche-name">Disky</div>
+                    <span class="cartouche-status">Fonctionnel</span>
+                </div>
+            </a>
+
+            <a class="cartouche" href="projects/tierly/tierly.html">
+                <div class="cartouche-img"><span class="cartouche-initial">T</span></div>
+                <div class="cartouche-info">
+                    <div class="cartouche-name">Tierly</div>
+                    <span class="cartouche-status">Fonctionnel</span>
+                </div>
+            </a>
+
+        </div>
+    </div>
+
+    <!-- Jeux vidéo -->
+    <div class="section">
+        <div class="section-title">Jeux vidéo <span class="section-tag">2</span></div>
+        <div class="grid">
+
+            <a class="cartouche" href="projects/Gexo/gexo.html">
+                <div class="cartouche-img"><span class="cartouche-initial">G</span></div>
+                <div class="cartouche-info">
+                    <div class="cartouche-name">Gexo console</div>
+                    <span class="cartouche-status">Fonctionnel</span>
+                </div>
+            </a>
+
+            <a class="cartouche" href="projects/shield/shield.html">
+                <div class="cartouche-img"><span class="cartouche-initial">S</span></div>
+                <div class="cartouche-info">
+                    <div class="cartouche-name">Shield</div>
+                    <span class="cartouche-status">Fonctionnel</span>
+                </div>
+            </a>
+
+        </div>
+    </div>
+
+    <!-- Other projects -->
+    <div class="section">
+        <div class="section-title">Autres projets <span class="section-tag">0</span></div>
+        <div class="empty">Aucun autre projet pour le moment — revenez plus tard</div>
+    </div>
+
+    <footer>
+        <span>© 2024 WobNet. Tous droits réservés.</span>
+        <span>fait par <span class="accent">doppaz</span></span>
+    </footer>
+
 </div>
 
 </body>
