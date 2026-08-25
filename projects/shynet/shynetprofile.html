@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ShyNet — WobNet</title>
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700;9..144,800&family=DM+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --cream: #FAF6EF;
+            --cream-deep: #F1EADA;
+            --card: #FFFFFF;
+            --blue: #A9C6E8;
+            --blue-deep: #7FA6D6;
+            --blue-ink: #4C6D93;
+            --ink: #33322E;
+            --muted: #8C887C;
+            --line: #E7DFCF;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: var(--cream);
+            color: var(--ink);
+            min-height: 100vh;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background:
+                radial-gradient(600px 400px at 10% -5%, rgba(169,198,232,0.35), transparent 60%),
+                radial-gradient(500px 380px at 105% 10%, rgba(169,198,232,0.28), transparent 60%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .page {
+            position: relative;
+            z-index: 1;
+            max-width: 760px;
+            margin: 0 auto;
+            padding: 40px 24px 70px;
+        }
+
+        /* Back link */
+        .back {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.82rem;
+            font-weight: 500;
+            color: var(--muted);
+            text-decoration: none;
+            margin-bottom: 30px;
+            transition: color 0.2s ease;
+        }
+        .back:hover { color: var(--blue-ink); }
+
+        /* Hero image */
+        .hero-img {
+            width: 100%;
+            aspect-ratio: 16 / 10;
+            border-radius: 28px;
+            overflow: hidden;
+            background: linear-gradient(135deg, var(--blue) 0%, var(--cream-deep) 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 10px 30px rgba(140,120,80,0.1);
+            margin-bottom: 26px;
+        }
+        .hero-img img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .hero-initial {
+            font-family: 'Fraunces', serif;
+            font-size: 5rem;
+            font-weight: 700;
+            color: rgba(255,255,255,0.85);
+            text-shadow: 0 3px 14px rgba(76,109,147,0.35);
+        }
+
+        /* Title block */
+        .title-row {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 14px;
+        }
+        h1 {
+            font-family: 'Fraunces', serif;
+            font-size: clamp(1.8rem, 5vw, 2.5rem);
+            font-weight: 700;
+            letter-spacing: -0.01em;
+        }
+        .status {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 0.68rem;
+            font-weight: 600;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            color: #5C9A6D;
+            margin-top: 10px;
+        }
+        .status::before {
+            content: '';
+            width: 6px; height: 6px;
+            border-radius: 50%;
+            background: #6FBE82;
+        }
+
+        /* CTA button */
+        .cta {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--blue-deep);
+            color: #fff;
+            font-family: 'DM Sans', sans-serif;
+            font-weight: 600;
+            font-size: 0.92rem;
+            text-decoration: none;
+            padding: 13px 26px;
+            border-radius: 999px;
+            box-shadow: 0 8px 22px rgba(79,109,147,0.28);
+            transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+            margin-bottom: 36px;
+        }
+        .cta:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 28px rgba(79,109,147,0.36);
+            background: var(--blue-ink);
+        }
+        .cta svg { width: 16px; height: 16px; }
+
+        /* Description */
+        .desc-block { margin-bottom: 36px; }
+        .desc-block h2 {
+            font-family: 'Fraunces', serif;
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--blue-ink);
+            letter-spacing: 0.02em;
+            margin-bottom: 12px;
+        }
+        .desc-block p {
+            font-size: 0.96rem;
+            line-height: 1.75;
+            color: var(--ink);
+        }
+        .desc-block p + p { margin-top: 12px; }
+
+        /* Tags */
+        .tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 36px;
+        }
+        .tag {
+            font-size: 0.72rem;
+            font-weight: 600;
+            letter-spacing: 0.03em;
+            color: var(--blue-ink);
+            background: rgba(169,198,232,0.28);
+            padding: 6px 14px;
+            border-radius: 999px;
+        }
+
+        /* Features */
+        .features {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 14px;
+            margin-bottom: 36px;
+        }
+        .feature {
+            background: var(--card);
+            border: 1px solid var(--line);
+            border-radius: 18px;
+            padding: 16px 18px;
+            box-shadow: 0 6px 20px rgba(140,120,80,0.06);
+        }
+        .feature-title {
+            font-family: 'Fraunces', serif;
+            font-weight: 600;
+            font-size: 0.9rem;
+            margin-bottom: 6px;
+        }
+        .feature-text {
+            font-size: 0.82rem;
+            line-height: 1.55;
+            color: var(--muted);
+        }
+
+        footer {
+            padding-top: 26px;
+            margin-top: 10px;
+            border-top: 1px solid var(--line);
+            font-size: 0.78rem;
+            color: var(--muted);
+        }
+        footer .accent { color: var(--blue-ink); font-weight: 600; }
+
+        @media (max-width: 560px) {
+            .features { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="page">
+
+    <a class="back" href="../../index.html">&larr; Retour à WobNet</a>
+
+    <div class="hero-img">
+        <span class="hero-initial">S</span>
+        <!-- Remplace le bloc ci-dessus par : <img src="apercu.jpg" alt="Aperçu de ShyNet"> -->
+    </div>
+
+    <div class="title-row">
+        <div>
+            <h1>ShyNet</h1>
+            <span class="status">Fonctionnel</span>
+        </div>
+    </div>
+
+    <a class="cta" href="shynet.html">
+        Voir le site
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7M7 7h10v10"/></svg>
+    </a>
+
+    <div class="desc-block">
+        <h2>Le projet</h2>
+        <p>ShyNet est une messagerie où personne n'a d'identité — tout le monde devient un parfait inconnu. Anonyme par conception, pensée pour discuter sans laisser de traces ni de profil derrière soi.</p>
+        <p>Pas de comptes, pas d'historique, pas de pseudo permanent : chaque conversation repart de zéro.</p>
+    </div>
+
+    <div class="tags">
+        <span class="tag">HTML / CSS / JS</span>
+        <span class="tag">Chat en temps réel</span>
+        <span class="tag">Anonymat</span>
+    </div>
+
+    <div class="features">
+        <div class="feature">
+            <div class="feature-title">Sans compte</div>
+            <div class="feature-text">Aucune inscription requise, on arrive et on discute directement.</div>
+        </div>
+        <div class="feature">
+            <div class="feature-title">Léger</div>
+            <div class="feature-text">Une interface simple, rapide à charger, sans superflu.</div>
+        </div>
+    </div>
+
+    <footer>
+        <span>Projet par <span class="accent">doppaz</span> — WobNet</span>
+    </footer>
+
+</div>
+
+</body>
+</html>
