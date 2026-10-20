@@ -5,8 +5,8 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400..900;1,6..96,400..900&family=DM+Mono:wght@400;500&family=Instrument+Sans:wght@400;500;600&display=swap">
 <style>
-/* Concept : un clavier de piano. Menu = pupitre d'ébène, terrain de jeu = touches d'ivoire,
-   tuiles d'ébène, bande de feutre cramoisie à la ligne de frappe. Look unique volontaire (sombre). */
+/* Concept : un pupitre d'ébène. Barre de navigation (Bibliothèque, Ajouter, Réglages), liste à gauche et détail du niveau à droite,
+   touches d'ivoire pour la frappe, feutre cramoisi pour l'action. Look sombre assumé. */
 :root{
   --ebony:#131013;
   --lacquer:#1c171b;
@@ -34,127 +34,152 @@ body{
   padding-right:max(16px,env(safe-area-inset-right,0px));
   overflow:hidden;-webkit-font-smoothing:antialiased;
 }
-button{font:inherit;color:inherit}
+button,input,select,textarea{font:inherit;color:inherit}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 :focus-visible{outline:2px solid var(--brass);outline-offset:2px}
-
+h1,h2,h3,p{margin:0}
 #app{height:100%}
 .screen{height:100%}
-#menu{overflow-y:auto;overflow-x:hidden;padding-block:18px 32px}
-.menu-inner{max-width:1080px;margin:0 auto}
 
-/* Masthead */
-.masthead{display:grid;gap:10px;padding-bottom:26px}
-.keys{height:30px;display:flex;position:relative;border-radius:0 0 3px 3px;overflow:hidden;
-  -webkit-mask-image:linear-gradient(90deg,#000 55%,transparent);mask-image:linear-gradient(90deg,#000 55%,transparent)}
-.keys .w{flex:1;min-width:0;background:var(--ivory);border-right:1px solid #8d8982}
-.keys .b{position:absolute;top:0;width:3.4%;height:62%;background:var(--ebony);border:1px solid #3a333a;border-top:0;border-radius:0 0 2px 2px;transform:translateX(-50%)}
-h1{margin:6px 0 0;font:italic 500 clamp(60px,12vw,112px)/.9 var(--display);letter-spacing:-.02em;text-wrap:balance}
-.lede{margin:0;color:var(--mist);max-width:48ch}
-
-/* Grid */
-.grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.05fr);gap:24px 44px;align-items:start;
-  grid-template-areas:"lev map" "tem map" "add map" "set map"}
-.s-add{grid-area:add}.s-levels{grid-area:lev}.s-tempo{grid-area:tem}.s-set{grid-area:set}
-.s-map{grid-area:map;position:sticky;top:0}
-@media (max-width:860px){
-  .grid{grid-template-columns:minmax(0,1fr);grid-template-areas:"lev" "tem" "map" "add" "set"}
-  .s-map{position:static}
-}
-.sec{border-top:1px solid var(--line);padding-top:14px;min-width:0}
-h2{margin:0 0 12px;font:500 11px/1.2 var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--mist)}
-.hint{margin:10px 0 0;color:var(--mist);font-size:13px;max-width:60ch}
-
-/* Ajout (niveau partagé en premier, musique en retrait) */
-.add-block{display:grid;gap:8px;margin-bottom:18px}
-.add-block.quiet{margin-bottom:0;padding-top:14px;border-top:1px solid var(--line)}
-.lab{font:500 11px/1.2 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ivory-dim)}
-.add-row{display:flex;flex-wrap:wrap;gap:8px}
-.s-add.over{outline:1px dashed var(--felt);outline-offset:8px}
-textarea,.finput{display:block;width:100%;background:var(--ebony);color:var(--ivory);border:1px solid var(--line);border-radius:2px;
-  padding:10px 12px;font:400 12px/1.5 var(--mono)}
-textarea{resize:vertical;word-break:break-all}
-.finput{font-size:13px;margin-bottom:8px}
-textarea::placeholder,.finput::placeholder{color:var(--mist)}
-.panel textarea{background:var(--ebony)}
-.drop{display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 12px;padding:11px 14px;border:1px dashed #4a434a;border-radius:3px;cursor:pointer;
-  transition:background .15s,border-color .15s}
-.drop:hover,.drop.over,.drop:focus-within{background:var(--lacquer);border-color:var(--felt)}
-.drop-title{font:italic 500 18px/1.2 var(--display)}
-.drop-sub{font:400 11px/1.4 var(--mono);color:var(--mist)}
-.btn.small{padding:10px 16px;font-size:14px}
-.btn.tiny{padding:8px 12px;font:500 12px var(--mono);letter-spacing:.06em;text-transform:uppercase}
-.btn.tiny.arm{background:var(--felt);border-color:var(--felt)}
-.filebtn{display:inline-flex;align-items:center;cursor:pointer}
-.filebtn:has(input:focus-visible){outline:2px solid var(--brass);outline-offset:2px}
-.tools{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
-.linkbtn{appearance:none;background:none;border:0;padding:8px 0 0;color:var(--ivory-dim);font:500 12px var(--mono);letter-spacing:.08em;
-  text-transform:uppercase;text-decoration:underline;text-underline-offset:3px;cursor:pointer}
-.linkbtn:hover{color:var(--ivory)}
-.msg{margin:10px 0 0;font:400 12px/1.4 var(--mono);color:var(--ivory-dim)}
-.msg:empty{display:none}
-.msg.err,.hint.err{color:#ff8a9a}
-#share{display:grid;gap:8px;margin-top:14px}
-.rename{display:block;width:100%;margin:0 0 14px;padding:0 0 2px;background:transparent;color:var(--ivory);border:0;border-bottom:1px solid var(--felt);
-  border-radius:0;font:italic 500 28px/1.1 var(--display)}
-.lv .t{grid-column:1/-1;font:500 10px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--brass)}
-.lv[aria-pressed="true"] .t{color:var(--felt-deep)}
-.lvname.editable{cursor:text;text-decoration:underline dotted var(--mist);text-decoration-thickness:1px;text-underline-offset:6px}
-.lvname.editable:hover{text-decoration-color:var(--ivory)}
-#incWrap{margin:14px 0 0;font-size:13px;color:var(--ivory-dim)}
-.inc-size{font:400 12px var(--mono);color:var(--mist)}
-.levels .empty{padding:10px 2px;color:var(--mist);font-size:13px}
-.status{min-height:22px;margin-top:10px;font:400 13px/1.4 var(--mono);color:var(--ivory-dim)}
-.status.err{color:#ff8a9a}
-.bar{height:3px;background:var(--line);margin-top:6px}
-.bar i{display:block;height:100%;width:0;background:var(--felt);transition:width .12s linear}
-
-/* Levels */
-.levels{list-style:none;margin:0;padding:2px;display:grid;gap:4px;max-height:380px;overflow-y:auto}
-.lv{width:100%;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:baseline;text-align:left;
-  padding:10px 12px;background:transparent;border:1px solid var(--line);border-radius:2px;cursor:pointer}
-.lv:hover{border-color:var(--mist)}
-.lv .n{font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
-.lv .m{font:400 12px var(--mono);color:var(--mist);white-space:nowrap}
-.lv[aria-pressed="true"]{background:var(--ivory);color:var(--ebony);border-color:var(--ivory)}
-.lv[aria-pressed="true"] .m{color:#5b545a}
-
-/* Tempo */
-.tempos{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
-@media (max-width:520px){.tempos{grid-template-columns:repeat(2,minmax(0,1fr))}}
-.tempo{position:relative;display:grid;gap:2px;padding:10px 12px;border:1px solid var(--line);border-radius:2px;cursor:pointer;min-width:0}
-.tempo:hover{border-color:var(--mist)}
-.tempo .tn{font:italic 500 21px/1.1 var(--display)}
-.tempo .tc{font:400 12px var(--mono);color:var(--mist)}
-.tempo:has(input:checked){background:var(--ivory);color:var(--ebony);border-color:var(--ivory)}
-.tempo:has(input:checked) .tc{color:#5b545a}
-.tempo:has(input:focus-visible){outline:2px solid var(--brass);outline-offset:2px}
-
-/* Settings */
-.row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 12px;align-items:center;margin-bottom:14px}
-.row label{font-weight:500}
-.row output{font:400 13px var(--mono);color:var(--ivory-dim)}
-.row input[type=range]{grid-column:1/-1;width:100%;accent-color:var(--felt);margin:4px 0 0}
-.check{display:flex;gap:10px;align-items:center;margin:0 0 10px;cursor:pointer}
-.check input{width:18px;height:18px;accent-color:var(--felt);margin:0}
-
-/* Map card */
-.panel{background:var(--lacquer);border:1px solid var(--line);border-radius:3px;padding:18px;min-width:0}
-.lvname{margin:0 0 14px;font:italic 500 28px/1.1 var(--display);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-#map{display:block;width:100%;height:170px}
-.stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 16px;margin:16px 0 18px}
-.stats div{display:grid;gap:1px}
-.stats dt{font:500 10px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--mist)}
-.stats dd{margin:0;font:400 17px var(--mono);font-variant-numeric:tabular-nums}
-
-.btn{appearance:none;border:0;background:var(--felt);color:var(--ivory);font:600 16px var(--body);
-  padding:14px 22px;border-radius:2px;cursor:pointer;transition:background .12s}
+/* Boutons */
+.btn{appearance:none;border:0;background:var(--felt);color:var(--ivory);font:600 15px var(--body);padding:13px 20px;border-radius:2px;
+  cursor:pointer;text-align:center;transition:background .12s}
 .btn:hover{background:var(--felt-hi)}
 .btn[disabled]{opacity:.4;cursor:not-allowed;background:var(--felt)}
 .btn.ghost{background:transparent;border:1px solid #6a626a}
 .btn.ghost:hover{background:var(--lacquer);border-color:var(--ivory-dim)}
+.btn.ghost[disabled]:hover{background:transparent;border-color:#6a626a}
 .btn.wide{width:100%;font-size:18px;padding:16px}
+.btn.small{padding:10px 16px;font-size:14px}
+.btn.tiny{padding:7px 11px;font:500 12px var(--mono);letter-spacing:.06em;text-transform:uppercase}
+.btn.tiny.arm{background:var(--felt);border-color:var(--felt)}
+.linkbtn{appearance:none;background:none;border:0;padding:4px 0;color:var(--ivory-dim);font:500 12px var(--mono);letter-spacing:.08em;
+  text-transform:uppercase;text-decoration:underline;text-underline-offset:3px;cursor:pointer;justify-self:start}
+.linkbtn:hover{color:var(--ivory)}
 
+/* Coque : bandeau de touches, navigation, vues */
+.shell{display:flex;flex-direction:column;max-width:1180px;margin:0 auto}
+.keys{flex:none;height:12px;display:flex;position:relative;overflow:hidden;border-radius:0 0 2px 2px;
+  -webkit-mask-image:linear-gradient(90deg,#000 45%,transparent);mask-image:linear-gradient(90deg,#000 45%,transparent)}
+.keys .w{flex:1;min-width:0;background:var(--ivory);border-right:1px solid #8d8982}
+.keys .b{position:absolute;top:0;width:2%;height:62%;background:var(--ebony);border:1px solid #3a333a;border-top:0;border-radius:0 0 2px 2px;transform:translateX(-50%)}
+.top{flex:none;display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:0 28px;padding-top:10px;border-bottom:1px solid var(--line)}
+.brand{font:italic 500 36px/1 var(--display);letter-spacing:-.01em;padding-bottom:10px}
+.nav{display:flex;gap:2px;margin-bottom:-1px}
+.nav button{appearance:none;background:none;border:0;border-bottom:2px solid transparent;color:var(--mist);font:600 14px var(--body);
+  padding:14px 14px 12px;cursor:pointer;display:flex;gap:8px;align-items:center}
+.nav button:hover{color:var(--ivory)}
+.nav button[aria-current="page"]{color:var(--ivory);border-bottom-color:var(--felt)}
+.count{font:500 11px var(--mono);background:var(--line);color:var(--ivory-dim);border-radius:10px;padding:1px 7px;font-variant-numeric:tabular-nums}
+@media (max-width:560px){
+  .nav{width:100%}
+  .nav button{flex:1;justify-content:center;padding:12px 6px 10px}
+}
+.views{flex:1;min-height:0}
+.view{height:100%;overflow-y:auto;overflow-x:hidden;padding-block:22px 28px}
+.view-head{display:grid;gap:8px;margin-bottom:24px}
+.h-view{font:italic 500 clamp(32px,5vw,44px)/1 var(--display);letter-spacing:-.01em}
+.lede{color:var(--mist);max-width:60ch}
+.eyebrow{font:500 11px/1.2 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--mist)}
+.hint{color:var(--mist);font-size:13px;max-width:62ch}
+.hint.err,.status.err,.notice.err{color:#ff8a9a}
+.notice{flex:none;margin-bottom:16px;padding:10px 14px;border:1px solid var(--line);background:var(--lacquer);font:400 13px/1.45 var(--mono);color:var(--ivory)}
+.notice.err{border-color:var(--felt-deep)}
+.status{font:400 13px/1.4 var(--mono);color:var(--ivory-dim);min-height:0}
+.status:empty{display:none}
+.bar{height:3px;background:var(--line)}
+.bar i{display:block;height:100%;width:0;background:var(--felt);transition:width .12s linear}
+
+/* Champs */
+.finput{display:block;width:100%;background:var(--ebony);color:var(--ivory);border:1px solid var(--line);border-radius:2px;padding:9px 12px;font-size:14px}
+.finput::placeholder{color:var(--mist)}
+select.finput{width:auto;padding-right:8px}
+
+/* Bibliothèque : liste + détail */
+.view-lib{display:block}
+.lib-grid{display:grid;grid-template-columns:minmax(280px,360px) minmax(0,1fr);gap:28px;align-items:start}
+.lib-list{display:flex;flex-direction:column;min-width:0}
+.list-head{display:flex;justify-content:space-between;align-items:center;gap:8px;min-height:30px;margin-bottom:10px}
+.list-tools{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;margin-bottom:10px}
+.levels{list-style:none;margin:0;padding:2px;display:grid;gap:4px;align-content:start;overflow-y:auto}
+.levels .empty{padding:12px 2px;color:var(--mist);font-size:13px}
+@media (max-width:900px){
+  .lib-grid{grid-template-columns:minmax(0,1fr);gap:22px}
+  .detail{order:-1;padding:18px}
+  .levels{max-height:48vh}
+}
+.row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px}
+.lv{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 12px;align-items:baseline;text-align:left;
+  padding:10px 12px;background:transparent;border:1px solid var(--line);border-radius:2px;cursor:pointer;min-width:0}
+.lv:hover{border-color:var(--mist)}
+.lv .n{font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.lv .m{font:400 12px var(--mono);color:var(--mist);white-space:nowrap;font-variant-numeric:tabular-nums}
+.lv .t{grid-column:1/-1;font:500 10px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--brass)}
+.lv[aria-pressed="true"]{background:var(--ivory);color:var(--ebony);border-color:var(--ivory)}
+.lv[aria-pressed="true"] .m{color:#5b545a}
+.lv[aria-pressed="true"] .t{color:var(--felt-deep)}
+.rowplay{appearance:none;display:grid;place-items:center;width:42px;background:transparent;border:1px solid var(--line);border-radius:2px;cursor:pointer;color:var(--ivory-dim)}
+.rowplay:hover{background:var(--felt);border-color:var(--felt);color:var(--ivory)}
+
+.detail{min-width:0;background:var(--lacquer);border:1px solid var(--line);border-radius:3px;padding:24px;display:grid;gap:22px}
+.d-empty{display:grid;gap:10px;justify-items:start;padding:12px 0}
+.d-empty-t{font:italic 500 28px/1.1 var(--display)}
+.d-head{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-start;gap:12px 20px}
+.d-title{min-width:0;flex:1 1 260px;display:grid;gap:6px}
+.lvname{font:italic 500 clamp(28px,4vw,38px)/1.1 var(--display);overflow-wrap:anywhere}
+.lvname.editable{cursor:text;text-decoration:underline dotted var(--mist);text-decoration-thickness:1px;text-underline-offset:6px}
+.lvname.editable:hover{text-decoration-color:var(--ivory)}
+.rename{display:block;width:100%;padding:0 0 2px;background:transparent;color:var(--ivory);border:0;border-bottom:1px solid var(--felt);border-radius:0;
+  font:italic 500 clamp(28px,4vw,38px)/1.1 var(--display)}
+.d-actions{display:flex;flex-wrap:wrap;gap:8px}
+.facts{margin:0;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px 16px}
+.facts div{display:grid;gap:2px;min-width:0}
+.facts dt{font:500 10px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--mist)}
+.facts dd{margin:0;font:400 15px var(--mono);font-variant-numeric:tabular-nums;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+@media (max-width:640px){.facts{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.d-sec{display:grid;gap:10px;min-width:0}
+#map{display:block;width:100%;height:170px}
+.tempos{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+@media (max-width:560px){.tempos{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.tempo{display:grid;gap:1px;padding:10px 12px;border:1px solid var(--line);border-radius:2px;cursor:pointer;min-width:0;background:var(--ebony)}
+.tempo:hover{border-color:var(--mist)}
+.tempo .tn{font:italic 500 21px/1.1 var(--display)}
+.tempo .tc,.tempo .tr{font:400 12px var(--mono);color:var(--mist);font-variant-numeric:tabular-nums}
+.tempo:has(input:checked){background:var(--ivory);color:var(--ebony);border-color:var(--ivory)}
+.tempo:has(input:checked) .tc,.tempo:has(input:checked) .tr{color:#5b545a}
+.tempo:has(input:focus-visible){outline:2px solid var(--brass);outline-offset:2px}
+.play-row{display:grid;gap:10px}
+
+/* Ajouter et réglages */
+.add-grid,.set-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px;align-items:start}
+@media (max-width:860px){.add-grid,.set-grid{grid-template-columns:minmax(0,1fr)}}
+.card{display:grid;gap:14px;align-content:start;min-width:0;background:var(--lacquer);border:1px solid var(--line);border-radius:3px;padding:22px}
+.card-t{font:italic 500 26px/1.15 var(--display)}
+.card-d{color:var(--mist);font-size:14px}
+.card-d code{font:400 12px var(--mono);color:var(--ivory-dim)}
+.dz{display:grid;place-items:center;gap:4px;padding:34px 16px;border:1px dashed #5a525a;border-radius:3px;cursor:pointer;text-align:center;
+  transition:background .15s,border-color .15s}
+.dz:hover,.dz.over,.dz:focus-within{background:var(--ebony);border-color:var(--felt)}
+.dz-t{font-weight:600}
+.dz-s{font:400 12px var(--mono);color:var(--mist)}
+.add-row{display:flex;flex-wrap:wrap;gap:8px}
+.setting{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 12px;align-items:baseline;padding-top:14px;border-top:1px solid var(--line)}
+.setting:first-of-type{border-top:0;padding-top:0}
+.setting label{font-weight:600}
+.setting output{font:400 13px var(--mono);color:var(--ivory-dim)}
+.setting .sd{grid-column:1/-1;color:var(--mist);font-size:13px}
+.setting input[type=range]{grid-column:1/-1;width:100%;accent-color:var(--felt);margin:8px 0 0}
+.check{display:flex;gap:12px;align-items:flex-start;cursor:pointer;padding-top:14px;border-top:1px solid var(--line)}
+.check input{width:18px;height:18px;accent-color:var(--felt);margin:3px 0 0;flex:none}
+.check span{display:grid;font-weight:600}
+.check small{font-weight:400;color:var(--mist);font-size:13px}
+.keylist{margin:0;display:grid;gap:12px}
+.keylist div{display:grid;grid-template-columns:minmax(0,120px) minmax(0,1fr);gap:12px;align-items:baseline}
+.keylist dt{display:flex;flex-wrap:wrap;gap:4px;color:var(--ivory-dim);font-size:13px}
+.keylist dd{margin:0;color:var(--mist);font-size:14px}
+kbd{display:inline-block;min-width:26px;padding:2px 7px;text-align:center;font:500 12px var(--mono);color:var(--ebony);background:var(--ivory);border-radius:2px}
+
+/* Jeu */
 /* Game */
 #game{display:flex;justify-content:center}
 #stage{flex:1;min-width:0;display:flex;justify-content:center}
@@ -191,98 +216,176 @@ textarea::placeholder,.finput::placeholder{color:var(--mist)}
 </style>
 
 <div id="app">
-  <main id="menu" class="screen">
-    <div class="menu-inner">
-      <header class="masthead">
-        <div class="keys" id="keys" aria-hidden="true"></div>
-        <h1>Ébène</h1>
-        <p class="lede">Une bibliothèque de niveaux à quatre colonnes. Crée-en depuis un morceau, ou importe ceux d’un ami.</p>
-      </header>
+  <div id="menu" class="screen shell">
+    <div class="keys" id="keys" aria-hidden="true"></div>
+    <header class="top">
+      <div class="brand">Ébène</div>
+      <nav class="nav" aria-label="Sections">
+        <button type="button" data-view="lib" aria-current="page">Bibliothèque <span class="count" id="libCount">0</span></button>
+        <button type="button" data-view="add">Ajouter</button>
+        <button type="button" data-view="set">Réglages</button>
+      </nav>
+    </header>
 
-      <div class="grid">
-                <section class="sec s-levels">
-          <h2>Bibliothèque</h2>
-          <input id="filter" class="finput" type="search" placeholder="Filtrer par titre" aria-label="Filtrer la bibliothèque" hidden>
-          <ul id="levels" class="levels"></ul>
-          <p class="hint" id="libNote">Enregistrée dans ce navigateur, musique comprise.</p>
-        </section>
-
-        <section class="sec s-tempo">
-          <h2>Tempo</h2>
-          <div class="tempos" id="tempos" role="radiogroup" aria-label="Tempo"></div>
-          <p class="hint">Plus le tempo est vif, plus le niveau compte de notes.</p>
-        </section>
-
-        <section class="sec s-add" id="addSec">
-          <h2>Ajouter à la bibliothèque</h2>
-          <div class="add-block">
-            <label class="lab" for="codeIn">Niveau reçu</label>
-            <textarea id="codeIn" rows="3" spellcheck="false" autocomplete="off" placeholder="Colle ici un code de niveau (il commence par EBENE)"></textarea>
-            <div class="add-row">
-              <button class="btn small" id="btnCode" type="button">Importer le code</button>
-              <label class="btn small ghost filebtn" for="lvFile">Choisir un fichier
-                <input id="lvFile" class="sr" type="file" accept=".ebene,.txt,.json,text/plain,application/json">
-              </label>
+    <main class="views">
+      <!-- Bibliothèque -->
+      <section id="view-lib" class="view view-lib" aria-label="Bibliothèque">
+        <div class="notice" id="libMsg" role="status" aria-live="polite" hidden></div>
+        <div class="lib-grid">
+          <div class="lib-list">
+            <div class="list-head">
+              <h2 class="eyebrow">Niveaux</h2>
+              <button class="btn tiny ghost" id="btnExportAll" type="button" hidden>Tout exporter</button>
             </div>
+            <div class="list-tools">
+              <input id="filter" class="finput" type="search" placeholder="Rechercher un titre" aria-label="Rechercher dans la bibliothèque" autocomplete="off">
+              <select id="sort" class="finput" aria-label="Trier les niveaux">
+                <option value="recent">Récents</option>
+                <option value="title">Titre</option>
+                <option value="duration">Durée</option>
+              </select>
+            </div>
+            <ul id="levels" class="levels"></ul>
+            <p class="hint" id="libNote">Enregistrée dans ce navigateur, musique comprise.</p>
           </div>
-          <div class="add-block quiet">
-            <span class="lab">Ou créer un niveau depuis une musique</span>
-            <label class="drop" id="drop" for="file">
-              <span class="drop-title">Importer un fichier audio</span>
-              <span class="drop-sub">MP3, WAV, OGG, M4A</span>
+
+          <article class="detail" id="detail" aria-label="Niveau sélectionné">
+            <div class="d-empty" id="dEmpty" hidden>
+              <p class="d-empty-t">Aucun niveau sélectionné</p>
+              <p class="hint">Choisis un niveau dans la liste, ou ajoutes-en un.</p>
+              <button class="btn small" id="goAdd" type="button">Ajouter un niveau</button>
+            </div>
+            <div id="dBody" class="d-body" style="display:contents">
+              <header class="d-head">
+                <div class="d-title">
+                  <p class="eyebrow" id="dTags"></p>
+                  <h2 class="lvname" id="lvname" tabindex="0" role="button" title="Cliquer pour renommer">Niveau</h2>
+                  <input id="renameIn" class="rename" type="text" maxlength="80" aria-label="Nom du niveau" autocomplete="off" hidden>
+                </div>
+                <div class="d-actions" id="tools">
+                  <button class="btn tiny ghost" id="btnRename" type="button">Renommer</button>
+                  <button class="btn tiny ghost" id="btnExport" type="button">Exporter</button>
+                  <button class="btn tiny ghost" id="btnDelete" type="button">Supprimer</button>
+                </div>
+              </header>
+
+              <dl class="facts">
+                <div><dt>Durée</dt><dd id="fDur">–</dd></div>
+                <div><dt>Tempo estimé</dt><dd id="fBpm">–</dd></div>
+                <div><dt>Musique</dt><dd id="fAudio">–</dd></div>
+                <div><dt>Ajouté</dt><dd id="fDate">–</dd></div>
+              </dl>
+
+              <section class="d-sec" aria-label="Carte du niveau">
+                <h3 class="eyebrow">Carte du niveau</h3>
+                <canvas id="map" aria-label="Forme d'onde et notes par colonne"></canvas>
+              </section>
+
+              <section class="d-sec">
+                <h3 class="eyebrow">Tempo</h3>
+                <div class="tempos" id="tempos" role="radiogroup" aria-label="Tempo"></div>
+              </section>
+
+              <div class="play-row">
+                <button class="btn wide" id="btnPlay" type="button" disabled>Jouer</button>
+                <button class="btn wide ghost" id="btnAttach" type="button" hidden>Associer la musique</button>
+                <input id="attachFile" class="sr" type="file" accept="audio/*,.mp3,.wav,.ogg,.m4a,.flac,.aac" tabindex="-1">
+                <p class="hint" id="attachHint" hidden>Ce niveau a été importé sans sa musique. Choisis le même morceau pour pouvoir le jouer.</p>
+              </div>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <!-- Ajouter -->
+      <section id="view-add" class="view" aria-label="Ajouter un niveau" hidden>
+        <div class="view-head">
+          <h1 class="h-view">Ajouter un niveau</h1>
+          <p class="lede">Crée un niveau à partir d'un morceau, ou importe un fichier Ébène reçu. Tu peux aussi déposer un fichier n'importe où sur la page.</p>
+        </div>
+        <div class="add-grid">
+          <article class="card">
+            <h2 class="card-t">Depuis une musique</h2>
+            <p class="card-d">Ébène détecte les notes du morceau et génère un niveau pour chacun des quatre tempos. L'analyse se fait dans ton navigateur, rien n'est envoyé.</p>
+            <label class="dz" for="file">
+              <span class="dz-t">Choisir un fichier audio</span>
+              <span class="dz-s">ou le déposer ici · MP3, WAV, OGG, M4A</span>
               <input id="file" class="sr" type="file" accept="audio/*,.mp3,.wav,.ogg,.m4a,.flac,.aac">
             </label>
-          </div>
-          <div class="status" id="status" role="status" aria-live="polite"></div>
-          <div class="bar" id="bar" hidden><i id="barFill"></i></div>
-          <p class="hint">Tout est analysé dans ton navigateur et n'est envoyé nulle part. Tu peux aussi déposer un fichier n'importe où sur la page.</p>
-        </section>
+            <div class="bar" id="bar" hidden><i id="barFill"></i></div>
+            <p class="status" id="stCreate" role="status" aria-live="polite"></p>
+            <button class="linkbtn" id="goLibCreate" type="button" hidden>Ouvrir dans la bibliothèque</button>
+          </article>
 
-        <section class="panel s-map">
-          <h2>Carte du niveau</h2>
-          <p class="lvname" id="lvname" tabindex="0" role="button" title="Cliquer pour renommer">Aucun niveau</p>
-          <input id="renameIn" class="rename" type="text" maxlength="80" aria-label="Nom du niveau" autocomplete="off" hidden>
-          <canvas id="map" aria-label="Aperçu de la forme d'onde et des notes par colonne"></canvas>
-          <dl class="stats">
-            <div><dt>Notes</dt><dd id="stNotes">–</dd></div>
-            <div><dt>Durée</dt><dd id="stDur">–</dd></div>
-            <div><dt>Tempo estimé</dt><dd id="stBpm">–</dd></div>
-            <div><dt>Record</dt><dd id="stBest">–</dd></div>
-          </dl>
-          <button class="btn wide" id="btnPlay" type="button" disabled>Jouer</button>
-          <button class="btn wide ghost" id="btnAttach" type="button" hidden>Associer la musique</button>
-          <input id="attachFile" class="sr" type="file" accept="audio/*,.mp3,.wav,.ogg,.m4a,.flac,.aac" tabindex="-1">
-          <p class="hint" id="attachHint" hidden>Ce niveau vient d'un code : il contient les notes, pas la musique. Choisis le même morceau pour le jouer.</p>
-          <label class="check" id="incWrap" hidden><input type="checkbox" id="incAudio" checked> Inclure la musique à l'export <span id="incSize" class="inc-size"></span></label>
-          <div class="tools" id="tools">
-            <button class="btn tiny ghost" id="btnRename" type="button">Renommer</button>
-            <button class="btn tiny ghost" id="btnExport" type="button">Copier le code</button>
-            <button class="btn tiny ghost" id="btnDelete" type="button">Supprimer</button>
-          </div>
-          <button class="linkbtn" id="btnExportAll" type="button" hidden>Tout exporter</button>
-          <p class="msg" id="panelMsg" role="status"></p>
-          <div id="share" hidden>
-            <label class="lab" for="codeOut">Code à envoyer</label>
-            <textarea id="codeOut" rows="3" readonly spellcheck="false"></textarea>
-            <p class="hint" id="shareNote">Il contient les notes des quatre tempos, pas la musique. Envoie-le avec le titre du morceau.</p>
-          </div>
-        </section>
+          <article class="card">
+            <h2 class="card-t">Depuis un fichier Ébène</h2>
+            <p class="card-d">Un fichier <code>.ebene.zip</code> exporté depuis la bibliothèque contient les niveaux, leur musique et tes records. Tu peux en choisir plusieurs à la fois.</p>
+            <label class="dz" for="lvFile">
+              <span class="dz-t">Choisir un fichier .ebene.zip</span>
+              <span class="dz-s">ou le déposer ici</span>
+              <input id="lvFile" class="sr" type="file" accept=".zip,.ebene,application/zip,application/x-zip-compressed" multiple>
+            </label>
+            <p class="status" id="stImport" role="status" aria-live="polite"></p>
+            <button class="linkbtn" id="goLibImport" type="button" hidden>Ouvrir dans la bibliothèque</button>
+          </article>
+        </div>
+      </section>
 
-        <section class="sec s-set">
-          <h2>Réglages</h2>
-          <div class="row"><label for="speed">Vitesse de chute</label><output id="speedV" for="speed">5</output>
-            <input id="speed" type="range" min="1" max="10" step="1"></div>
-          <div class="row"><label for="offset">Décalage audio</label><output id="offsetV" for="offset">0 ms</output>
-            <input id="offset" type="range" min="-150" max="150" step="5"></div>
-          <div class="row"><label for="volume">Volume</label><output id="volumeV" for="volume">80 %</output>
-            <input id="volume" type="range" min="0" max="100" step="5"></div>
-          <label class="check"><input type="checkbox" id="sounds"> Sons de touche</label>
-          <label class="check"><input type="checkbox" id="nofail"> Sans échec (la santé ne baisse pas)</label>
-          <p class="hint">Touches D F J K, ou touche directement les colonnes. Échap met en pause. Si les tuiles arrivent avant la musique, augmente le décalage ; sinon, diminue-le.</p>
-        </section>
-      </div>
-    </div>
-  </main>
+      <!-- Réglages -->
+      <section id="view-set" class="view" aria-label="Réglages" hidden>
+        <div class="view-head">
+          <h1 class="h-view">Réglages</h1>
+          <p class="lede">Ils s'appliquent à tous les niveaux et sont conservés sur cet appareil.</p>
+        </div>
+        <div class="set-grid">
+          <article class="card">
+            <h2 class="card-t">Jeu</h2>
+            <div class="setting">
+              <label for="speed">Vitesse de chute</label><output id="speedV" for="speed">5</output>
+              <p class="sd">Plus elle est haute, moins tu as de temps pour lire les tuiles.</p>
+              <input id="speed" type="range" min="1" max="10" step="1">
+            </div>
+            <div class="setting">
+              <label for="tol">Tolérance de frappe</label><output id="tolV" for="tol">Normale</output>
+              <p class="sd">Largeur des zones « Parfait » et « Bien ». Un Parfait se joue au milieu de la tuile, quand elle croise la ligne rouge.</p>
+              <input id="tol" type="range" min="1" max="3" step="1">
+            </div>
+            <div class="setting">
+              <label for="offset">Décalage audio</label><output id="offsetV" for="offset">0 ms</output>
+              <p class="sd">Si les tuiles arrivent avant la musique, augmente la valeur. Sinon, diminue-la.</p>
+              <input id="offset" type="range" min="-150" max="150" step="5">
+            </div>
+            <label class="check" for="nofail"><input type="checkbox" id="nofail"><span>Sans échec<small>La santé ne baisse pas, le morceau va toujours au bout.</small></span></label>
+          </article>
+
+          <article class="card">
+            <h2 class="card-t">Son</h2>
+            <div class="setting">
+              <label for="volume">Volume de la musique</label><output id="volumeV" for="volume">80 %</output>
+              <input id="volume" type="range" min="0" max="100" step="5">
+            </div>
+            <label class="check" for="sounds"><input type="checkbox" id="sounds"><span>Sons de touche<small>Une note courte à chaque frappe réussie.</small></span></label>
+          </article>
+
+          <article class="card">
+            <h2 class="card-t">Commandes</h2>
+            <dl class="keylist">
+              <div><dt><kbd>D</kbd><kbd>F</kbd><kbd>J</kbd><kbd>K</kbd></dt><dd>Frapper les quatre colonnes, de gauche à droite.</dd></div>
+              <div><dt>Écran tactile</dt><dd>Touche directement la colonne.</dd></div>
+              <div><dt><kbd>Échap</kbd><kbd>P</kbd></dt><dd>Mettre en pause ou reprendre.</dd></div>
+            </dl>
+          </article>
+
+          <article class="card">
+            <h2 class="card-t">Données</h2>
+            <p class="card-d" id="dataInfo">–</p>
+            <div class="add-row"><button class="btn tiny ghost" id="btnClear" type="button">Vider la bibliothèque</button></div>
+            <p class="status" id="stData" role="status" aria-live="polite"></p>
+          </article>
+        </div>
+      </section>
+    </main>
+  </div>
 
   <section id="game" class="screen" hidden>
     <div id="stage">
@@ -532,13 +635,19 @@ const store = {
 };
 const fmtTime = s => Math.floor(s / 60) + ':' + String(Math.floor(s % 60)).padStart(2, '0');
 const fmtNum = n => Math.round(n).toLocaleString('fr-FR');
+const fmtSize = n => n >= 1048576 ? (n / 1048576).toFixed(n < 10485760 ? 1 : 0).replace('.', ',') + ' Mo' : Math.max(1, Math.round(n / 1024)) + ' Ko';
 const TEMPOS = [['adagio', 'Adagio'], ['andante', 'Andante'], ['allegro', 'Allegro'], ['presto', 'Presto']];
+// fenêtres de frappe en secondes autour du milieu de la tuile : [Parfait, Bien]
+const TOL = [[0.065, 0.13], [0.095, 0.18], [0.125, 0.23]];
+const TOL_LABELS = ['Stricte', 'Normale', 'Large'];
 
 const settings = {
   speed: store.get('ebene:speed', 5), offset: store.get('ebene:offset', 0), volume: store.get('ebene:volume', 80),
-  sounds: store.get('ebene:sounds', false), nofail: store.get('ebene:nofail', false), diff: store.get('ebene:diff', 'allegro')
+  sounds: store.get('ebene:sounds', false), nofail: store.get('ebene:nofail', false), diff: store.get('ebene:diff', 'allegro'),
+  tol: store.get('ebene:tol', 2)
 };
 if (!DIFFS[settings.diff]) settings.diff = 'allegro';
+if (!(settings.tol >= 1 && settings.tol <= 3)) settings.tol = 2;
 const travelFromSpeed = s => 2.7 - 0.19 * (s - 1);
 
 /* ================= Audio ================= */
@@ -594,8 +703,102 @@ async function buildDemo() {
 }
 
 /* ================= Bibliothèque ================= */
-// <codec>
 const DIFF_KEYS = Object.keys(DIFFS);
+// <zip>
+const CRC_T = (() => {
+  const t = new Uint32Array(256);
+  for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; }
+  return t;
+})();
+function crc32(u8) {
+  let c = 0xFFFFFFFF;
+  for (let i = 0; i < u8.length; i++) c = CRC_T[(c ^ u8[i]) & 255] ^ (c >>> 8);
+  return (c ^ 0xFFFFFFFF) >>> 0;
+}
+async function pipe(stream, bytes, cap) {
+  const w = stream.writable.getWriter();
+  w.write(bytes).catch(() => {}); w.close().catch(() => {});
+  const r = stream.readable.getReader(), parts = [];
+  let n = 0;
+  for (;;) {
+    const { done, value } = await r.read();
+    if (done) break;
+    n += value.length;
+    if (cap && n > cap) { r.cancel().catch(() => {}); throw new Error('taille'); }
+    parts.push(value);
+  }
+  const out = new Uint8Array(n); let o = 0;
+  for (const p of parts) { out.set(p, o); o += p.length; }
+  return out;
+}
+// Archive ZIP sans compression (les musiques sont déjà compressées) : lisible par n'importe quel logiciel de zip.
+function zipBuild(entries) {
+  const enc = new TextEncoder(), now = new Date();
+  const dd = (((now.getFullYear() - 1980) << 9) | ((now.getMonth() + 1) << 5) | now.getDate()) & 0xFFFF;
+  const tt = ((now.getHours() << 11) | (now.getMinutes() << 5) | (now.getSeconds() >> 1)) & 0xFFFF;
+  const parts = [], central = [];
+  let off = 0;
+  for (const e of entries) {
+    const nameB = enc.encode(e.name), crc = crc32(e.data), size = e.data.length;
+    const lh = new DataView(new ArrayBuffer(30));
+    lh.setUint32(0, 0x04034b50, true); lh.setUint16(4, 20, true); lh.setUint16(6, 0x0800, true); lh.setUint16(8, 0, true);
+    lh.setUint16(10, tt, true); lh.setUint16(12, dd, true); lh.setUint32(14, crc, true); lh.setUint32(18, size, true); lh.setUint32(22, size, true);
+    lh.setUint16(26, nameB.length, true); lh.setUint16(28, 0, true);
+    parts.push(new Uint8Array(lh.buffer), nameB, e.data);
+    const ch = new DataView(new ArrayBuffer(46));
+    ch.setUint32(0, 0x02014b50, true); ch.setUint16(4, 20, true); ch.setUint16(6, 20, true); ch.setUint16(8, 0x0800, true); ch.setUint16(10, 0, true);
+    ch.setUint16(12, tt, true); ch.setUint16(14, dd, true); ch.setUint32(16, crc, true); ch.setUint32(20, size, true); ch.setUint32(24, size, true);
+    ch.setUint16(28, nameB.length, true); ch.setUint32(42, off, true);
+    central.push(new Uint8Array(ch.buffer), nameB);
+    off += 30 + nameB.length + size;
+  }
+  let cd = 0; for (const p of central) cd += p.length;
+  const end = new DataView(new ArrayBuffer(22));
+  end.setUint32(0, 0x06054b50, true); end.setUint16(8, entries.length, true); end.setUint16(10, entries.length, true);
+  end.setUint32(12, cd, true); end.setUint32(16, off, true);
+  return new Blob([...parts, ...central, new Uint8Array(end.buffer)], { type: 'application/zip' });
+}
+async function zipRead(buf, maxTotal) {
+  const u = new Uint8Array(buf), dv = new DataView(buf);
+  let e = -1;
+  for (let i = u.length - 22; i >= Math.max(0, u.length - 22 - 65535); i--) if (dv.getUint32(i, true) === 0x06054b50) { e = i; break; }
+  if (e < 0) throw new Error('zip');
+  const n = dv.getUint16(e + 10, true), cdOff = dv.getUint32(e + 16, true), dec = new TextDecoder(), ents = new Map();
+  let p = cdOff, total = 0;
+  for (let i = 0; i < n; i++) {
+    if (p + 46 > u.length || dv.getUint32(p, true) !== 0x02014b50) throw new Error('zip');
+    const flags = dv.getUint16(p + 8, true), method = dv.getUint16(p + 10, true), crc = dv.getUint32(p + 16, true);
+    const csize = dv.getUint32(p + 20, true), usize = dv.getUint32(p + 24, true);
+    const nl = dv.getUint16(p + 28, true), xl = dv.getUint16(p + 30, true), cl = dv.getUint16(p + 32, true), lho = dv.getUint32(p + 42, true);
+    const name = dec.decode(u.subarray(p + 46, p + 46 + nl));
+    p += 46 + nl + xl + cl;
+    total += usize;
+    if (total > maxTotal) throw new Error('taille');
+    ents.set(name, { flags, method, crc, csize, usize, lho });
+  }
+  async function read(name, cap) {
+    const en = ents.get(name);
+    if (!en || (en.flags & 1)) throw new Error('entrée');
+    if (cap && en.usize > cap) throw new Error('taille');
+    const { lho } = en;
+    if (lho + 30 > u.length || dv.getUint32(lho, true) !== 0x04034b50) throw new Error('zip');
+    const start = lho + 30 + dv.getUint16(lho + 26, true) + dv.getUint16(lho + 28, true);
+    if (start + en.csize > u.length) throw new Error('zip');
+    const raw = u.subarray(start, start + en.csize);
+    let data;
+    if (en.method === 0) data = raw.slice();
+    else if (en.method === 8) {
+      if (typeof DecompressionStream !== 'function') throw new Error('gzip');
+      data = await pipe(new DecompressionStream('deflate-raw'), raw, en.usize + 1024);
+    } else throw new Error('méthode');
+    if (data.length !== en.usize || crc32(data) !== en.crc) throw new Error('crc');
+    return data;
+  }
+  return { names: [...ents.keys()], read };
+}
+// </zip>
+
+// <codec>
 const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
 function makeLevel(o) {
   return Object.assign({
@@ -618,79 +821,43 @@ function fpOf(lv) {
   lv.fp = h.toString(36);
   return lv.fp;
 }
-async function pipe(stream, bytes, cap) {
-  const w = stream.writable.getWriter();
-  w.write(bytes).catch(() => {}); w.close().catch(() => {});
-  const r = stream.readable.getReader(), parts = [];
-  let n = 0;
-  for (;;) {
-    const { done, value } = await r.read();
-    if (done) break;
-    n += value.length;
-    if (cap && n > cap) { r.cancel().catch(() => {}); throw new Error('taille'); }
-    parts.push(value);
-  }
-  const out = new Uint8Array(n); let o = 0;
-  for (const p of parts) { out.set(p, o); o += p.length; }
-  return out;
-}
-function b64(bytes) {
-  let s = '';
-  for (let i = 0; i < bytes.length; i += 0x8000) s += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
-  return btoa(s);
-}
-function unb64(str) {
-  const s = atob(str), u = new Uint8Array(s.length);
-  for (let i = 0; i < s.length; i++) u[i] = s.charCodeAt(i);
-  return u;
-}
+// chaque note : délai en ms depuis la précédente × 4 + colonne (0 à 3)
 function packChart(notes) {
   let prev = 0;
   return notes.map(n => { const ms = Math.round(n.t * 1000), d = Math.max(0, ms - prev); prev += d; return d * 4 + n.lane; });
 }
-function levelToJson(lv) {
-  const P = 300, pk = lv.peaks, n = pk.length, p = new Array(P).fill(0);
-  for (let i = 0; i < n; i++) { const j = Math.min(P - 1, (i * P / n) | 0), v = Math.round(pk[i] * 99); if (v > p[j]) p[j] = v; }
-  const c = {};
-  for (const k of DIFF_KEYS) c[k] = packChart(getChart(lv, k).notes);
-  return { n: lv.name, d: Math.round(lv.duration * 100) / 100, b: lv.bpm || 0, p, c };
+function sniffAudio(u) {
+  const s4 = String.fromCharCode(u[0] || 0, u[1] || 0, u[2] || 0, u[3] || 0);
+  if (s4 === 'RIFF') return ['wav', 'audio/wav'];
+  if (s4 === 'OggS') return ['ogg', 'audio/ogg'];
+  if (s4 === 'fLaC') return ['flac', 'audio/flac'];
+  if (String.fromCharCode(u[4] || 0, u[5] || 0, u[6] || 0, u[7] || 0) === 'ftyp') return ['m4a', 'audio/mp4'];
+  if (u[0] === 0x1A && u[1] === 0x45 && u[2] === 0xDF && u[3] === 0xA3) return ['webm', 'audio/webm'];
+  if (s4.slice(0, 3) === 'ID3' || (u[0] === 0xFF && (u[1] & 0xE0) === 0xE0)) return ['mp3', 'audio/mpeg'];
+  return ['bin', 'application/octet-stream'];
 }
-async function encodeLevels(list, audioFn, budget) {
-  const heads = [], blobs = [];
-  let off = 0, left = budget || 0, skipped = 0;
-  for (const lv of list) {
-    const h = levelToJson(lv);
-    if (audioFn && lv.hasAudio) {
-      const ab = await audioFn(lv);
-      if (ab && ab.byteLength <= left) {
-        h.au = [off, ab.byteLength]; off += ab.byteLength; left -= ab.byteLength; blobs.push(new Uint8Array(ab));
-      } else if (ab) skipped++;
-    }
-    heads.push(h);
-  }
-  const hjson = new TextEncoder().encode(JSON.stringify({ v: 2, levels: heads }));
-  let hb = hjson, flag = 0;
-  if (typeof CompressionStream === 'function') {
-    try { hb = await pipe(new CompressionStream('gzip'), hjson); flag = 1; } catch (e) { hb = hjson; flag = 0; }
-  }
-  const out = new Uint8Array(5 + hb.length + off);
-  out[0] = flag; new DataView(out.buffer).setUint32(1, hb.length, true); out.set(hb, 5);
-  let p = 5 + hb.length;
-  for (const b of blobs) { out.set(b, p); p += b.length; }
-  return { code: 'EBENE2.' + b64(out), withMusic: blobs.length, skipped };
+function levelToManifest(lv, audio, records) {
+  const P = 300, pk = lv.peaks, n = pk.length, peaks = new Array(P).fill(0);
+  for (let i = 0; i < n; i++) { const j = Math.min(P - 1, (i * P / n) | 0), v = Math.round(pk[i] * 99); if (v > peaks[j]) peaks[j] = v; }
+  const charts = {}, notes = {};
+  for (const k of DIFF_KEYS) { const ns = getChart(lv, k).notes; charts[k] = packChart(ns); notes[k] = ns.length; }
+  return {
+    name: lv.name, duration: Math.round(lv.duration * 100) / 100, bpm: lv.bpm || 0,
+    created: new Date(lv.created).toISOString(), notes, records: records || {}, peaks, charts, audio: audio || null
+  };
 }
 function parseLevel(o) {
   if (!o || typeof o !== 'object') throw new Error('niveau');
-  const name = String(o.n == null ? '' : o.n).replace(/\s+/g, ' ').trim().slice(0, 80) || 'Niveau sans titre';
-  const d = Number(o.d);
+  const name = String(o.name == null ? '' : o.name).replace(/\s+/g, ' ').trim().slice(0, 80) || 'Niveau sans titre';
+  const d = Number(o.duration);
   if (!(d >= 1 && d <= 7200)) throw new Error('durée');
-  let bpm = Number(o.b); bpm = bpm > 0 && bpm < 400 ? Math.round(bpm) : 0;
-  const src = Array.isArray(o.p) ? o.p.slice(0, 2000) : [];
+  let bpm = Number(o.bpm); bpm = bpm > 0 && bpm < 400 ? Math.round(bpm) : 0;
+  const src = Array.isArray(o.peaks) ? o.peaks.slice(0, 2000) : [];
   const peaks = new Float32Array(src.length || 300);
   src.forEach((v, i) => { const x = Number(v); peaks[i] = x >= 0 ? Math.min(99, x) / 99 : 0; });
   const charts = {}; let playable = false;
   for (const key of DIFF_KEYS) {
-    const arr = o.c && Array.isArray(o.c[key]) ? o.c[key] : [];
+    const arr = o.charts && Array.isArray(o.charts[key]) ? o.charts[key] : [];
     if (arr.length > 20000) throw new Error('taille');
     const notes = []; let ms = 0;
     for (const v of arr) {
@@ -705,66 +872,45 @@ function parseLevel(o) {
     if (notes.length >= 4) playable = true;
   }
   if (!playable) throw new Error('vide');
+  const records = {};
+  for (const key of DIFF_KEYS) { const r = o.records ? Number(o.records[key]) : 0; if (r > 0 && r < 1e9) records[key] = Math.round(r); }
+  const audioFile = o.audio && typeof o.audio.file === 'string' ? o.audio.file : null;
   const lv = makeLevel({ name, duration: d, bpm, peaks, charts, source: 'shared' });
   lv.sig = name + '|' + Math.round(d) + '|' + fpOf(lv);
-  return lv;
+  return { lv, records, audioFile };
 }
-async function decodeCode(text) {
-  const compact = text.replace(/\s+/g, '');
-  let data, region = null;
-  if (compact[0] === '{') data = JSON.parse(text);
-  else {
-    const m = /^EBENE([012])\./.exec(compact);
-    if (!m) throw new Error('format');
-    const bytes = unb64(compact.slice(m[0].length));
-    if (m[1] === '2') {
-      if (bytes.length < 6) throw new Error('format');
-      const hl = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength).getUint32(1, true);
-      if (hl < 2 || 5 + hl > bytes.length) throw new Error('format');
-      let hb = bytes.subarray(5, 5 + hl);
-      if (bytes[0] === 1) {
-        if (typeof DecompressionStream !== 'function') throw new Error('gzip');
-        hb = await pipe(new DecompressionStream('gzip'), hb, 16e6);
-      }
-      data = JSON.parse(new TextDecoder().decode(hb));
-      region = bytes.subarray(5 + hl);
-    } else {
-      let hb = bytes;
-      if (m[1] === '1') {
-        if (typeof DecompressionStream !== 'function') throw new Error('gzip');
-        hb = await pipe(new DecompressionStream('gzip'), bytes, 16e6);
-      }
-      data = JSON.parse(new TextDecoder().decode(hb));
-    }
-  }
-  if (!data || (data.v !== 1 && data.v !== 2) || !Array.isArray(data.levels) || !data.levels.length || data.levels.length > 200) throw new Error('format');
-  return data.levels.map(o => {
-    const lv = parseLevel(o);
-    let audio = null;
-    if (region && o && Array.isArray(o.au) && o.au.length === 2) {
-      const [off, len] = o.au;
-      if (Number.isInteger(off) && Number.isInteger(len) && off >= 0 && len > 0 && off + len <= region.length) audio = region.slice(off, off + len).buffer;
-    }
-    return { lv, audio };
-  });
-}
+const README = 'Fichier de niveaux Ébène\r\n\r\n' +
+  'Ce fichier est une archive zip standard.\r\n' +
+  '- ebene.json : le ou les niveaux (titre, durée, tempo estimé, forme d\'onde, notes des quatre tempos, records).\r\n' +
+  '- musique-N.xxx : le morceau original de chaque niveau.\r\n\r\n' +
+  'Dans la section « charts » d\'ebene.json, chaque nombre vaut : délai en millisecondes depuis la note précédente × 4 + numéro de colonne (0 à 3).\r\n' +
+  'Pour l\'ouvrir : dans Ébène, onglet Ajouter, « Depuis un fichier Ébène ».\r\n';
 // </codec>
 
 const levels = [];
-let cur = null, busy = false, delTimer = 0;
+let cur = null, busy = false, delTimer = 0, clearTimer = 0, lastView = 'lib';
 const els = {
-  status: $('#status'), bar: $('#bar'), fill: $('#barFill'), list: $('#levels'), tempos: $('#tempos'), filter: $('#filter'),
-  libNote: $('#libNote'), name: $('#lvname'), rename: $('#renameIn'), play: $('#btnPlay'), attach: $('#btnAttach'),
-  attachFile: $('#attachFile'), attachHint: $('#attachHint'), tools: $('#tools'), btnRename: $('#btnRename'),
-  btnExport: $('#btnExport'), btnDelete: $('#btnDelete'), btnExportAll: $('#btnExportAll'), share: $('#share'),
-  codeOut: $('#codeOut'), shareNote: $('#shareNote'), incAudio: $('#incAudio'), incWrap: $('#incWrap'), incSize: $('#incSize'), msg: $('#panelMsg'), map: $('#map'),
-  stNotes: $('#stNotes'), stDur: $('#stDur'), stBpm: $('#stBpm'), stBest: $('#stBest')
+  bar: $('#bar'), fill: $('#barFill'), list: $('#levels'), tempos: $('#tempos'), filter: $('#filter'), sort: $('#sort'),
+  libNote: $('#libNote'), libCount: $('#libCount'), msg: $('#libMsg'), dBody: $('#dBody'), dEmpty: $('#dEmpty'), dTags: $('#dTags'),
+  name: $('#lvname'), rename: $('#renameIn'), play: $('#btnPlay'), attach: $('#btnAttach'), attachFile: $('#attachFile'), attachHint: $('#attachHint'),
+  btnRename: $('#btnRename'), btnExport: $('#btnExport'), btnDelete: $('#btnDelete'), btnExportAll: $('#btnExportAll'),
+  fDur: $('#fDur'), fBpm: $('#fBpm'), fAudio: $('#fAudio'), fDate: $('#fDate'), map: $('#map'),
+  stCreate: $('#stCreate'), stImport: $('#stImport'), goLibCreate: $('#goLibCreate'), goLibImport: $('#goLibImport'),
+  dataInfo: $('#dataInfo'), btnClear: $('#btnClear'), stData: $('#stData')
 };
-const fmtSize = n => n >= 1048576 ? (n / 1048576).toFixed(n < 10485760 ? 1 : 0).replace('.', ',') + ' Mo' : Math.max(1, Math.round(n / 1024)) + ' Ko';
-function setStatus(t, err) { els.status.textContent = t; els.status.classList.toggle('err', !!err); }
-function setMsg(t, err, kind) { els.msg.textContent = t || ''; els.msg.classList.toggle('err', !!err); els.msg.dataset.kind = kind || ''; }
+function setStatus(which, t, err, done) {
+  const el = which === 'import' ? els.stImport : els.stCreate, go = which === 'import' ? els.goLibImport : els.goLibCreate;
+  el.textContent = t || ''; el.classList.toggle('err', !!err);
+  go.hidden = !done;
+}
+function setMsg(t, err, kind) {
+  els.msg.textContent = t || ''; els.msg.hidden = !t;
+  els.msg.classList.toggle('err', !!err); els.msg.dataset.kind = kind || '';
+}
 function libWarn(t) { els.libNote.textContent = t; els.libNote.classList.add('err'); }
 const bestKey = (lv, key) => 'ebene:best:' + lv.sig + ':' + key;
+const readRecords = lv => { const r = {}; for (const k of DIFF_KEYS) { const b = store.get(bestKey(lv, k), 0); if (b > 0) r[k] = b; } return r; };
+function mergeRecords(lv, rec) { for (const k of Object.keys(rec)) { const key = bestKey(lv, k); if (rec[k] > store.get(key, 0)) store.set(key, rec[k]); } }
 
 /* Stockage local (IndexedDB) : métadonnées dans « levels », fichiers audio dans « audio » */
 let dbp = null;
@@ -780,10 +926,10 @@ function openDb() {
   });
   return dbp;
 }
-function dbReq(store, mode, fn) {
+function dbReq(store_, mode, fn) {
   return openDb().then(db => !db ? null : new Promise(res => {
     try {
-      const tx = db.transaction(store, mode), rq = fn(tx.objectStore(store));
+      const tx = db.transaction(store_, mode), rq = fn(tx.objectStore(store_));
       tx.oncomplete = () => res(rq ? rq.result : true);
       tx.onerror = tx.onabort = () => res(null);
     } catch (e) { res(null); }
@@ -818,15 +964,15 @@ async function loadAudio(lv) {
 async function ensureBuffer(lv) {
   if (lv.buffer) return lv.buffer;
   ensureCtx();
-  let bytes = lv.audio;
-  if (!bytes) { const rec = await dbGetAudio(lv.id); bytes = rec && rec.data; }
+  const bytes = await loadAudio(lv);
   if (!bytes) throw new Error('sans-audio');
   trimBuffers(lv);
   lv.buffer = await decode(bytes.slice(0));
   return lv.buffer;
 }
-function addLevel(lv) { if (lv.demo) levels.push(lv); else levels.unshift(lv); }
+function addLevel(lv) { levels.push(lv); }
 
+/* Affichage */
 function renderTempos() {
   els.tempos.textContent = '';
   for (const [key, label] of TEMPOS) {
@@ -836,77 +982,88 @@ function renderTempos() {
     inp.addEventListener('change', () => { settings.diff = key; store.set('ebene:diff', key); refreshMenu(); });
     const n = document.createElement('span'); n.className = 'tn'; n.textContent = label;
     const c = document.createElement('span'); c.className = 'tc'; c.dataset.count = key; c.textContent = '–';
-    lab.append(inp, n, c);
+    const r = document.createElement('span'); r.className = 'tr'; r.dataset.rec = key; r.textContent = '';
+    lab.append(inp, n, c, r);
     els.tempos.append(lab);
   }
 }
 function levelTags(lv) {
   const t = [];
-  if (lv.demo) t.push('démo');
-  if (!lv.hasAudio) t.push('sans musique');
-  if (lv.source === 'shared') t.push('reçu');
-  return t.join(' · ');
+  if (lv.demo) t.push('Démo');
+  else if (lv.source === 'shared') t.push('Reçu');
+  else t.push('Créé depuis une musique');
+  if (!lv.hasAudio) t.push('Sans musique');
+  return t;
 }
+const SORTS = {
+  recent: (a, b) => b.created - a.created,
+  title: (a, b) => a.name.localeCompare(b.name, 'fr', { sensitivity: 'base' }),
+  duration: (a, b) => b.duration - a.duration
+};
 function renderLevels() {
-  els.filter.hidden = levels.length < 7;
-  if (els.filter.hidden) els.filter.value = '';
+  els.libCount.textContent = String(levels.length);
   const q = els.filter.value.trim().toLowerCase();
   els.list.textContent = '';
-  const shown = levels.filter(l => !q || l.name.toLowerCase().includes(q));
+  const match = levels.filter(l => !q || l.name.toLowerCase().includes(q));
+  const shown = match.filter(l => !l.demo).sort(SORTS[els.sort.value] || SORTS.recent).concat(match.filter(l => l.demo));
   if (!shown.length) {
     const li = document.createElement('li'); li.className = 'empty';
-    li.textContent = levels.length ? 'Aucun niveau ne correspond.' : 'La bibliothèque est vide. Ajoute un niveau ou une musique ci-dessous.';
+    li.textContent = levels.length ? 'Aucun niveau ne correspond.' : 'La bibliothèque est vide. Ajoute un niveau ou une musique.';
     els.list.append(li); return;
   }
   for (const lv of shown) {
-    const li = document.createElement('li');
+    const li = document.createElement('li'); li.className = 'row';
     const b = document.createElement('button'); b.type = 'button'; b.className = 'lv';
     b.setAttribute('aria-pressed', lv === cur ? 'true' : 'false');
     const n = document.createElement('span'); n.className = 'n'; n.textContent = lv.name;
     const m = document.createElement('span'); m.className = 'm';
     m.textContent = fmtTime(lv.duration) + ' · ' + getChart(lv, settings.diff).notes.length + ' notes';
     b.append(n, m);
-    const tg = levelTags(lv);
+    const tg = lv.hasAudio ? (lv.demo ? 'Démo' : '') : levelTags(lv).slice(1).join('');
     if (tg) { const t = document.createElement('span'); t.className = 't'; t.textContent = tg; b.append(t); }
     b.addEventListener('click', () => selectLevel(lv));
-    li.append(b); els.list.append(li);
+    li.append(b);
+    if (lv.hasAudio) {
+      const pl = document.createElement('button'); pl.type = 'button'; pl.className = 'rowplay'; pl.setAttribute('aria-label', 'Jouer ' + lv.name);
+      pl.innerHTML = '<svg viewBox="0 0 12 12" width="12" height="12" aria-hidden="true"><path d="M2 1l9 5-9 5z" fill="currentColor"/></svg>';
+      pl.addEventListener('click', () => { selectLevel(lv); startGame(); });
+      li.append(pl);
+    }
+    els.list.append(li);
   }
 }
 function selectLevel(lv) {
   cur = lv || null;
   if (lv) store.set('ebene:last', lv.id);
   disarmDelete(); commitRename(false);
-  els.share.hidden = true; setMsg('');
+  setMsg('');
   refreshMenu();
 }
 function refreshMenu() {
   renderLevels();
-  document.querySelectorAll('.tempo .tc').forEach(el => {
-    el.textContent = cur ? getChart(cur, el.dataset.count).notes.length + ' notes' : '–';
-  });
-  document.querySelectorAll('input[name=tempo]').forEach(i => { i.checked = i.value === settings.diff; });
   const mine = levels.filter(l => !l.demo).length;
   els.btnExportAll.hidden = !mine;
   els.btnExportAll.textContent = 'Tout exporter (' + mine + ')';
-  els.tools.hidden = !cur;
-  els.name.classList.toggle('editable', !!cur);
-  const dm = !!(cur && cur.demo);
+  els.btnExportAll.disabled = busy;
+  els.dBody.hidden = !cur; els.dEmpty.hidden = !!cur;
+  document.querySelectorAll('.tempo .tc').forEach(el => {
+    el.textContent = cur ? getChart(cur, el.dataset.count).notes.length + ' notes' : '–';
+  });
+  document.querySelectorAll('.tempo .tr').forEach(el => {
+    const b = cur ? store.get(bestKey(cur, el.dataset.rec), 0) : 0;
+    el.textContent = b ? 'Record ' + fmtNum(b) : 'Pas de record';
+  });
+  document.querySelectorAll('input[name=tempo]').forEach(i => { i.checked = i.value === settings.diff; });
+  if (!cur) { drawMap(); return; }
+  const ch = getChart(cur, settings.diff), dm = cur.demo;
+  els.name.textContent = cur.name; els.name.classList.add('editable');
+  els.dTags.textContent = levelTags(cur).join(' · ');
   els.btnExport.hidden = dm; els.btnDelete.hidden = dm;
-  els.incWrap.hidden = !levels.some(l => !l.demo && l.hasAudio);
-  els.incSize.textContent = cur && cur.audioSize ? '(' + fmtSize(cur.audioSize) + ')' : '';
-  if (!cur) {
-    els.name.textContent = 'Aucun niveau';
-    els.stNotes.textContent = els.stDur.textContent = els.stBpm.textContent = els.stBest.textContent = '–';
-    els.play.hidden = false; els.play.disabled = true; els.attach.hidden = true; els.attachHint.hidden = true;
-    drawMap(); return;
-  }
-  const ch = getChart(cur, settings.diff);
-  els.name.textContent = cur.name;
-  els.stNotes.textContent = String(ch.notes.length);
-  els.stDur.textContent = fmtTime(cur.duration);
-  els.stBpm.textContent = cur.bpm ? '≈ ' + cur.bpm : '–';
-  const best = store.get(bestKey(cur, settings.diff), 0);
-  els.stBest.textContent = best ? fmtNum(best) : '–';
+  els.btnExport.disabled = busy;
+  els.fDur.textContent = fmtTime(cur.duration);
+  els.fBpm.textContent = cur.bpm ? '≈ ' + cur.bpm : '–';
+  els.fAudio.textContent = !cur.hasAudio ? 'Absente' : (cur.audioSize ? fmtSize(cur.audioSize) : (dm ? 'Générée' : 'Présente'));
+  els.fDate.textContent = dm ? '–' : new Date(cur.created).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' });
   els.play.hidden = !cur.hasAudio; els.attach.hidden = cur.hasAudio; els.attach.disabled = busy; els.attachHint.hidden = cur.hasAudio;
   els.play.disabled = busy || ch.notes.length < 4;
   if (ch.notes.length < 4) setMsg('Pas assez de notes à ce tempo. Essaie un tempo plus vif.', true, 'notes');
@@ -952,7 +1109,7 @@ function drawMap() {
 
 /* Création depuis une musique */
 async function analyseToLevel(name, buffer, demo, quiet) {
-  if (!quiet) { els.bar.hidden = false; els.fill.style.width = '0%'; setStatus('Analyse de « ' + name + ' »…'); }
+  if (!quiet) { els.bar.hidden = false; els.fill.style.width = '0%'; setStatus('create', 'Analyse de « ' + name + ' »…'); }
   const an = await analyseBuffer(buffer, quiet ? null : (p => { els.fill.style.width = Math.round(p * 100) + '%'; }));
   const charts = {};
   for (const k of DIFF_KEYS) { const ch = pickNotes(an, k); ch.notes.forEach(n => { delete n.s; }); charts[k] = ch; }
@@ -965,11 +1122,11 @@ async function handleAudioFile(file) {
   busy = true; refreshMenu();
   try {
     ensureCtx();
-    setStatus('Lecture du fichier…');
+    setStatus('create', 'Lecture du fichier…');
     const ab = await file.arrayBuffer(), bytes = ab.slice(0);
     let buf;
     try { buf = await decode(ab); } catch (e) {
-      setStatus('Impossible de lire ce fichier. Les formats pris en charge dépendent du navigateur (MP3, WAV, OGG, M4A en général).', true);
+      setStatus('create', 'Impossible de lire ce fichier. Les formats pris en charge dépendent du navigateur (MP3, WAV, OGG, M4A en général).', true);
       return;
     }
     const name = file.name.replace(/\.[^.]+$/, '').slice(0, 80) || 'Sans titre';
@@ -977,16 +1134,16 @@ async function handleAudioFile(file) {
     const ex = levels.find(l => !l.demo && fpOf(l) === fpOf(lv));
     if (ex && !ex.hasAudio) {
       trimBuffers(ex); ex.buffer = buf; await storeAudio(ex, bytes);
-      selectLevel(ex); setStatus('Musique associée au niveau « ' + ex.name + ' ».');
+      selectLevel(ex); setStatus('create', 'Musique associée au niveau « ' + ex.name + ' ».', false, true);
     } else if (ex) {
-      selectLevel(ex); setStatus('Ce morceau est déjà dans la bibliothèque.');
+      selectLevel(ex); setStatus('create', 'Ce morceau est déjà dans la bibliothèque.', false, true);
     } else {
       trimBuffers(lv); addLevel(lv); await storeAudio(lv, bytes); selectLevel(lv);
       const cnt = getChart(lv, settings.diff).notes.length;
-      setStatus('Niveau créé : ' + cnt + ' notes au tempo ' + TEMPOS.find(t => t[0] === settings.diff)[1] + '.');
+      setStatus('create', 'Niveau créé : ' + cnt + ' notes au tempo ' + TEMPOS.find(t => t[0] === settings.diff)[1] + '.', false, true);
     }
   } catch (e) {
-    setStatus('L’analyse de ce fichier a échoué.', true);
+    setStatus('create', 'L’analyse de ce fichier a échoué.', true);
   } finally {
     busy = false; els.bar.hidden = true; refreshMenu();
   }
@@ -1010,7 +1167,7 @@ async function attachAudio(file) {
   finally { busy = false; refreshMenu(); }
 }
 
-/* Import / export de niveaux */
+/* Fichiers .ebene.zip : import */
 async function giveAudio(lv, ab) {
   try {
     ensureCtx();
@@ -1020,24 +1177,32 @@ async function giveAudio(lv, ab) {
     return true;
   } catch (e) { return false; }
 }
-async function importCode(text) {
-  if (busy) return false;
-  const raw = (text || '').trim();
-  if (!raw) { setStatus('Colle d’abord un code de niveau.', true); return false; }
-  if (raw.length > 80e6) { setStatus('Ce code est trop volumineux.', true); return false; }
+async function importFile(file) {
+  if (!file || busy) return false;
+  if (file.size > 700e6) { setStatus('import', 'Ce fichier est trop volumineux.', true); return false; }
   busy = true; refreshMenu();
-  setStatus('Lecture du code…');
+  setStatus('import', 'Lecture de « ' + file.name + ' »…');
   try {
-    const list = await decodeCode(raw);
-    let added = 0, dup = 0, gained = 0, bad = 0, last = null, warn = false;
-    for (const { lv, audio } of list) {
+    const zip = await zipRead(await file.arrayBuffer(), 900e6);
+    if (!zip.names.includes('ebene.json')) throw new Error('format');
+    const data = JSON.parse(new TextDecoder().decode(await zip.read('ebene.json', 40e6)));
+    if (!data || data.format !== 'ebene' || !(data.version >= 1 && data.version <= 2) || !Array.isArray(data.levels) || !data.levels.length || data.levels.length > 500) throw new Error('format');
+    let added = 0, dup = 0, gained = 0, bad = 0, last = null, warn = false, i = 0;
+    for (const o of data.levels) {
+      i++;
+      if (data.levels.length > 1) setStatus('import', 'Import du niveau ' + i + ' sur ' + data.levels.length + '…');
+      const { lv, records, audioFile } = parseLevel(o);
+      let audio = null;
+      if (audioFile && zip.names.includes(audioFile)) {
+        try { audio = (await zip.read(audioFile, 400e6)).buffer; } catch (e) { bad++; }
+      }
       const ex = levels.find(l => !l.demo && fpOf(l) === fpOf(lv));
       if (ex) {
-        dup++; last = ex;
+        dup++; last = ex; mergeRecords(ex, records);
         if (!ex.hasAudio && audio && await giveAudio(ex, audio)) gained++;
         continue;
       }
-      addLevel(lv); added++; last = lv;
+      addLevel(lv); added++; last = lv; mergeRecords(lv, records);
       if (!(await persist(lv))) warn = true;
       if (audio) { if (await giveAudio(lv, audio)) gained++; else bad++; }
     }
@@ -1048,39 +1213,75 @@ async function importCode(text) {
     if (gained) msg += ' · ' + (gained > 1 ? 'musiques incluses' : 'musique incluse');
     if (bad) msg += ' · ' + bad + (bad > 1 ? ' musiques inutilisables' : ' musique inutilisable');
     msg += '.';
-    if (last && !last.hasAudio) msg += ' Associe la musique pour jouer.';
-    setStatus(msg, !!bad);
+    if (last && !last.hasAudio) msg += ' Ce niveau n’a pas sa musique : associe-la depuis la bibliothèque.';
+    setStatus('import', msg, !!bad, true);
     return true;
   } catch (e) {
-    setStatus(e && e.message === 'gzip'
-      ? 'Ce navigateur ne sait pas lire ce code compressé. Essaie avec un navigateur récent.'
-      : 'Ce code n’est pas un niveau Ébène valide. Vérifie qu’il est copié en entier.', true);
+    setStatus('import', e && e.message === 'gzip'
+      ? 'Ce navigateur ne sait pas lire ce fichier compressé. Essaie avec un navigateur récent.'
+      : 'Ce fichier n’est pas un export Ébène valide ou il est abîmé.', true);
     return false;
   } finally {
     busy = false; refreshMenu();
   }
 }
-async function exportLevels(list) {
-  setMsg('Préparation du code…');
-  try {
-    const r = await encodeLevels(list, els.incAudio.checked ? loadAudio : null, 30e6);
-    const code = r.code, big = code.length > 300000, size = fmtSize(code.length);
-    let copied = false;
-    try { await navigator.clipboard.writeText(code); copied = true; } catch (e) { /* repli manuel */ }
-    if (big && copied) els.share.hidden = true;
-    else {
-      els.share.hidden = false; els.codeOut.value = code; els.codeOut.focus(); els.codeOut.setSelectionRange(0, code.length);
-    }
-    els.shareNote.textContent = r.withMusic
-      ? 'Ce code contient aussi la musique. Colle-le dans un message ou un fichier texte : ton ami le charge avec « Choisir un fichier » ou le colle dans la zone d’import.'
-      : 'Ce code contient les notes des quatre tempos, pas la musique. Envoie-le avec le titre du morceau.';
-    let msg = copied ? 'Code copié (' + size + ').' : 'Copie automatique impossible ici. Le code est sélectionné : copie-le à la main (' + size + ').';
-    if (r.withMusic) msg += big ? ' Musique incluse : colle-le dans un message ou un fichier texte.' : ' Musique incluse.';
-    if (r.skipped) msg += ' ' + r.skipped + (r.skipped > 1 ? ' musiques trop volumineuses non incluses.' : ' musique trop volumineuse non incluse.');
-    setMsg(msg, !copied || !!r.skipped);
-  } catch (e) { setMsg('Export impossible sur ce navigateur.', true); }
+
+/* Fichiers .ebene.zip : export */
+let dlp = null;
+const getDownloads = () => dlp || (dlp = (window.claude && window.claude.use ? window.claude.use('downloads').catch(() => null) : Promise.resolve(null)));
+async function deliver(blob, filename) {
+  const dl = await getDownloads();
+  if (dl) { await dl.save({ filename, data: blob }); return 'saved'; }
+  if (window.claude) throw Object.assign(new Error('indisponible'), { code: 'unavailable' });
+  const url = URL.createObjectURL(blob), a = document.createElement('a');
+  a.href = url; a.download = filename; document.body.append(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 15000);
+  return 'saved';
 }
+const safeName = s => (s.replace(/[\\/:*?"<>|\u0000-\u001f]+/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 60) || 'niveau');
+async function exportLevels(list) {
+  if (!list.length || busy) return;
+  busy = true; refreshMenu();
+  setMsg('Préparation du fichier…');
+  try {
+    const enc = new TextEncoder(), entries = [], items = [];
+    let withMusic = 0, without = 0, i = 0;
+    for (const lv of list) {
+      i++;
+      let info = null;
+      const ab = lv.hasAudio ? await loadAudio(lv) : null;
+      if (ab) {
+        const u8 = new Uint8Array(ab), [ext, type] = sniffAudio(u8), file = 'musique-' + i + '.' + ext;
+        entries.push({ name: file, data: u8 });
+        info = { file, type, size: u8.length }; withMusic++;
+      } else without++;
+      items.push(levelToManifest(lv, info, readRecords(lv)));
+    }
+    const manifest = { format: 'ebene', version: 2, app: 'Ébène', created: new Date().toISOString(), levels: items };
+    entries.unshift({ name: 'ebene.json', data: enc.encode(JSON.stringify(manifest, null, 1)) }, { name: 'LISEZMOI.txt', data: enc.encode(README) });
+    const blob = zipBuild(entries);
+    const fname = (list.length === 1 ? safeName(list[0].name) : 'Bibliothèque Ébène (' + list.length + ' niveaux)') + '.ebene.zip';
+    await deliver(blob, fname);
+    let msg = 'Fichier « ' + fname + ' » enregistré (' + fmtSize(blob.size) + ').';
+    if (without) msg += ' ' + without + (without > 1 ? ' niveaux sont exportés sans musique.' : ' niveau est exporté sans musique.');
+    setMsg(msg, !!without);
+  } catch (e) {
+    const c = e && e.code;
+    if (c === 'declined') setMsg('Enregistrement annulé.');
+    else if (c === 'unavailable' || c === 'not_granted' || c === 'capability_disabled') setMsg('Le téléchargement n’est pas disponible dans cette vue. Ouvre la page directement dans Claude.', true);
+    else if (c === 'rate_limited') setMsg('Une demande d’enregistrement est déjà en cours. Réessaie dans un instant.', true);
+    else setMsg('Impossible de créer le fichier d’export.', true);
+  } finally {
+    busy = false; refreshMenu();
+  }
+}
+
+/* Actions sur le niveau */
 function disarmDelete() { clearTimeout(delTimer); els.btnDelete.classList.remove('arm'); els.btnDelete.textContent = 'Supprimer'; }
+function startRename() {
+  if (!cur) return;
+  els.name.hidden = true; els.rename.hidden = false; els.rename.value = cur.name; els.rename.focus(); els.rename.select();
+}
 function commitRename(save) {
   if (els.rename.hidden) return;
   const v = els.rename.value.replace(/\s+/g, ' ').trim().slice(0, 80);
@@ -1092,15 +1293,12 @@ function commitRename(save) {
   }
 }
 els.filter.addEventListener('input', renderLevels);
-function startRename() {
-  if (!cur) return;
-  els.name.hidden = true; els.rename.hidden = false; els.rename.value = cur.name; els.rename.focus(); els.rename.select();
-}
+els.sort.value = store.get('ebene:sort', 'recent');
+if (!SORTS[els.sort.value]) els.sort.value = 'recent';
+els.sort.addEventListener('change', () => { store.set('ebene:sort', els.sort.value); renderLevels(); });
 els.btnRename.addEventListener('click', startRename);
 els.name.addEventListener('click', startRename);
 els.name.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); startRename(); } });
-els.incAudio.checked = store.get('ebene:incAudio', true);
-els.incAudio.addEventListener('change', () => store.set('ebene:incAudio', els.incAudio.checked));
 els.rename.addEventListener('keydown', e => {
   if (e.key === 'Enter') { e.preventDefault(); commitRename(true); }
   else if (e.key === 'Escape') { e.preventDefault(); commitRename(false); }
@@ -1123,9 +1321,12 @@ els.btnDelete.addEventListener('click', async () => {
 });
 els.attach.addEventListener('click', () => els.attachFile.click());
 els.attachFile.addEventListener('change', e => { const f = e.target.files[0]; e.target.value = ''; attachAudio(f); });
+$('#goAdd').addEventListener('click', () => showView('add'));
+els.goLibCreate.addEventListener('click', () => showView('lib'));
+els.goLibImport.addEventListener('click', () => showView('lib'));
 
 /* ================= Jeu ================= */
-const WIN_PERF = 0.065, WIN_GOOD = 0.13;
+let WIN_PERF = 0.095, WIN_GOOD = 0.18;
 const LANE_HZ = [440, 523.25, 587.33, 659.25];
 const LETTERS = ['D', 'F', 'J', 'K'];
 const KEYMAP = { KeyD: 0, KeyF: 1, KeyJ: 2, KeyK: 3 };
@@ -1162,6 +1363,7 @@ async function startGame() {
   if (lv !== cur) return;
   stopAudio();
   master.gain.value = settings.volume / 100;
+  { const w = TOL[settings.tol - 1] || TOL[1]; WIN_PERF = w[0]; WIN_GOOD = w[1]; }
   Object.assign(G, {
     level: cur, diff: settings.diff, first: 0, travel: travelFromSpeed(settings.speed), off: settings.offset / 1000,
     score: 0, combo: 0, maxCombo: 0, health: 100, cnt: { p: 0, b: 0, m: 0, f: 0 },
@@ -1294,9 +1496,11 @@ function draw(st) {
   }
   const baseH = Math.min(H * 0.13, lw * 1.25);
   for (let i = 0; i < G.notes.length; i++) {
-    const n = G.notes[i], yb = yHit + (st - (n.t + G.off)) * pps;
-    if (yb < 0) break;
+    // le temps de la note correspond au MILIEU de la tuile sur la ligne de frappe
+    const n = G.notes[i], dt = st - (n.t + G.off);
+    if (dt < -(G.travel + 0.7)) break;
     const h = Math.max(14, Math.min(baseH, n.next * pps * 0.82));
+    const yb = yHit + dt * pps + h / 2;
     if (yb - h > H) continue;
     let alpha = 1, fill;
     if (n.state === 1) {
@@ -1448,21 +1652,61 @@ $('#btnAgain').addEventListener('click', startGame);
 $('#btnMenu').addEventListener('click', toMenu);
 $('#btnBack').addEventListener('click', toMenu);
 
-/* Import : fichiers, code collé et glisser-déposer */
-const AUDIO_RE = /\.(mp3|wav|ogg|oga|m4a|aac|flac|opus|weba|webm|mp4)$/i;
-async function handleAnyFile(f) {
-  if (!f) return;
-  if ((f.type && f.type.startsWith('audio/')) || AUDIO_RE.test(f.name)) return handleAudioFile(f);
-  if (f.size > 80e6) { setStatus('Ce fichier est trop volumineux pour être un niveau.', true); return; }
-  try { await importCode(await f.text()); } catch (e) { setStatus('Ce fichier est illisible.', true); }
+/* ================= Navigation ================= */
+const VIEWS = ['lib', 'add', 'set'], HASHES = { lib: 'bibliotheque', add: 'ajouter', set: 'reglages' };
+function showView(v) {
+  if (!VIEWS.includes(v)) v = 'lib';
+  lastView = v;
+  for (const k of VIEWS) $('#view-' + k).hidden = k !== v;
+  document.querySelectorAll('.nav button').forEach(b => {
+    if (b.dataset.view === v) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current');
+  });
+  try { history.replaceState(null, '', '#' + HASHES[v]); } catch (e) { /* ignoré */ }
+  if (v === 'lib') requestAnimationFrame(drawMap);
+  if (v === 'set') refreshData();
 }
-const addSec = $('#addSec'), codeIn = $('#codeIn');
-$('#file').addEventListener('change', e => { const f = e.target.files[0]; e.target.value = ''; handleAudioFile(f); });
-$('#lvFile').addEventListener('change', e => { const f = e.target.files[0]; e.target.value = ''; handleAnyFile(f); });
-$('#btnCode').addEventListener('click', async () => { if (await importCode(codeIn.value)) codeIn.value = ''; });
-['dragenter', 'dragover'].forEach(t => document.addEventListener(t, e => { e.preventDefault(); addSec.classList.add('over'); }));
-['dragleave', 'drop'].forEach(t => document.addEventListener(t, e => { e.preventDefault(); if (t === 'drop' || !e.relatedTarget) addSec.classList.remove('over'); }));
-document.addEventListener('drop', e => { const f = e.dataTransfer && e.dataTransfer.files[0]; if (f && !menu.hidden) handleAnyFile(f); });
+document.querySelectorAll('.nav button').forEach(b => b.addEventListener('click', () => showView(b.dataset.view)));
+function refreshData() {
+  const mine = levels.filter(l => !l.demo);
+  const size = mine.reduce((a, l) => a + (l.audioSize || 0), 0);
+  els.dataInfo.textContent = mine.length
+    ? mine.length + (mine.length > 1 ? ' niveaux' : ' niveau') + ' dans la bibliothèque' + (size ? ' · ' + fmtSize(size) + ' de musique' : '') + '. Tout est conservé dans ce navigateur.'
+    : 'Aucun niveau personnel pour le moment.';
+  els.btnClear.disabled = !mine.length;
+}
+els.btnClear.addEventListener('click', async () => {
+  if (!els.btnClear.classList.contains('arm')) {
+    els.btnClear.classList.add('arm'); els.btnClear.textContent = 'Confirmer la suppression';
+    clearTimer = setTimeout(() => { els.btnClear.classList.remove('arm'); els.btnClear.textContent = 'Vider la bibliothèque'; }, 3500);
+    return;
+  }
+  clearTimeout(clearTimer);
+  els.btnClear.classList.remove('arm'); els.btnClear.textContent = 'Vider la bibliothèque';
+  const mine = levels.filter(l => !l.demo);
+  for (const lv of mine) { levels.splice(levels.indexOf(lv), 1); await dbDelete(lv.id); }
+  selectLevel(levels[0] || null);
+  refreshData();
+  $('#stData').textContent = mine.length + (mine.length > 1 ? ' niveaux supprimés.' : ' niveau supprimé.');
+});
+
+/* Import : fichiers audio, fichiers .ebene.zip, glisser-déposer */
+const AUDIO_RE = /\.(mp3|wav|ogg|oga|m4a|aac|flac|opus|weba|webm|mp4)$/i;
+const isAudio = f => (f.type && f.type.startsWith('audio/')) || AUDIO_RE.test(f.name);
+async function handleAnyFiles(files) {
+  const list = Array.from(files || []);
+  if (!list.length) return;
+  showView('add');
+  for (const f of list) { if (isAudio(f)) await handleAudioFile(f); else await importFile(f); }
+}
+$('#file').addEventListener('change', e => { const f = e.target.files[0]; e.target.value = ''; if (f) handleAudioFile(f); });
+$('#lvFile').addEventListener('change', async e => {
+  const list = Array.from(e.target.files); e.target.value = '';
+  for (const f of list) await importFile(f);
+});
+const dropZones = document.querySelectorAll('.dz');
+['dragenter', 'dragover'].forEach(t => document.addEventListener(t, e => { e.preventDefault(); dropZones.forEach(z => z.classList.add('over')); }));
+['dragleave', 'drop'].forEach(t => document.addEventListener(t, e => { e.preventDefault(); if (t === 'drop' || !e.relatedTarget) dropZones.forEach(z => z.classList.remove('over')); }));
+document.addEventListener('drop', e => { if (!menu.hidden && e.dataTransfer) handleAnyFiles(e.dataTransfer.files); });
 
 /* Réglages */
 function bindRange(id, outId, key, fmt) {
@@ -1471,6 +1715,7 @@ function bindRange(id, outId, key, fmt) {
   el.addEventListener('input', () => { settings[key] = Number(el.value); out.textContent = fmt(settings[key]); store.set('ebene:' + key, settings[key]); });
 }
 bindRange('speed', 'speedV', 'speed', v => String(v));
+bindRange('tol', 'tolV', 'tol', v => TOL_LABELS[v - 1]);
 bindRange('offset', 'offsetV', 'offset', v => (v > 0 ? '+' : '') + v + ' ms');
 bindRange('volume', 'volumeV', 'volume', v => v + ' %');
 [['sounds', 'sounds'], ['nofail', 'nofail']].forEach(([id, key]) => {
@@ -1478,9 +1723,9 @@ bindRange('volume', 'volumeV', 'volume', v => v + ' %');
   el.addEventListener('change', () => { settings[key] = el.checked; store.set('ebene:' + key, el.checked); });
 });
 
-/* Décor : bande de touches */
+/* Décor : bandeau de touches */
 (function () {
-  const k = $('#keys'), N = 28, blackAfter = [1, 1, 0, 1, 1, 1, 0];
+  const k = $('#keys'), N = 48, blackAfter = [1, 1, 0, 1, 1, 1, 0];
   for (let i = 0; i < N; i++) {
     const w = document.createElement('span'); w.className = 'w'; k.append(w);
     if (blackAfter[i % 7] && i < N - 1) {
@@ -1492,30 +1737,28 @@ bindRange('volume', 'volumeV', 'volume', v => v + ' %');
 /* Démarrage : bibliothèque enregistrée, puis morceau de démonstration généré */
 (async function init() {
   busy = true;
+  const h = (location.hash || '').replace('#', '');
+  showView(Object.keys(HASHES).find(k => HASHES[k] === h) || 'lib');
   renderTempos(); refreshMenu();
   const recs = await dbAll();
   if (recs === null) libWarn('Stockage indisponible dans ce navigateur : la bibliothèque sera perdue à la fermeture de la page.');
   else {
-    recs.sort((a, b) => (b.created || 0) - (a.created || 0));
     for (const r of recs) levels.push(makeLevel(Object.assign({}, r, { audio: null, buffer: null, demo: false })));
   }
   const last = store.get('ebene:last', null);
-  cur = levels.find(l => l.id === last) || levels[0] || null;
+  cur = levels.find(l => l.id === last) || levels.slice().sort(SORTS.recent)[0] || null;
   refreshMenu();
   try {
-    if (!levels.length) setStatus('Génération du morceau de démonstration…');
     const buf = await buildDemo();
-    const lv = await analyseToLevel('Arpège en la mineur (démo)', buf, true, levels.length > 0);
+    const lv = await analyseToLevel('Arpège en la mineur (démo)', buf, true, true);
     const dn = store.get('ebene:demoName', null);
     if (typeof dn === 'string' && dn) lv.name = dn;
     addLevel(lv);
-    if (!cur) selectLevel(lv);
-    if (!levels.some(l => !l.demo)) setStatus('');
+    if (!cur) cur = lv;
   } catch (e) {
-    setStatus('Importe un niveau ou une musique pour commencer.');
+    setMsg('Le morceau de démonstration n’a pas pu être généré.', true);
   } finally {
-    busy = false; els.bar.hidden = true; refreshMenu();
-    if (levels.some(l => !l.demo)) setStatus('');
+    busy = false; refreshMenu();
   }
 })();
 })();
